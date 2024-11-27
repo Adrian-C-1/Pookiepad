@@ -13,12 +13,15 @@ int main()
     sf::WindowHandle handle = window.getSystemHandle();
     
     sf::Font font;
-    font.loadFromFile("Roboto-Black.ttf");
-
+    std::string font_path("samples/BebasNeue-Regular.otf");
+    font.loadFromFile(font_path);
+    
     sf::Text text;
     text.setFont(font);
     text.setString("Hello. THis is a string of characters\nThis is a second line");
     text.setPosition({ 100.0, 100.0 });
+    text.setCharacterSize(30);
+    text.setFillColor(sf::Color::Black);
 
     while (window.isOpen()) {
         sf::Event ev;
