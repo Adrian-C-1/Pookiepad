@@ -4,17 +4,30 @@
 
 #include "Windows.h"
 
+#include "globals.h"
+
 using namespace std;
+
+void initiate() {
+    std::string font_path("samples/BebasNeue-Regular.otf");
+    font.loadFromFile(font_path);
+
+    handle = window.getSystemHandle();
+}
+
+;
+void draw_menu(sf::RenderWindow &window) {
+    ;
+}
+
+;
+void draw_content(sf::RenderWindow& window) {
+    ;
+}
 
 int main()
 {
-    sf::RenderWindow window(sf::VideoMode(600, 600), "Title");
-
-    sf::WindowHandle handle = window.getSystemHandle();
-    
-    sf::Font font;
-    std::string font_path("samples/BebasNeue-Regular.otf");
-    font.loadFromFile(font_path);
+    initiate();
     
     sf::Text text;
     text.setFont(font);
@@ -35,7 +48,8 @@ int main()
         }
         window.clear(sf::Color::White);
 
-        window.draw(text);
+        draw_menu(window);
+        draw_content(window);
 
         window.display();
     }
