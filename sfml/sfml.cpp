@@ -12,7 +12,7 @@ void initiate() {
     std::string font_path("samples/BebasNeue-Regular.otf");
     font.loadFromFile(font_path);
 
-    handle = window.getSystemHandle();
+    handle = window.getSystemHandle();sure
 }
 
 ;
