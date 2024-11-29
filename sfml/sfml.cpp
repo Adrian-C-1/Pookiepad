@@ -5,19 +5,17 @@
 #include "Windows.h"
 
 #include "globals.h"
+#include "menu.h"
 
 using namespace std;
 
 void initiate() {
-    std::string font_path("samples/BebasNeue-Regular.otf");
+    std::string font_path("samples/OpenSans-Regular.ttf");
     font.loadFromFile(font_path);
+    // Daca modifici fontul zi-mi ca trb sa modific si eu lucruri
+    // ;
 
     handle = window.getSystemHandle();
-}
-
-;
-void draw_menu(sf::RenderWindow &window) {
-    ;
 }
 
 ;
@@ -27,28 +25,33 @@ void draw_content(sf::RenderWindow& window) {
 
 int main()
 {
+    if (!window.isOpen()) {
+        std::cout << "Error, could not open window or initialize SFML\n";
+        return 0;
+    }
     initiate();
-    
-    sf::Text text;
-    text.setFont(font);
-    text.setString("Hello. THis is a string of characters\nThis is a second line");
-    text.setPosition({ 100.0, 100.0 });
-    text.setCharacterSize(30);
-    text.setFillColor(sf::Color::Black);
+
+    BAR::menu = new Menu(); // initialize it here not there
 
     while (window.isOpen()) {
         sf::Event ev;
-        while (window.pollEvent(ev)) {
+        while (window.pollEvent(ev)) { // todo wait ev ADRIAN NU UITA (don't waste CPU !! )
             switch (ev.type) {
             case sf::Event::Closed:
                 window.close();
                 return 0;
                 break;
+            case sf::Event::MouseButtonPressed:
+                BAR::menu->onPress();
+                break;
+            case sf::Event::MouseMoved:
+                BAR::menu->onMouseMove();
+                break;
             }
         }
         window.clear(sf::Color::White);
 
-        draw_menu(window);
+        BAR::menu->draw();
         draw_content(window);
 
         window.display();
