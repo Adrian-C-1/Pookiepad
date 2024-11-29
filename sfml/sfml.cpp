@@ -7,8 +7,6 @@
 #include "globals.h"
 #include "menu.h"
 
-using namespace std;
-
 void initiate() {
     std::string font_path("samples/OpenSans-Regular.ttf");
     font.loadFromFile(font_path);
