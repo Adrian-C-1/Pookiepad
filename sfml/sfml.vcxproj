@@ -139,11 +139,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="content.cpp" />
     <ClCompile Include="menu.cpp" />
     <ClCompile Include="globals.cpp" />
     <ClCompile Include="sfml.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="content.h" />
     <ClInclude Include="menu.h" />
     <ClInclude Include="globals.h" />
   </ItemGroup>

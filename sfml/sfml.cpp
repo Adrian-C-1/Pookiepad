@@ -6,6 +6,7 @@
 
 #include "globals.h"
 #include "menu.h"
+#include "content.h"
 
 /* Modificarile mele */
 sf::Text text;
@@ -203,6 +204,7 @@ int main()
     initiate();
 
     BAR::menu = new Menu(); // initialize it here not there
+    Content content;
 
     bool letter_detection = 1;
     // exemplu la letter detection
