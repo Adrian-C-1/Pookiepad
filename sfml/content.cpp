@@ -57,6 +57,13 @@ void Content::addEnter() {
     updateCursor();
 }
 
+// todo
+void Content::setText(std::string str) {
+    textString = str;
+    offset = 0;
+    text.setString(str);
+}
+
 void Content::removeChar(bool isCtrlPressed) {
     if (!textString.empty()) {
         if (!isCtrlPressed) {

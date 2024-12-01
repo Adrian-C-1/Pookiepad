@@ -26,7 +26,7 @@ int main()
 
     initiate();
 
-    Content content;
+    CONTENT::content = new Content;
     BAR::menu = new Menu(); // initialize it here not there
 
     bool letter_detection = 1;
@@ -80,64 +80,64 @@ int main()
             /* Modificarile mele */
             case (sf::Event::TextEntered):
                 if (event.text.unicode >= ' ' && event.text.unicode <= '~') { // Character
-                    content.addText(event.text.unicode);
+                    CONTENT::content->addText(event.text.unicode);
                 }
                 else {
                     switch (event.text.unicode) {
                     case (13): // 13 = Enter
-                        content.addEnter();
+                        CONTENT::content->addEnter();
                         break;
                     case (9): // 9 = Tab
                         for (int i = 0; i < 6; ++i) {
-                            content.addText(' ');
+                            CONTENT::content->addText(' ');
                         }
                         break;
                     case (8): // 8 = Backspace
-                        content.removeChar(false);
+                        CONTENT::content->removeChar(false);
                         break;
                     case (127): // 127 = Ctrl - Backspace
-                        content.removeChar(true);
+                        CONTENT::content->removeChar(true);
                         break;
                     }
                 }
             case (sf::Event::KeyPressed):
                 if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
                     if ((sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl))) {
-                        content.left(true);
+                        CONTENT::content->left(true);
                     }
                     else {
-                        content.left(false);
+                        CONTENT::content->left(false);
                     }
                 }
                 else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
                     if ((sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl))) {
-                        content.right(true);
+                        CONTENT::content->right(true);
                     }
                     else {
-                        content.right(false);
+                        CONTENT::content->right(false);
 
                     }
                 }
                 else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) {
-                    content.up();
+                    CONTENT::content->up();
                 }
                 else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
-                    content.down();
+                    CONTENT::content->down();
                 }
             }
             /* Sfarsitul modificarilor mele */
         }
 
         /* Modificarile mele */
-        if (std::time(0) > content.getDate()) { // efectul de "blink" al cursorului
-            content.updateCursorBlink();
+        if (std::time(0) > CONTENT::content->getDate()) { // efectul de "blink" al cursorului
+            CONTENT::content->updateCursorBlink();
         }
         /* Sfarsitul modificarilor mele */
 
         window.clear(/*sf::Color::White*/);
 
-        BAR::menu->draw();
-        content.draw_content(window);
+        CONTENT::content->draw_content(window);
+        BAR::menu->draw(); // menu on top
 
         // vvv si aici
         if (letter_detection == 0) {

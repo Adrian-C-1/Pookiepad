@@ -15,3 +15,7 @@ namespace BAR {
 
 	bool SHOW_HITBOX = 0;
 }
+
+namespace CONTENT {
+	Content* content = nullptr;
+}

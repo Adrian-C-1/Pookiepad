@@ -1,6 +1,8 @@
 #include "menu.h"
 
 #include <iostream>
+#include <fstream>
+#include "content.h"
 
 Button::Button(std::string name, void (*onPress)())
 	: onPressFunc(onPress) {
@@ -95,7 +97,48 @@ void onPressView() {
 	BAR::events.push(BAR::OPEN_VIEW_POPUP);
 }
 void onOpenFile() {
-	std::cout << "Opening file here need content API for this though" << '\n';
+	OPENFILENAMEA open = { 0 };
+
+	char buffer[2048];
+	buffer[0] = '\0';
+
+	open.hwndOwner = handle;
+	open.hInstance = GetModuleHandleA(NULL);
+	open.lStructSize = sizeof(OPENFILENAMEA);
+	open.lpstrFile = buffer;
+	open.nMaxFile = sizeof(buffer);
+	open.lpstrFilter = "All files\0*.*\0";
+	open.nFilterIndex = 1;
+	open.lpstrFileTitle = NULL;
+	open.nMaxFileTitle = 0;
+	open.lpstrInitialDir = NULL;
+	open.lpstrTitle = "Open File";
+	open.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
+
+	BOOL selected = GetOpenFileNameA(&open);
+
+	if (!selected){
+		// sth happeded
+		return;
+	}
+	
+	std::ifstream in(buffer, std::ios::ate);
+	if (!in.is_open()) {
+		std::cout << "Couldn't open file\n";
+		return;
+	}
+	int size = in.tellg();
+	char* ch = new char[size + 1];
+	std::memset(ch, 0, size + 1);
+	in.seekg(0);
+	in.read(ch, size);
+	ch[size] = NULL;
+	
+	std::string str(ch);
+
+	CONTENT::content->setText(str);
+
+	delete[] ch;
 }
 
 

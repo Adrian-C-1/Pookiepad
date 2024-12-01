@@ -24,6 +24,9 @@ public:
 	void updateStrings();
 	void updateCursor();
 
+	// todo
+	void setText(std::string str);
+
 	void addText(char character);
 	void addEnter();
 	void removeChar(bool isCtrlPressed);

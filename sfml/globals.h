@@ -29,3 +29,8 @@ namespace BAR {
 	};
 	extern std::queue<EVENT> events;
 }
+
+class Content;
+namespace CONTENT {
+	extern Content* content;
+}
