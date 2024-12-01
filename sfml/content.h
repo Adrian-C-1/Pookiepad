@@ -9,11 +9,11 @@ private:
 	sf::Text numbers;
 	std::string numbersString;
 
-	sf::RectangleShape cursor(sf::Vector2f(12.f, 24.f));
-	bool cursorState = false;
-	int numberCount = 1;
-	int offset = 0;
-	time_t date = std::time(0);
+	sf::RectangleShape cursor;
+	bool cursorState;
+	int numberCount;
+	int offset;
+	time_t date;
 public:
 	Content();
 

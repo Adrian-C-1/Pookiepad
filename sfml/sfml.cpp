@@ -30,12 +30,13 @@ void initiate() {
     /* Modificarile mele */
     text.setFont(font);
     text.setCharacterSize(24);
-    text.setPosition(sf::Vector2f(35.f, 0.f)); // De modificat dimensiunile de aici pentru a marca de unde incepe "casuta" cu text in program
+    text.setPosition(sf::Vector2f(35.f, BAR::HEIGHT)); // De modificat dimensiunile de aici pentru a marca de unde incepe "casuta" cu text in program
 
     numbers.setFont(font);
     numbers.setCharacterSize(24);
     numbersString = "1\n";
     numbers.setString(numbersString);
+    numbers.setPosition(0.0f, BAR::HEIGHT);
 
     cursor.setFillColor(sf::Color::Black);
     cursor.setPosition(sf::Vector2f(text.findCharacterPos(textString.size()).x + 2.f, text.findCharacterPos(textString.size()).y + 1.f));
@@ -45,13 +46,11 @@ void initiate() {
 }
 
 /* Modificarile mele */
-
 void addText(char character) {
     textString.insert(textString.size() - offset, 1, character);
     text.setString(textString);
     cursor.setPosition(sf::Vector2f(text.findCharacterPos(textString.size() - offset).x + 2.f, text.findCharacterPos(textString.size() - offset).y + 1.f));
 }
-
 void addEnter() {
     textString.insert(textString.size() - offset, 1, '\n');
     numberCount++;
@@ -60,7 +59,6 @@ void addEnter() {
     numbers.setString(numbersString);
     cursor.setPosition(sf::Vector2f(text.findCharacterPos(textString.size() - offset).x + 2.f, text.findCharacterPos(textString.size() - offset).y + 1.f));
 }
-
 void removeChar(bool isCtrlPressed) {
     if (!textString.empty()) {
         if (!isCtrlPressed) {
@@ -101,7 +99,6 @@ void removeChar(bool isCtrlPressed) {
         }
     }
 }
-
 void left(bool isCtrlPressed) {
     if (!isCtrlPressed) {
         if (offset < textString.size()) {
@@ -120,7 +117,6 @@ void left(bool isCtrlPressed) {
     }
     cursor.setPosition(sf::Vector2f(text.findCharacterPos(textString.size() - offset).x + 2.f, text.findCharacterPos(textString.size() - offset).y + 1.f));
 }
-
 void right(bool isCtrlPressed) {
     if (!isCtrlPressed) {
         if (offset > 0) {
@@ -139,7 +135,6 @@ void right(bool isCtrlPressed) {
     }
     cursor.setPosition(sf::Vector2f(text.findCharacterPos(textString.size() - offset).x + 2.f, text.findCharacterPos(textString.size() - offset).y + 1.f));
 }
-
 void up() {
     int currlineoffset = 0; // offset fata de stanga
     while (textString.size() - offset - currlineoffset > 0 && (textString[textString.size() - offset - currlineoffset - 1] != '\n')) { // calcularea offset-ului
@@ -161,7 +156,6 @@ void up() {
     cursor.setPosition(sf::Vector2f(text.findCharacterPos(textString.size() - offset).x + 2.f, text.findCharacterPos(textString.size() - offset).y + 1.f));
 
 }
-
 void down() {
     int currlineoffset = 0; // offset fata de stanga again
     while (textString.size() - offset - currlineoffset > 0 && (textString[textString.size() - offset - currlineoffset - 1] != '\n')) { // calcularea offset-ului
@@ -178,13 +172,11 @@ void down() {
     }
     cursor.setPosition(sf::Vector2f(text.findCharacterPos(textString.size() - offset).x + 2.f, text.findCharacterPos(textString.size() - offset).y + 1.f));
 }
-
 void updateCursorBlink() {
     date = std::time(0);
     cursorState = !cursorState;
     cursor.setFillColor((cursorState ? sf::Color(206, 206, 206) : sf::Color::Black));
 }
-
 /* Sfarsitul modificarilor mele */
 
 void draw_content(sf::RenderWindow& window) {
@@ -220,7 +212,7 @@ int main()
         text.setLineSpacing(1);
         text.setString("qwertyuiopasdffghjklzxcvbnm|");
         lineHeight = text.getGlobalBounds().height;
-        text.setString("Hello\nThis is another line of text\nByee\nn\nn\nn\nn\nn\nn\nn");
+        text.setString("iiiiiiiiiiiiiiiiiiiiiii\nwwwwwwwwwwwwwwwwww");
 
         sf::Vector2f textSize;
         textSize.x = text.getGlobalBounds().width;
@@ -242,9 +234,11 @@ int main()
                 break;
             /* Modificarile mele */
             case (sf::Event::Resized):
-                //sf::FloatRect* view = new sf::FloatRect(0, 0, event.size.width, event.size.height);
-                //window.setView(sf::View(*view));
+            {
+                sf::FloatRect* view = new sf::FloatRect(0, 0, event.size.width, event.size.height);
+                window.setView(sf::View(*view));
                 break;
+            }
             /* Sfarsitul modificarilor mele */
             case sf::Event::MouseButtonPressed:
                 BAR::menu->onPress();
@@ -315,7 +309,7 @@ int main()
         draw_content(window);
 
         // vvv si aici
-        if (letter_detection == 1) {
+        if (letter_detection == 0) {
             window.draw(rect);
             for (int i = 0; i < text.getString().getSize(); i++) {
                 sf::FloatRect fr;
@@ -347,7 +341,7 @@ int main()
         window.display();
     }
    
-
+    /*
     // works
 
     OPENFILENAMEA open = { 0 }; 
@@ -376,7 +370,7 @@ int main()
     else {
         std::cout << "No file selected or error\n";
     }
-
+    */
 
     return 0;
 }
