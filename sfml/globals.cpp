@@ -1,7 +1,7 @@
 #include "globals.h"
 
 sf::Font font;
-sf::RenderWindow window(sf::VideoMode(600, 600), "title");
+sf::RenderWindow window(sf::VideoMode(600, 600), "Pookiepad");
 sf::WindowHandle handle;
 
 namespace BAR {

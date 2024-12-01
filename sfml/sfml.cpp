@@ -8,183 +8,13 @@
 #include "menu.h"
 #include "content.h"
 
-/* Modificarile mele */
-sf::Text text;
-std::string textString;
-sf::Text numbers;
-std::string numbersString;
-
-sf::RectangleShape cursor(sf::Vector2f(12.f, 24.f));
-bool cursorState = false;
-int numberCount = 1;
-int offset = 0;
-time_t date = std::time(0);
-/* Sfarsitul modificarilor mele */
-
 void initiate() {
     std::string font_path("samples/OpenSans-Regular.ttf");
     font.loadFromFile(font_path);
     // Daca modifici fontul zi-mi ca trb sa modific si eu lucruri
     // ;
 
-    /* Modificarile mele */
-    text.setFont(font);
-    text.setCharacterSize(24);
-    text.setPosition(sf::Vector2f(35.f, BAR::HEIGHT)); // De modificat dimensiunile de aici pentru a marca de unde incepe "casuta" cu text in program
-
-    numbers.setFont(font);
-    numbers.setCharacterSize(24);
-    numbersString = "1\n";
-    numbers.setString(numbersString);
-    numbers.setPosition(0.0f, BAR::HEIGHT);
-
-    cursor.setFillColor(sf::Color::Black);
-    cursor.setPosition(sf::Vector2f(text.findCharacterPos(textString.size()).x + 2.f, text.findCharacterPos(textString.size()).y + 1.f));
-    /* Sfarsitul modificarilor mele */
-
     handle = window.getSystemHandle();
-}
-
-/* Modificarile mele */
-void addText(char character) {
-    textString.insert(textString.size() - offset, 1, character);
-    text.setString(textString);
-    cursor.setPosition(sf::Vector2f(text.findCharacterPos(textString.size() - offset).x + 2.f, text.findCharacterPos(textString.size() - offset).y + 1.f));
-}
-void addEnter() {
-    textString.insert(textString.size() - offset, 1, '\n');
-    numberCount++;
-    numbersString += std::to_string(numberCount) + '\n';
-    text.setString(textString);
-    numbers.setString(numbersString);
-    cursor.setPosition(sf::Vector2f(text.findCharacterPos(textString.size() - offset).x + 2.f, text.findCharacterPos(textString.size() - offset).y + 1.f));
-}
-void removeChar(bool isCtrlPressed) {
-    if (!textString.empty()) {
-        if (!isCtrlPressed) {
-            if (textString.size() - offset > 0) {
-                if (textString[textString.size() - offset - 1] == '\n') {
-                    numberCount--;
-                    numbersString.pop_back(); // stergerea \n-ului
-                    while (!numbersString.empty() && numbersString.back() != '\n') { // stergerea cifrelor
-                        numbersString.pop_back();
-                    }
-                    numbers.setString(numbersString);
-                }
-                textString.erase(textString.size() - offset - 1, 1);
-                text.setString(textString);
-                cursor.setPosition(sf::Vector2f(text.findCharacterPos(textString.size() - offset).x + 2.f, text.findCharacterPos(textString.size() - offset).y + 1.f));
-            }
-        }
-        else {
-            if (textString[textString.size() - offset - 1] == ' ') {
-                textString.erase(textString.size() - offset - 1, 1);
-            }
-            else if (textString[textString.size() - offset - 1] == '\n') {
-                numberCount--;
-                numbersString.pop_back(); // stergerea \n-ului
-                while (!numbersString.empty() && numbersString.back() != '\n') { // stergerea cifrelor
-                    numbersString.pop_back();
-                }
-                numbers.setString(numbersString);
-                textString.erase(textString.size() - offset - 1, 1);
-            }
-            else {
-                while (!textString.empty() && textString.size() - offset > 0 && (textString[textString.size() - offset - 1] != ' ' && textString[textString.size() - offset - 1] != '\n')) {
-                    textString.erase(textString.size() - offset - 1, 1);
-                }
-            }
-            text.setString(textString);
-            cursor.setPosition(sf::Vector2f(text.findCharacterPos(textString.size() - offset).x + 2.f, text.findCharacterPos(textString.size() - offset).y + 1.f));
-        }
-    }
-}
-void left(bool isCtrlPressed) {
-    if (!isCtrlPressed) {
-        if (offset < textString.size()) {
-            offset++;
-        }
-    }
-    else {
-        if (textString[textString.size() - offset - 1] == ' ' || textString[textString.size() - offset - 1] == '\n') {
-            offset++;
-        }
-        else {
-            while (!textString.empty() && textString.size() - offset > 0 && (textString[textString.size() - offset - 1] != ' ' && textString[textString.size() - offset - 1] != '\n')) {
-                offset++;
-            }
-        }
-    }
-    cursor.setPosition(sf::Vector2f(text.findCharacterPos(textString.size() - offset).x + 2.f, text.findCharacterPos(textString.size() - offset).y + 1.f));
-}
-void right(bool isCtrlPressed) {
-    if (!isCtrlPressed) {
-        if (offset > 0) {
-            offset--;
-        }
-    }
-    else {
-        if (textString[textString.size() - offset] == ' ' || textString[textString.size() - offset] == '\n') {
-            offset--;
-        }
-        else {
-            while (offset > 0 && (textString[textString.size() - offset] != ' ' && textString[textString.size() - offset] != '\n')) {
-                offset--;
-            }
-        }
-    }
-    cursor.setPosition(sf::Vector2f(text.findCharacterPos(textString.size() - offset).x + 2.f, text.findCharacterPos(textString.size() - offset).y + 1.f));
-}
-void up() {
-    int currlineoffset = 0; // offset fata de stanga
-    while (textString.size() - offset - currlineoffset > 0 && (textString[textString.size() - offset - currlineoffset - 1] != '\n')) { // calcularea offset-ului
-        currlineoffset++;
-    }
-    while (!textString.empty() && textString.size() - offset > 0 && textString[textString.size() - offset - 1] != '\n') { // aducerea la primul caracter de pe linia veche
-        offset++;
-    }
-    if (textString.size() - offset > 0) offset++; // aducerea la ultimul caracter de pe linia noua
-    int nextlinesize = 0;
-    while (!textString.empty() && textString.size() - offset > 0 && textString[textString.size() - offset - 1] != '\n') { // aducerea la primul caracter de pe linia noua
-        offset++;
-        nextlinesize++;
-    }
-    if (currlineoffset <= nextlinesize) offset -= currlineoffset;
-    else {
-        offset -= nextlinesize;
-    }
-    cursor.setPosition(sf::Vector2f(text.findCharacterPos(textString.size() - offset).x + 2.f, text.findCharacterPos(textString.size() - offset).y + 1.f));
-
-}
-void down() {
-    int currlineoffset = 0; // offset fata de stanga again
-    while (textString.size() - offset - currlineoffset > 0 && (textString[textString.size() - offset - currlineoffset - 1] != '\n')) { // calcularea offset-ului
-        currlineoffset++;
-    }
-    while (offset > 0 && textString[textString.size() - offset] != '\n') { // aducerea la finalul liniei vechi
-        offset--;
-    }
-    if (offset > 0) offset--; // aducerea la inceputul noii linii
-    int nextlinesize = 0;
-    while (offset > 0 && currlineoffset > 0 && textString[textString.size() - offset] != '\n') { // ori ajunge la capat, ori ajunge la offset-ul de pe linia anterioara
-        offset--;
-        currlineoffset--;
-    }
-    cursor.setPosition(sf::Vector2f(text.findCharacterPos(textString.size() - offset).x + 2.f, text.findCharacterPos(textString.size() - offset).y + 1.f));
-}
-void updateCursorBlink() {
-    date = std::time(0);
-    cursorState = !cursorState;
-    cursor.setFillColor((cursorState ? sf::Color(206, 206, 206) : sf::Color::Black));
-}
-/* Sfarsitul modificarilor mele */
-
-void draw_content(sf::RenderWindow& window) {
-    /* Modificarile mele */
-    window.draw(cursor);
-    window.draw(numbers);
-    window.draw(text);
-    /* Sfarsitul modificarilor mele */
 }
 
 int main()
@@ -193,10 +23,11 @@ int main()
         std::cout << "Error, could not open window or initialize SFML\n";
         return 0;
     }
+
     initiate();
 
-    BAR::menu = new Menu(); // initialize it here not there
     Content content;
+    BAR::menu = new Menu(); // initialize it here not there
 
     bool letter_detection = 1;
     // exemplu la letter detection
@@ -249,64 +80,64 @@ int main()
             /* Modificarile mele */
             case (sf::Event::TextEntered):
                 if (event.text.unicode >= ' ' && event.text.unicode <= '~') { // Character
-                    addText(event.text.unicode);
+                    content.addText(event.text.unicode);
                 }
                 else {
                     switch (event.text.unicode) {
                     case (13): // 13 = Enter
-                        addEnter();
+                        content.addEnter();
                         break;
                     case (9): // 9 = Tab
                         for (int i = 0; i < 6; ++i) {
-                            addText(' ');
+                            content.addText(' ');
                         }
                         break;
                     case (8): // 8 = Backspace
-                        removeChar(false);
+                        content.removeChar(false);
                         break;
                     case (127): // 127 = Ctrl - Backspace
-                        removeChar(true);
+                        content.removeChar(true);
                         break;
                     }
                 }
             case (sf::Event::KeyPressed):
                 if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
-                    if ((sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl)) && textString.size() - offset > 0) {
-                        left(true);
+                    if ((sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl))) {
+                        content.left(true);
                     }
                     else {
-                        left(false);
+                        content.left(false);
                     }
                 }
                 else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
-                    if ((sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl)) && offset > 0) {
-                        right(true);
+                    if ((sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl))) {
+                        content.right(true);
                     }
                     else {
-                        right(false);
+                        content.right(false);
 
                     }
                 }
                 else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) {
-                    up();
+                    content.up();
                 }
                 else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
-                    down();
+                    content.down();
                 }
             }
             /* Sfarsitul modificarilor mele */
         }
 
         /* Modificarile mele */
-        if (std::time(0) > date) { // efectul de "blink" al cursorului
-            updateCursorBlink();
+        if (std::time(0) > content.getDate()) { // efectul de "blink" al cursorului
+            content.updateCursorBlink();
         }
         /* Sfarsitul modificarilor mele */
 
         window.clear(/*sf::Color::White*/);
 
         BAR::menu->draw();
-        draw_content(window);
+        content.draw_content(window);
 
         // vvv si aici
         if (letter_detection == 0) {
