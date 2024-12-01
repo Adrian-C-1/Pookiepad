@@ -63,21 +63,18 @@ int main()
                 window.close();
                 return 0;
                 break;
-            /* Modificarile mele */
             case (sf::Event::Resized):
             {
                 sf::FloatRect* view = new sf::FloatRect(0, 0, event.size.width, event.size.height);
                 window.setView(sf::View(*view));
                 break;
             }
-            /* Sfarsitul modificarilor mele */
             case sf::Event::MouseButtonPressed:
                 BAR::menu->onPress();
                 break;
             case sf::Event::MouseMoved:
                 BAR::menu->onMouseMove();
                 break;
-            /* Modificarile mele */
             case (sf::Event::TextEntered):
                 if (event.text.unicode >= ' ' && event.text.unicode <= '~') { // Character
                     CONTENT::content->addText(event.text.unicode);
@@ -125,14 +122,11 @@ int main()
                     CONTENT::content->down();
                 }
             }
-            /* Sfarsitul modificarilor mele */
         }
 
-        /* Modificarile mele */
         if (std::time(0) > CONTENT::content->getDate()) { // efectul de "blink" al cursorului
             CONTENT::content->updateCursorBlink();
         }
-        /* Sfarsitul modificarilor mele */
 
         window.clear(/*sf::Color::White*/);
 

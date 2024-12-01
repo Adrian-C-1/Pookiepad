@@ -26,6 +26,7 @@ public:
 
 	// todo
 	void setText(std::string str);
+	void resetNumbers();
 
 	void addText(char character);
 	void addEnter();
@@ -36,6 +37,4 @@ public:
 	void down();
 	void updateCursorBlink();
 	void draw_content(sf::RenderWindow& windoww);
-
-
 };

@@ -61,7 +61,24 @@ void Content::addEnter() {
 void Content::setText(std::string str) {
     textString = str;
     offset = 0;
-    text.setString(str);
+    resetNumbers();
+    updateStrings();
+    updateCursor();
+}
+
+void Content::resetNumbers() {
+    numbersString = "";
+    numberCount = 1;
+    for (int i = 0; i < textString.size(); ++i) {
+        if (textString[i] == '\n') {
+            numberCount++;
+        }
+    }
+    for (int i = 1; i <= numberCount; ++i) {
+        numbersString += std::to_string(i) + '\n';
+    }
+    updateStrings();
+    updateCursor();
 }
 
 void Content::removeChar(bool isCtrlPressed) {
