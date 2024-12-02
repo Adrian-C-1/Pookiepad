@@ -57,7 +57,6 @@ void Content::addEnter() {
     updateCursor();
 }
 
-// todo
 void Content::setText(std::string str) {
     textString = str;
     offset = 0;
@@ -207,8 +206,57 @@ void Content::updateCursorBlink() {
     cursor.setFillColor((cursorState ? sf::Color(206, 206, 206) : sf::Color::Black));
 }
 
-void Content::draw_content(sf::RenderWindow& windoww) {
-    windoww.draw(cursor);
-    windoww.draw(numbers);
-    windoww.draw(text);
+void Content::draw_content() {
+    window.draw(cursor);
+    window.draw(numbers);
+    window.draw(text);
+}
+
+void Content::onKeyPress(sf::Uint32 code) {
+    if (code >= ' ' && code <= '~') { // Character
+        addText(code);
+    }
+    else {
+        switch (code) {
+        case (13): // 13 = Enter
+            addEnter();
+            break;
+        case (9): // 9 = Tab
+            for (int i = 0; i < 6; ++i) {
+                addText(' ');
+            }
+            break;
+        case (8): // 8 = Backspace
+            removeChar(false);
+            break;
+        case (127): // 127 = Ctrl - Backspace
+            removeChar(true);
+            break;
+        }
+    }
+}
+void Content::onKeyPress(sf::Keyboard::Key key) {
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
+        if ((sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl))) {
+            left(true);
+        }
+        else {
+            left(false);
+        }
+    }
+    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
+        if ((sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl))) {
+            right(true);
+        }
+        else {
+            right(false);
+
+        }
+    }
+    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) {
+        up();
+    }
+    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
+        down();
+    }
 }

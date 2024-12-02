@@ -29,7 +29,7 @@ int main()
     CONTENT::content = new Content;
     BAR::menu = new Menu(); // initialize it here not there
 
-    bool letter_detection = 1;
+    bool letter_detection = 0;
     // exemplu la letter detection
     // trb doar sa vezi daca mausu pica intre 2 litere sau e pe o litera, f ez
     // vvvv
@@ -76,51 +76,10 @@ int main()
                 BAR::menu->onMouseMove();
                 break;
             case (sf::Event::TextEntered):
-                if (event.text.unicode >= ' ' && event.text.unicode <= '~') { // Character
-                    CONTENT::content->addText(event.text.unicode);
-                }
-                else {
-                    switch (event.text.unicode) {
-                    case (13): // 13 = Enter
-                        CONTENT::content->addEnter();
-                        break;
-                    case (9): // 9 = Tab
-                        for (int i = 0; i < 6; ++i) {
-                            CONTENT::content->addText(' ');
-                        }
-                        break;
-                    case (8): // 8 = Backspace
-                        CONTENT::content->removeChar(false);
-                        break;
-                    case (127): // 127 = Ctrl - Backspace
-                        CONTENT::content->removeChar(true);
-                        break;
-                    }
-                }
+                CONTENT::content->onKeyPress(event.text.unicode);
             case (sf::Event::KeyPressed):
-                if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
-                    if ((sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl))) {
-                        CONTENT::content->left(true);
-                    }
-                    else {
-                        CONTENT::content->left(false);
-                    }
-                }
-                else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
-                    if ((sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl))) {
-                        CONTENT::content->right(true);
-                    }
-                    else {
-                        CONTENT::content->right(false);
-
-                    }
-                }
-                else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) {
-                    CONTENT::content->up();
-                }
-                else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
-                    CONTENT::content->down();
-                }
+                CONTENT::content->onKeyPress(event.key.code);
+                break;
             }
         }
 
@@ -130,11 +89,11 @@ int main()
 
         window.clear(/*sf::Color::White*/);
 
-        CONTENT::content->draw_content(window);
+        CONTENT::content->draw_content();
         BAR::menu->draw(); // menu on top
 
         // vvv si aici
-        if (letter_detection == 0) {
+        if (letter_detection) {
             window.draw(rect);
             for (int i = 0; i < text.getString().getSize(); i++) {
                 sf::FloatRect fr;

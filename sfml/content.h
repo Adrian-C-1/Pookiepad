@@ -4,7 +4,34 @@
 #include "globals.h"
 
 class Content {
+public:
+	Content();
+	sf::RectangleShape getCursor();
+	time_t getDate();
+
+	void setText(std::string str);
+	void resetNumbers();
+
+	void updateCursorBlink();
+	void draw_content();
+
+	void onKeyPress(sf::Uint32 code);
+	void onKeyPress(sf::Keyboard::Key key);
 private:
+	sf::Text getText();
+	sf::Text getNumbers();
+
+	void addText(char character);
+	void addEnter();
+	void removeChar(bool isCtrlPressed);
+	void left(bool isCtrlPressed);
+	void right(bool isCtrlPressed);
+	void up();
+	void down();
+
+	void updateStrings();
+	void updateCursor();
+
 	sf::Text text;
 	std::string textString;
 	sf::Text numbers;
@@ -15,26 +42,4 @@ private:
 	int numberCount;
 	int offset;
 	time_t date;
-public:
-	Content();
-	sf::Text getText();
-	sf::Text getNumbers();
-	sf::RectangleShape getCursor();
-	time_t getDate();
-	void updateStrings();
-	void updateCursor();
-
-	// todo
-	void setText(std::string str);
-	void resetNumbers();
-
-	void addText(char character);
-	void addEnter();
-	void removeChar(bool isCtrlPressed);
-	void left(bool isCtrlPressed);
-	void right(bool isCtrlPressed);
-	void up();
-	void down();
-	void updateCursorBlink();
-	void draw_content(sf::RenderWindow& windoww);
 };
