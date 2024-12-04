@@ -6,17 +6,19 @@
 class Content {
 public:
 	Content();
-	sf::RectangleShape getCursor();
-	time_t getDate();
 
-	void setText(std::string str);
+	/// <summary>
+	/// Updates blinking state
+	/// </summary>
+	void update();
 
-	void updateCursorBlink();
+	void loadText(std::string str);
+
 	void draw_content();
 
 	void onKeyPress(sf::Uint32 code);
 	void onKeyPress(sf::Keyboard::Key key);
-	void onMousePress(sf::Event);
+	void onMousePress();
 private:
 	sf::Text getText();
 	sf::Text getNumbers();

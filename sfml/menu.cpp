@@ -136,7 +136,7 @@ void onOpenFile() {
 	
 	std::string str(ch);
 
-	CONTENT::content->setText(str);
+	CONTENT::content->loadText(str);
 
 	delete[] ch;
 }
@@ -215,7 +215,7 @@ void Menu::draw() {
 	}
 }
 
-void Menu::onPress() {
+bool Menu::onPress() {
 	bool pressed_inside = 0;
 
 	sf::Vector2f mpos = sf::Vector2f(sf::Mouse::getPosition(window));
@@ -237,6 +237,8 @@ void Menu::onPress() {
 			BAR::events.push(BAR::SHOULD_CLOSE_POPUP);
 		}
 	}
+
+	return pressed_inside;
 }
 void Menu::onMouseMove() {
 	; // todo hover show button

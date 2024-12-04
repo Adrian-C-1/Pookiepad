@@ -26,12 +26,12 @@ sf::Text Content::getNumbers() {
 	return numbers;
 }
 
-sf::RectangleShape Content::getCursor() {
-	return cursor;
-}
-
-time_t Content::getDate() {
-    return date;
+void Content::update() {
+    if (std::time(0) > date) { // efectul de "blink" al cursorului
+        date = std::time(0);
+        cursorState = !cursorState;
+        cursor.setFillColor((cursorState ? sf::Color(206, 206, 206) : sf::Color::Black));
+    }
 }
 
 void Content::updateStrings() {
@@ -57,7 +57,7 @@ void Content::addEnter() {
     updateCursor();
 }
 
-void Content::setText(std::string str) {
+void Content::loadText(std::string str) {
     textString = str;
     offset = 0;
     /* resetNumbers() */
@@ -220,12 +220,6 @@ void Content::down() {
     updateCursor();
 }
 
-void Content::updateCursorBlink() {
-    date = std::time(0);
-    cursorState = !cursorState;
-    cursor.setFillColor((cursorState ? sf::Color(206, 206, 206) : sf::Color::Black));
-}
-
 void Content::draw_content() {
     window.draw(cursor);
     window.draw(numbers);
@@ -281,25 +275,25 @@ void Content::onKeyPress(sf::Keyboard::Key key) {
     }
 }
 
-//de updatat sa fie variabile in loc de tot cerut valoarea prin functie
-void Content::onMousePress(sf::Event event) {
-    if (event.mouseButton.y > text.getGlobalBounds().height + text.getGlobalBounds().top) {
-		if (event.mouseButton.x > text.findCharacterPos(textString.size()).x) {
+void Content::onMousePress() {
+    sf::Vector2f mpos = sf::Vector2f(sf::Mouse::getPosition(window));
+    if (mpos.y > text.getGlobalBounds().height + text.getGlobalBounds().top) {
+		if (mpos.x > text.findCharacterPos(textString.size()).x) {
 			offset = 0;
 		}
 		else {
 			offset = 0;
-			while (event.mouseButton.x <= text.findCharacterPos(textString.size() - offset).x && text.findCharacterPos(textString.size() - offset).x > text.getGlobalBounds().left) {
-				offset++;
+			while (offset < textString.size() && mpos.x <= text.findCharacterPos(textString.size() - offset).x && text.findCharacterPos(textString.size() - offset).x > text.getGlobalBounds().left) {
+                offset++;
 			}
 		}
     }
     else {
         offset = 0;
-        while (event.mouseButton.y <= text.findCharacterPos(textString.size() - offset).y) {
+        while (offset < textString.size() && mpos.y <= text.findCharacterPos(textString.size() - offset).y) {
             offset++;
         }
-		while (event.mouseButton.x <= text.findCharacterPos(textString.size() - offset).x && text.findCharacterPos(textString.size() - offset).x > text.getGlobalBounds().left) {
+		while (offset < textString.size() && mpos.x <= text.findCharacterPos(textString.size() - offset).x && text.findCharacterPos(textString.size() - offset).x > text.getGlobalBounds().left) {
 			offset++;
 		}
     }

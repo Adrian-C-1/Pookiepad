@@ -39,7 +39,7 @@ class Menu {
 public:
 	Menu();
 	void draw();
-	void onPress();
+	bool onPress();
 	void onMouseMove();
 private:
 	sf::RectangleShape background;

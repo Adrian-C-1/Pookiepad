@@ -44,9 +44,12 @@ int main()
                 break;
             }
             case sf::Event::MouseButtonPressed:
-                CONTENT::content->onMousePress(event);
-                BAR::menu->onPress();
+            {
+                bool pressed_on_menu = BAR::menu->onPress();
+                if (!pressed_on_menu)
+                    CONTENT::content->onMousePress();
                 break;
+            }
             case sf::Event::MouseMoved:
                 BAR::menu->onMouseMove();
                 break;
@@ -58,9 +61,7 @@ int main()
             }
         }
 
-        if (std::time(0) > CONTENT::content->getDate()) { // efectul de "blink" al cursorului
-            CONTENT::content->updateCursorBlink();
-        }
+        CONTENT::content->update();
 
         window.clear(/*sf::Color::White*/);
 
