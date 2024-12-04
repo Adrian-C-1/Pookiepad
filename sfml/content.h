@@ -10,13 +10,13 @@ public:
 	time_t getDate();
 
 	void setText(std::string str);
-	void resetNumbers();
 
 	void updateCursorBlink();
 	void draw_content();
 
 	void onKeyPress(sf::Uint32 code);
 	void onKeyPress(sf::Keyboard::Key key);
+	void onMousePress(sf::Event);
 private:
 	sf::Text getText();
 	sf::Text getNumbers();

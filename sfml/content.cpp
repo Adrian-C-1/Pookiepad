@@ -60,12 +60,7 @@ void Content::addEnter() {
 void Content::setText(std::string str) {
     textString = str;
     offset = 0;
-    resetNumbers();
-    updateStrings();
-    updateCursor();
-}
-
-void Content::resetNumbers() {
+    /* resetNumbers() */
     numbersString = "";
     numberCount = 1;
     for (int i = 0; i < textString.size(); ++i) {
@@ -76,47 +71,46 @@ void Content::resetNumbers() {
     for (int i = 1; i <= numberCount; ++i) {
         numbersString += std::to_string(i) + '\n';
     }
+    /* End of resetNumbers() */
     updateStrings();
     updateCursor();
 }
 
 void Content::removeChar(bool isCtrlPressed) {
-    if (!textString.empty()) {
-        if (!isCtrlPressed) {
-            if (textString.size() - offset > 0) {
-                if (textString[textString.size() - offset - 1] == '\n') {
-                    numberCount--;
-                    numbersString.pop_back(); // stergerea \n-ului
-                    while (!numbersString.empty() && numbersString.back() != '\n') { // stergerea cifrelor
-                        numbersString.pop_back();
-                    }
-                    numbers.setString(numbersString);
-                }
-                textString.erase(textString.size() - offset - 1, 1);
-                updateStrings();
-                updateCursor();
-            }
-        }
-        else {
-            if (textString[textString.size() - offset - 1] == ' ') {
-                textString.erase(textString.size() - offset - 1, 1);
-            }
-            else if (textString[textString.size() - offset - 1] == '\n') {
+    if (!isCtrlPressed) {
+        if (!textString.empty() && textString.size() - offset > 0) {
+            if (textString[textString.size() - offset - 1] == '\n') {
                 numberCount--;
                 numbersString.pop_back(); // stergerea \n-ului
                 while (!numbersString.empty() && numbersString.back() != '\n') { // stergerea cifrelor
                     numbersString.pop_back();
                 }
-                textString.erase(textString.size() - offset - 1, 1);
+                numbers.setString(numbersString);
             }
-            else {
-                while (!textString.empty() && textString.size() - offset > 0 && (textString[textString.size() - offset - 1] != ' ' && textString[textString.size() - offset - 1] != '\n')) {
-                    textString.erase(textString.size() - offset - 1, 1);
-                }
-            }
+            textString.erase(textString.size() - offset - 1, 1);
             updateStrings();
             updateCursor();
         }
+    }
+    else {
+        if (textString.size() - offset > 0 && textString[textString.size() - offset - 1] == ' ') {
+            textString.erase(textString.size() - offset - 1, 1);
+        }
+        else if (textString.size() - offset > 0 && textString[textString.size() - offset - 1] == '\n') {
+            numberCount--;
+            numbersString.pop_back(); // stergerea \n-ului
+            while (!numbersString.empty() && numbersString.back() != '\n') { // stergerea cifrelor
+                numbersString.pop_back();
+            }
+            textString.erase(textString.size() - offset - 1, 1);
+        }
+        else {
+            while (!textString.empty() && textString.size() - offset > 0 && (textString[textString.size() - offset - 1] != ' ' && textString[textString.size() - offset - 1] != '\n')) {
+                textString.erase(textString.size() - offset - 1, 1);
+            }
+        }
+        updateStrings();
+        updateCursor();
     }
 }
 
@@ -162,6 +156,7 @@ void Content::right(bool isCtrlPressed) {
     updateCursor();
 }
 
+/*
 void Content::up() {
     int currlineoffset = 0; // offset fata de stanga
     while (textString.size() - offset - currlineoffset > 0 && (textString[textString.size() - offset - currlineoffset - 1] != '\n')) { // calcularea offset-ului
@@ -182,7 +177,20 @@ void Content::up() {
     }
     updateCursor();
 }
+*/
 
+void Content::up() {
+	sf::Vector2f oldPos = text.findCharacterPos(textString.size() - offset);
+    while (textString.size() - offset > 0 && oldPos.y == text.findCharacterPos(textString.size() - offset).y) {
+        offset++;
+    }
+    while (textString.size() - offset > 0 && oldPos.x < text.findCharacterPos(textString.size() - offset).x) {
+        offset++;
+    }
+    updateCursor();
+}
+
+/*
 void Content::down() {
     int currlineoffset = 0; // offset fata de stanga again
     while (textString.size() - offset - currlineoffset > 0 && (textString[textString.size() - offset - currlineoffset - 1] != '\n')) { // calcularea offset-ului
@@ -197,6 +205,18 @@ void Content::down() {
         offset--;
         currlineoffset--;
     }
+    updateCursor();
+}
+*/
+
+void Content::down() {
+    sf::Vector2f oldPos = text.findCharacterPos(textString.size() - offset);
+	while (offset > 0 && oldPos.y == text.findCharacterPos(textString.size() - offset).y) {
+		offset--;
+	}
+	while (offset > 0 && oldPos.x > text.findCharacterPos(textString.size() - offset).x) {
+		offset--;
+	}
     updateCursor();
 }
 
@@ -259,4 +279,29 @@ void Content::onKeyPress(sf::Keyboard::Key key) {
     else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
         down();
     }
+}
+
+//de updatat sa fie variabile in loc de tot cerut valoarea prin functie
+void Content::onMousePress(sf::Event event) {
+    if (event.mouseButton.y > text.getGlobalBounds().height + text.getGlobalBounds().top) {
+		if (event.mouseButton.x > text.findCharacterPos(textString.size()).x) {
+			offset = 0;
+		}
+		else {
+			offset = 0;
+			while (event.mouseButton.x <= text.findCharacterPos(textString.size() - offset).x && text.findCharacterPos(textString.size() - offset).x > text.getGlobalBounds().left) {
+				offset++;
+			}
+		}
+    }
+    else {
+        offset = 0;
+        while (event.mouseButton.y <= text.findCharacterPos(textString.size() - offset).y) {
+            offset++;
+        }
+		while (event.mouseButton.x <= text.findCharacterPos(textString.size() - offset).x && text.findCharacterPos(textString.size() - offset).x > text.getGlobalBounds().left) {
+			offset++;
+		}
+    }
+	updateCursor();
 }
