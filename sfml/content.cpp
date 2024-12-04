@@ -277,23 +277,24 @@ void Content::onKeyPress(sf::Keyboard::Key key) {
 
 void Content::onMousePress() {
     sf::Vector2f mpos = sf::Vector2f(sf::Mouse::getPosition(window));
+    if (mpos.x <= text.getGlobalBounds().left || mpos.y <= text.getGlobalBounds().top) return;
     if (mpos.y > text.getGlobalBounds().height + text.getGlobalBounds().top) {
 		if (mpos.x > text.findCharacterPos(textString.size()).x) {
 			offset = 0;
 		}
 		else {
 			offset = 0;
-			while (offset < textString.size() && mpos.x <= text.findCharacterPos(textString.size() - offset).x && text.findCharacterPos(textString.size() - offset).x > text.getGlobalBounds().left) {
+			while (mpos.x <= text.findCharacterPos(textString.size() - offset).x && text.findCharacterPos(textString.size() - offset).x > text.getGlobalBounds().left) {
                 offset++;
 			}
 		}
     }
     else {
         offset = 0;
-        while (offset < textString.size() && mpos.y <= text.findCharacterPos(textString.size() - offset).y) {
+        while (mpos.y <= text.findCharacterPos(textString.size() - offset).y) {
             offset++;
         }
-		while (offset < textString.size() && mpos.x <= text.findCharacterPos(textString.size() - offset).x && text.findCharacterPos(textString.size() - offset).x > text.getGlobalBounds().left) {
+		while (mpos.x <= text.findCharacterPos(textString.size() - offset).x && text.findCharacterPos(textString.size() - offset).x > text.getGlobalBounds().left) {
 			offset++;
 		}
     }
