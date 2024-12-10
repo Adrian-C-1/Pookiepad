@@ -26,7 +26,7 @@ int main()
 
     initiate();
 
-    CONTENT::content = new Content;
+    CONTENT::content = new Content();
     BAR::menu = new Menu(); // initialize it here not there
 
     while (window.isOpen()) {
