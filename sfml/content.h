@@ -43,6 +43,8 @@ private: // private
     bool cursorState;
     int numberCount;
     int offset;
+    int lineoffset;
+    int propsize;
     time_t date;
 
     /*Old private*/
@@ -95,6 +97,8 @@ private: // private
     void get_string(nod* c, std::string& str);
     char charAt(nod* c, int pos);
 
+    std::string composeStrings();
+
     void init();
 
     /*Old public*/
@@ -104,6 +108,7 @@ private: // private
     void insert(int pos, char val);
     void erase(int pos);
     char at(int pos);
+    int lines();
 
     void left(bool isCtrlPressed);
     void right(bool isCtrlPressed);

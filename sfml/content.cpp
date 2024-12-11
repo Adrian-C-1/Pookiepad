@@ -14,6 +14,12 @@ void Content::init() {
     offset = 0;
     date = std::time(0);
     numbersString = "1\n";
+    int size1, size2;
+    sf::Text temp("Mp", font, 24);
+    size1 = temp.getLocalBounds().height;
+    temp.setString("Mp\nMp");
+    size2 = temp.getLocalBounds().height;
+    propsize = size2 - size1;
     updateCursor();
 }
 
@@ -38,6 +44,7 @@ void Content::onKeyPress(sf::Uint32 code) {
     if (code >= ' ' && code <= '~') { // Character
         insert(getLength(root) - offset, code);
         text.setString(getString());
+        composeStrings();
         updateCursor();
     }
     else {
@@ -45,6 +52,7 @@ void Content::onKeyPress(sf::Uint32 code) {
         case (13): // 13 = Enter
             insert(getLength(root) - offset, '\n');
             text.setString(getString());
+            composeStrings();
             updateCursor();
             break;
         case (9): // 9 = Tab
@@ -52,12 +60,14 @@ void Content::onKeyPress(sf::Uint32 code) {
                 insert(getLength(root) - offset, ' ');
             }
             text.setString(getString());
+            composeStrings();
             updateCursor();
             break;
         case (8): // 8 = Backspace
             if (getLength(root) - offset <= 0) return;
             erase(getLength(root) - offset - 1);
             text.setString(getString());
+            composeStrings();
             updateCursor();
             break;
         case (127): // 127 = Ctrl - Backspace
@@ -74,6 +84,7 @@ void Content::onKeyPress(sf::Uint32 code) {
                 if (ch != ' ' && ch != '\n') erase(getLength(root) - offset - 1);
             }
             text.setString(getString());
+            composeStrings();
             updateCursor();
             break;
         }
@@ -117,12 +128,14 @@ void Content::left(bool isCtrlPressed) {
     if (getLength(root) - offset > 0) {
         if (!isCtrlPressed) {
             if (offset < getLength(root)) {
+                if (at(getLength(root) - offset - 1) == '\n') lineoffset++;
                 offset++;
             }
         }
         else {
             char ch = at(getLength(root) - offset - 1);
             if (ch == ' ' || ch == '\n') {
+                if (at(getLength(root) - offset - 1) == '\n') lineoffset++;
                 offset++;
             }
             else {
@@ -134,17 +147,20 @@ void Content::left(bool isCtrlPressed) {
             }
         }
     }
+    //std::cout << lineoffset << " " << getPhrase(lines() - lineoffset - 1) << '\n';
     updateCursor();
 }
 
 void Content::right(bool isCtrlPressed) {
     if (offset > 0) {
         if (!isCtrlPressed) {
+            if (at(getLength(root) - offset) == '\n') lineoffset--;
             offset--;
         }
         else {
             char ch = at(getLength(root) - offset);
             if (ch == ' ' || ch == '\n') {
+                if (at(getLength(root) - offset) == '\n') lineoffset--;
                 offset--;
             }
             else {
@@ -156,10 +172,12 @@ void Content::right(bool isCtrlPressed) {
             }
         }
     }
+    //std::cout << lineoffset << " " << getPhrase(lines() - lineoffset - 1) << '\n';
     updateCursor();
 }
 
 void Content::up() {
+    if (lines() - lineoffset - 1 > 0) lineoffset++;
     sf::Vector2f oldPos = text.findCharacterPos(getLength(root) - offset);
     while (getLength(root) - offset > 0 && oldPos.y == text.findCharacterPos(getLength(root) - offset).y) {
         offset++;
@@ -167,10 +185,12 @@ void Content::up() {
     while (getLength(root) - offset > 0 && oldPos.x < text.findCharacterPos(getLength(root) - offset).x) {
         offset++;
     }
+    //std::cout << lineoffset << " " << getPhrase(lines() - lineoffset - 1) << '\n';
     updateCursor();
 }
 
 void Content::down() { // DE REVAZUT CAZUL CAND DAI SCROLL DE PE O PROPOZITIE CU MAI MULTE CARACTERE PE 2-3 PROPOZITII FARA NIMIC PE ELE IAR LA FINAL E O PROPOZITIE CU CARACTERE PE ELE (SE DUCE DE MAI MULTE ORI IN JOS)
+	if (lineoffset > 0) lineoffset--;
     sf::Vector2f oldPos = text.findCharacterPos(getLength(root) - offset);
     while (offset > 0 && oldPos.y == text.findCharacterPos(getLength(root) - offset).y) {
         offset--;
@@ -178,6 +198,7 @@ void Content::down() { // DE REVAZUT CAZUL CAND DAI SCROLL DE PE O PROPOZITIE CU
     while (offset > 0 && oldPos.x > text.findCharacterPos(getLength(root) - offset).x) {
         offset--;
     }
+    //std::cout << lineoffset << " " << getPhrase(lines() - lineoffset - 1) << '\n';
     updateCursor();
 }
 
@@ -215,6 +236,22 @@ void Content::loadText(std::string str) {
         numbersString += std::to_string(i) + '\n';
     }*/
     /* End of resetNumbers() */
+}
+
+int Content::lines() { // indexare de la 1, adica daca e o linie, se va returna 1
+    if (root == nullptr) return 0;
+    else return 1 + root->newline_characters;
+}
+
+std::string Content::composeStrings() {
+    // Effective y size: window.getSize().y - BAR::HEIGHT - 10
+    int propcount = (window.getSize().y - BAR::HEIGHT - 24) / propsize;
+    std::string str;
+    for (int i = (lines() - propcount + 1 >= 0 ? lines() - propcount + 1 : 0); i <= lines(); ++i) {
+        str += getPhrase(i);
+    }
+    std::cout << str << '\n';
+    return str;
 }
 
 void Content::onMousePress() {
