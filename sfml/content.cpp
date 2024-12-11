@@ -20,6 +20,8 @@ void Content::init() {
     temp.setString("Mp\nMp");
     size2 = temp.getLocalBounds().height;
     propsize = size2 - size1;
+    frameoffset = 0;
+    propcount = (window.getSize().y - BAR::HEIGHT) / propsize;
     updateCursor();
 }
 
@@ -40,34 +42,37 @@ Content::Content(std::string str)
     init();
 }
 
+void Content::destroyNode(nod* c) {
+	if (c == nullptr) return;
+	destroyNode(c->l);
+	destroyNode(c->r);
+	delete c;
+}
+
 void Content::onKeyPress(sf::Uint32 code) {
     if (code >= ' ' && code <= '~') { // Character
         insert(getLength(root) - offset, code);
-        text.setString(getString());
-        composeStrings();
+        text.setString(composeStrings());
         updateCursor();
     }
     else {
         switch (code) {
         case (13): // 13 = Enter
             insert(getLength(root) - offset, '\n');
-            text.setString(getString());
-            composeStrings();
+            text.setString(composeStrings());
             updateCursor();
             break;
         case (9): // 9 = Tab
             for (int i = 0; i < 6; ++i) {
                 insert(getLength(root) - offset, ' ');
             }
-            text.setString(getString());
-            composeStrings();
+            text.setString(composeStrings());
             updateCursor();
             break;
         case (8): // 8 = Backspace
             if (getLength(root) - offset <= 0) return;
             erase(getLength(root) - offset - 1);
-            text.setString(getString());
-            composeStrings();
+            text.setString(composeStrings());
             updateCursor();
             break;
         case (127): // 127 = Ctrl - Backspace
@@ -83,8 +88,7 @@ void Content::onKeyPress(sf::Uint32 code) {
                 }
                 if (ch != ' ' && ch != '\n') erase(getLength(root) - offset - 1);
             }
-            text.setString(getString());
-            composeStrings();
+            text.setString(composeStrings());
             updateCursor();
             break;
         }
@@ -177,27 +181,17 @@ void Content::right(bool isCtrlPressed) {
 }
 
 void Content::up() {
-    if (lines() - lineoffset - 1 > 0) lineoffset++;
-    sf::Vector2f oldPos = text.findCharacterPos(getLength(root) - offset);
-    while (getLength(root) - offset > 0 && oldPos.y == text.findCharacterPos(getLength(root) - offset).y) {
-        offset++;
-    }
-    while (getLength(root) - offset > 0 && oldPos.x < text.findCharacterPos(getLength(root) - offset).x) {
-        offset++;
-    }
+    if (lines() - frameoffset - propcount > 0) frameoffset++;
+    std::cout << frameoffset << '\n';
+    text.setString(composeStrings());
     //std::cout << lineoffset << " " << getPhrase(lines() - lineoffset - 1) << '\n';
     updateCursor();
 }
 
 void Content::down() { // DE REVAZUT CAZUL CAND DAI SCROLL DE PE O PROPOZITIE CU MAI MULTE CARACTERE PE 2-3 PROPOZITII FARA NIMIC PE ELE IAR LA FINAL E O PROPOZITIE CU CARACTERE PE ELE (SE DUCE DE MAI MULTE ORI IN JOS)
-	if (lineoffset > 0) lineoffset--;
-    sf::Vector2f oldPos = text.findCharacterPos(getLength(root) - offset);
-    while (offset > 0 && oldPos.y == text.findCharacterPos(getLength(root) - offset).y) {
-        offset--;
-    }
-    while (offset > 0 && oldPos.x > text.findCharacterPos(getLength(root) - offset).x) {
-        offset--;
-    }
+	if (frameoffset > 0) frameoffset--;
+    std::cout << frameoffset << '\n';
+    text.setString(composeStrings());
     //std::cout << lineoffset << " " << getPhrase(lines() - lineoffset - 1) << '\n';
     updateCursor();
 }
@@ -215,6 +209,7 @@ void Content::updateCursor() {
 }
 void Content::loadText(std::string str) {
     offset = 0;
+    destroyNode(root);
     if (str.size() == 0)
         root = nullptr;
     else
@@ -222,7 +217,7 @@ void Content::loadText(std::string str) {
         root = new nod;
         createRope(str, 0, str.size() - 1, root, nullptr);
     }
-    text.setString(getString());
+    text.setString(composeStrings());
     init();
     /* resetNumbers() */
     /*numbersString = "";
@@ -245,12 +240,12 @@ int Content::lines() { // indexare de la 1, adica daca e o linie, se va returna 
 
 std::string Content::composeStrings() {
     // Effective y size: window.getSize().y - BAR::HEIGHT - 10
-    int propcount = (window.getSize().y - BAR::HEIGHT - 24) / propsize;
+    
     std::string str;
-    for (int i = (lines() - propcount + 1 >= 0 ? lines() - propcount + 1 : 0); i <= lines(); ++i) {
-        str += getPhrase(i);
+    for (int i = (lines() - frameoffset - propcount + 1 > 0 ? lines() - frameoffset - propcount + 1 : 1); i <= lines() - frameoffset; ++i) {
+        str += getPhrase(i - 1);
     }
-    std::cout << str << '\n';
+    //std::cout << "\n\n" << str << "\n\n";
     return str;
 }
 
@@ -382,6 +377,7 @@ void Content::erase(int pos)
 /// Will return The n-th phrase that ends with newline.
 std::string Content::getPhrase(int index)
 {
+    if (root == nullptr) return "";
     std::string ret = "";
     get_phrase(root, index, ret);
     return ret;

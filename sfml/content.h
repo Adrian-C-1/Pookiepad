@@ -44,8 +44,13 @@ private: // private
     int numberCount;
     int offset;
     int lineoffset;
+    int frameoffset;
+    int propcount;
     int propsize;
     time_t date;
+
+    // now
+	void destroyNode(nod* c);
 
     /*Old private*/
 
