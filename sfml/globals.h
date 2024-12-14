@@ -11,11 +11,13 @@ extern sf::WindowHandle handle;
 
 class Menu; // sorry not sorry vreau menu sa fie pus aici
 namespace BAR {
+	extern sf::Font font;
 	extern const float HEIGHT;
 	extern const sf::Color BG_COLOR;
 	extern const sf::Color POPUP_COLOR;
 	extern const sf::Color HOVER_COLOR;
 	extern const sf::Color TEXT_COLOR;
+	extern const float spacing;
 
 	extern Menu *menu;
 

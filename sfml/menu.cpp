@@ -7,21 +7,20 @@
 Button::Button(std::string name, void (*onPress)())
 	: onPressFunc(onPress) {
 
-	text.setFont(font);
+	text.setFont(BAR::font);
 	text.setFillColor(BAR::TEXT_COLOR);
-	text.setCharacterSize(BAR::HEIGHT - 4);
+	text.setCharacterSize(BAR::HEIGHT - 4 - BAR::spacing);
 	text.setString(name);
 
 	
-	background.setSize(sf::Vector2f(text.getGlobalBounds().width, text.getGlobalBounds().height) + 
-					   sf::Vector2f(5, 8));
-	background.setFillColor(sf::Color::Red);
+	background.setSize(sf::Vector2f(	
+							text.getGlobalBounds().width + 2.0 * BAR::spacing,  
+							text.getGlobalBounds().height
+					   ) +  sf::Vector2f(5, 8));
+	background.setFillColor(sf::Color::Transparent);
 }
 void Button::draw() {
-	if (BAR::SHOW_HITBOX == 1) {
-		window.draw(background);
-	}
-
+	window.draw(background);
 	window.draw(text);
 
 	sf::FloatRect rect = text.getGlobalBounds();
@@ -40,8 +39,14 @@ sf::Vector2f Button::getSize() {
 	return background.getSize();
 }
 void Button::setPosition(sf::Vector2f position) {
-	text.setPosition(position + sf::Vector2f(0, 0));
 	background.setPosition(position);
+	text.setPosition(position + sf::Vector2f(BAR::spacing, 0));
+}
+void Button::onHover() {
+	background.setFillColor(BAR::HOVER_COLOR);
+}
+void Button::onUnHover() {
+	background.setFillColor(sf::Color::Transparent);
 }
 
 PopUp::PopUp(std::vector<Button> buttons) :children(buttons) {
@@ -51,23 +56,37 @@ void PopUp::spaceAround(Button& button) {
 	sf::Vector2f position = {9999, 9999};
 	sf::Vector2f size = {0, 0};
 	float last_pos = BAR::HEIGHT;
+	
+	float spatiu_sub_buton = 4;
+	float spatiu_sus_background = BAR::spacing;
 	for (auto& i : children) {
-		i.setPosition({ button.getPosition().x, last_pos });
+		i.setPosition({ button.getPosition().x, last_pos + spatiu_sus_background + spatiu_sub_buton });
 		last_pos += i.getSize().y;
+		last_pos += BAR::spacing;
 
 		position.x = std::min(position.x, i.getPosition().x);
 		position.y = std::min(position.y, i.getPosition().y);
 		size.x = std::max(size.x, i.getSize().x);
 		size.y += i.getSize().y;
+		size.y += BAR::spacing;
 	}
+	position.y -= spatiu_sus_background;
+	size.y += spatiu_sus_background;
+
 	background.setPosition(position);
 	background.setSize(size);
 	background.setFillColor(BAR::POPUP_COLOR);
 }
-void PopUp::draw() {
+void PopUp::draw(Button* hover) {
 	window.draw(background);
-	for (auto &i : children) {
-		i.draw();
+	for (int i = 0; i < children.size(); i++) {
+		if (&children[i] == hover) {
+			children[i].onHover();
+		}
+		children[i].draw();
+		if (&children[i] == hover) {
+			children[i].onUnHover();
+		}
 	}
 }
 bool PopUp::onPress() {
@@ -84,6 +103,14 @@ bool PopUp::onPress() {
 		return 1;
 	}
 	return 0;
+}
+Button* PopUp::onHover(sf::Vector2f mpos) {
+	for (int i = 0; i < children.size(); i++) {
+		if (children[i].getGlobalRect().contains(mpos)) {
+			return &children[i];
+		}
+	}
+	return nullptr;
 }
 
 
@@ -140,7 +167,43 @@ void onOpenFile() {
 
 	delete[] ch;
 }
+void onSaveFile() {
+	OPENFILENAMEA open = { 0 };
 
+	char buffer[2048];
+	buffer[0] = '\0';
+
+	open.hwndOwner = handle;
+	open.hInstance = GetModuleHandleA(NULL);
+	open.lStructSize = sizeof(OPENFILENAMEA);
+	open.lpstrFile = buffer;
+	open.nMaxFile = sizeof(buffer);
+	open.lpstrFilter = "All files\0*.*\0";
+	open.nFilterIndex = 1;
+	open.lpstrFileTitle = NULL;
+	open.nMaxFileTitle = 0;
+	open.lpstrInitialDir = NULL;
+	open.lpstrTitle = "Open File";
+	open.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
+
+	BOOL selected = GetSaveFileNameA(&open);
+
+	if (!selected) {
+		// sth happeded
+		return;
+	}
+
+	std::cout << buffer << '\n';
+
+	std::ofstream fin(buffer);
+	if (!fin.is_open()) {
+		std::cout << "Couldn't open or create file\n";
+		return;
+	}
+
+	//std::string text = CONTENT::content.getWholeText();
+
+}
 
 Menu::Menu() :
 	buttons(std::vector<Button>({ // if modify order see the PopUp spaceAround() functions
@@ -150,8 +213,9 @@ Menu::Menu() :
 		})),
 	filePopUp({
 		Button("Open", onOpenFile),
-		Button("This is another button", nullptr),
-		Button("Yet another one", nullptr)
+		Button("Save", onSaveFile),
+		Button("Close", nullptr),
+		Button("New", nullptr)
 	}),
 	editPopUp({
 		Button("Edit", nullptr)
@@ -160,14 +224,16 @@ Menu::Menu() :
 		Button("View", nullptr)
 	})
 {
+	hovering = nullptr;
+
 	background.setPosition({ 0.0f, 0.0f });
 	background.setSize({ float(window.getSize().x), BAR::HEIGHT });
 	background.setFillColor(BAR::BG_COLOR);
 
 	float last_pos = 0; 
 	for (auto &i : buttons) { 
-		i.setPosition(sf::Vector2f(last_pos, 0));
-		last_pos += i.getSize().x;
+		i.setPosition(sf::Vector2f(last_pos + BAR::spacing, BAR::spacing));
+		last_pos += i.getSize().x + BAR::spacing;
 	}
 
 	// if modify order see the buttons initialization
@@ -175,6 +241,7 @@ Menu::Menu() :
 	editPopUp.spaceAround(buttons[1]);
 	viewPopUp.spaceAround(buttons[2]);
 	currentPopUp = nullptr;
+
 }
 
 void Menu::draw() {
@@ -207,11 +274,17 @@ void Menu::draw() {
 	; // draws
 
 	window.draw(background);
-	for (auto& i : buttons) {
-		i.draw();
+	for (int i = 0; i < buttons.size(); i++) {
+		if (&buttons[i] == hovering) {
+			buttons[i].onHover();
+		}
+		buttons[i].draw();
+		if (&buttons[i] == hovering) {
+			buttons[i].onUnHover();
+		}
 	}
 	if (currentPopUp != nullptr) {
-		currentPopUp->draw();
+		currentPopUp->draw(hovering);
 	}
 }
 
@@ -242,4 +315,17 @@ bool Menu::onPress() {
 }
 void Menu::onMouseMove() {
 	; // todo hover show button
+	sf::Vector2f mpos = sf::Vector2f(sf::Mouse::getPosition(window));
+
+	hovering = nullptr;
+	for (int i = 0; i < buttons.size(); i++) {
+		if (buttons[i].getGlobalRect().contains(mpos)) {
+			hovering = &buttons[i];
+		}
+	}
+	if (hovering == nullptr) {
+		if (currentPopUp != nullptr) {
+			hovering = currentPopUp->onHover(mpos);
+		}
+	}
 }

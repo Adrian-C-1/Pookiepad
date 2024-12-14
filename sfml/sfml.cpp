@@ -10,9 +10,11 @@
 
 void initiate() {
     std::string font_path("samples/OpenSans-Regular.ttf");
-    font.loadFromFile(font_path);
+    BAR::font.loadFromFile(font_path);
     // Daca modifici fontul zi-mi ca trb sa modific si eu lucruri
     // ;
+
+    font.loadFromFile(font_path);
 
     handle = window.getSystemHandle();
 }

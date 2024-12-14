@@ -13,6 +13,9 @@ public:
 	sf::Vector2f getPosition();
 	sf::Vector2f getSize();
 	void setPosition(sf::Vector2f position);
+
+	void onHover();
+	void onUnHover();
 private:
 	void(*onPressFunc)();
 
@@ -24,12 +27,13 @@ public:
 	PopUp(std::vector<Button> buttons);
 	void spaceAround(Button& button);
 
-	void draw();
+	void draw(Button* hover);
 	/// <summary>
 	/// returns 1 if I did press inside it, 0 otherwise
 	/// </summary>
 	/// <returns></returns>
 	bool onPress();
+	Button* onHover(sf::Vector2f mpos);
 private:
 	std::vector<Button> children;
 	sf::RectangleShape background;
@@ -47,4 +51,6 @@ private:
 
 	PopUp filePopUp, editPopUp, viewPopUp;
 	PopUp* currentPopUp;
+
+	Button* hovering;
 };
