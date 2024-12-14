@@ -288,8 +288,13 @@ void Content::loadText(std::string str) {
         root = new nod;
         createRope(str, 0, str.size() - 1, root, nullptr);
     }
-    text.setString(composeStrings());
     init();
+    frameoffset = 0;
+    if (lines() > propcount) localoffset = propcount - 1;
+    else localoffset = lines();
+    lineoffset = 0;
+    offset = getPhrasePosition(lines() - lineoffset) - getPhrasePosition(lines() - lineoffset - 1);
+    text.setString(composeStrings());
     /* resetNumbers() */
     /*numbersString = "";
     numberCount = 1;
