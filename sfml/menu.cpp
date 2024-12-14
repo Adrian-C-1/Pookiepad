@@ -148,6 +148,17 @@ void onOpenFile() {
 		// sth happeded
 		return;
 	}
+
+	if (BAR::safeToExit() == 0) {
+		int rez = MessageBoxA(0, "You have unsaved changes! Discard them?", "Warning", MB_YESNO | MB_ICONWARNING);
+		switch (rez) {
+		case IDNO:
+			return;
+			break;
+		case IDYES:
+			break;
+		}
+	}
 	
 	std::ifstream in(buffer, std::ios::ate);
 	if (!in.is_open()) {
@@ -160,7 +171,11 @@ void onOpenFile() {
 	in.seekg(0);
 	in.read(ch, size);
 	ch[size] = NULL;
-	
+	in.close();
+
+	BAR::filepath_opened = std::string(buffer);
+	BAR::markUnchanged();
+
 	std::string str(ch);
 
 	CONTENT::content->loadText(str);
@@ -168,41 +183,75 @@ void onOpenFile() {
 	delete[] ch;
 }
 void onSaveFile() {
-	OPENFILENAMEA open = { 0 };
+	if (BAR::filepath_opened == "") {
+		OPENFILENAMEA open = { 0 };
 
-	char buffer[2048];
-	buffer[0] = '\0';
+		char buffer[2048];
+		buffer[0] = '\0';
 
-	open.hwndOwner = handle;
-	open.hInstance = GetModuleHandleA(NULL);
-	open.lStructSize = sizeof(OPENFILENAMEA);
-	open.lpstrFile = buffer;
-	open.nMaxFile = sizeof(buffer);
-	open.lpstrFilter = "All files\0*.*\0";
-	open.nFilterIndex = 1;
-	open.lpstrFileTitle = NULL;
-	open.nMaxFileTitle = 0;
-	open.lpstrInitialDir = NULL;
-	open.lpstrTitle = "Open File";
-	open.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
+		open.hwndOwner = handle;
+		open.hInstance = GetModuleHandleA(NULL);
+		open.lStructSize = sizeof(OPENFILENAMEA);
+		open.lpstrFile = buffer;
+		open.nMaxFile = sizeof(buffer);
+		open.lpstrFilter = "All files\0*.*\0";
+		open.nFilterIndex = 1;
+		open.lpstrFileTitle = NULL;
+		open.nMaxFileTitle = 0;
+		open.lpstrInitialDir = NULL;
+		open.lpstrTitle = "Open File";
+		open.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
 
-	BOOL selected = GetSaveFileNameA(&open);
+		BOOL selected = GetSaveFileNameA(&open);
 
-	if (!selected) {
-		// sth happeded
-		return;
+		if (!selected) {
+			// sth happeded
+			return;
+		}
+		
+		BAR::filepath_opened = std::string(buffer);
 	}
+	//std::cout << buffer << '\n';
 
-	std::cout << buffer << '\n';
-
-	std::ofstream fin(buffer);
-	if (!fin.is_open()) {
+	std::ofstream fout(BAR::filepath_opened);
+	if (!fout.is_open()) {
 		std::cout << "Couldn't open or create file\n";
 		return;
 	}
 
-	//std::string text = CONTENT::content.getWholeText();
+	BAR::markUnchanged();
 
+	std::string text = CONTENT::content->getString();
+	fout << text;
+	fout.close();
+}
+void onCloseFile() {
+	if (BAR::safeToExit() == 0) {
+		int rez = MessageBoxA(0, "You have unsaved changes! Discard them?", "Warning", MB_YESNO | MB_ICONWARNING);
+		switch (rez) {
+		case IDNO:
+			return;
+			break;
+		case IDYES:
+			break;
+		}
+	}
+	window.close(); 
+}
+void onNewFile() {
+	if (BAR::safeToExit() == 0) {
+		int rez = MessageBoxA(0, "You have unsaved changes! Discard them?", "Warning", MB_YESNO | MB_ICONWARNING);
+		switch (rez) {
+		case IDNO:
+			return;
+			break;
+		case IDYES:
+			break;
+		}
+	}
+	BAR::filepath_opened = "";
+	BAR::markUnchanged();
+	CONTENT::content->loadText("");
 }
 
 Menu::Menu() :
@@ -214,14 +263,21 @@ Menu::Menu() :
 	filePopUp({
 		Button("Open", onOpenFile),
 		Button("Save", onSaveFile),
-		Button("Close", nullptr),
-		Button("New", nullptr)
+		Button("Close", onCloseFile),
+		Button("New", onNewFile)
 	}),
 	editPopUp({
-		Button("Edit", nullptr)
+		Button("Find", nullptr),
+		Button("Copy", nullptr),
+		Button("Paste", nullptr),
+		Button("Cut", nullptr),
+		Button("Select All", nullptr)
 	}),
 	viewPopUp({
-		Button("View", nullptr)
+		Button("Zoom out", nullptr),
+		Button("Zoom in", nullptr),
+		Button("Show lines", nullptr),
+		Button("Word wrap", nullptr),
 	})
 {
 	hovering = nullptr;

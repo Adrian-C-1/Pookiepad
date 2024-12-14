@@ -1,4 +1,5 @@
 #include "globals.h"
+#include <iostream>
 
 sf::Font font;
 sf::RenderWindow window(sf::VideoMode(600, 600), "Pookiepad");
@@ -17,6 +18,31 @@ namespace BAR {
 	Menu *menu = nullptr;
 
 	bool SHOW_HITBOX = 1;
+
+	bool safe_to_exit = 1;
+	std::string filepath_opened = "";
+	std::string getFileFromFilepath(std::string path) {
+		std::string file = "";
+		int i = path.size() - 1;
+		while (i >= 0 && path[i] != '\\') i--;
+		i++;
+		while (i < path.size()) file += path[i++];
+		return file;
+	}
+	void markUnchanged() {
+		safe_to_exit = 1;
+		if (filepath_opened == "") window.setTitle(std::string("Pookiepad"));
+		else window.setTitle(getFileFromFilepath(filepath_opened) + std::string(" - Pookiepad"));
+	}
+	void markChanged() {
+		safe_to_exit = 0;
+		if (filepath_opened == "") window.setTitle(std::string("* Pookiepad"));
+		else window.setTitle(std::string("*") + getFileFromFilepath(filepath_opened) + std::string(" - Pookiepad"));
+	}
+	bool safeToExit() {
+		return safe_to_exit;
+	}
+
 }
 
 namespace CONTENT {

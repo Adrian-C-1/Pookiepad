@@ -30,8 +30,8 @@ public:
     void update();
     void updateResize();
     void draw_content(); // asta va ramane mereu cu case-ul asta xDDD
-
-
+    
+    std::string getString();
 private: // private
     
     /*Old content*/
@@ -111,7 +111,6 @@ private: // private
     /*Old public*/
 
     void out();
-    std::string getString();
     void insert(int pos, char val);
     void erase(int pos);
     char at(int pos);

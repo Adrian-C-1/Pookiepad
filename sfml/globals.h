@@ -30,6 +30,11 @@ namespace BAR {
 	OPEN_VIEW_POPUP
 	};
 	extern std::queue<EVENT> events;
+
+	extern std::string filepath_opened;
+	void markUnchanged();
+	void markChanged();
+	bool safeToExit();
 }
 
 class Content;

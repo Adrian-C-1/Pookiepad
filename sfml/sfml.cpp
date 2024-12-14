@@ -32,6 +32,17 @@ int main()
     BAR::menu = new Menu(); // initialize it here not there
 
     while (window.isOpen()) {
+
+        CONTENT::content->update();
+
+        window.clear(/*sf::Color::White*/);
+
+        CONTENT::content->draw_content();
+        BAR::menu->draw(); // menu on top
+
+        window.display();
+
+
         sf::Event event;
         while (window.pollEvent(event)) { // todo wait ev ADRIAN NU UITA (don't waste CPU !! )
             switch (event.type) {
@@ -57,21 +68,15 @@ int main()
                 BAR::menu->onMouseMove();
                 break;
             case (sf::Event::TextEntered):
+                BAR::markChanged();
                 CONTENT::content->onKeyPress(event.text.unicode);
+                break;
             case (sf::Event::KeyPressed):
+                BAR::markChanged();
                 CONTENT::content->onKeyPress(event.key.code);
                 break;
             }
         }
-
-        CONTENT::content->update();
-
-        window.clear(/*sf::Color::White*/);
-
-        CONTENT::content->draw_content();
-        BAR::menu->draw(); // menu on top
-
-        window.display();
     }
 
     return 0;
