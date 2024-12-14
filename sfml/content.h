@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream> // de scos
+#include <vector>
 #include "globals.h"
 
 class nod {
@@ -49,6 +50,8 @@ private: // private
     int localoffset;
     int propcount;
     int propsize;
+    int localpos;
+    std::vector<int> linesizes;
     time_t date;
 
     // now
@@ -101,6 +104,7 @@ private: // private
     nod* get_prev_node(nod* c, nod* fiu);
     
     int getLength(nod* c);
+    int getLineLength(int line);
     void get_string(nod* c, std::string& str);
     int get_phrase_position(nod* c, int phrase_index, int left_positions);
 
@@ -123,6 +127,7 @@ private: // private
     void down();
 
     void updateCursor();
+    void updateSizes();
 
     /// Will return The n-th phrase that ends with newline.
     std::string getPhrase(int index);

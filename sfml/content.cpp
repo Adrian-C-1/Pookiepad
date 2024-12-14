@@ -17,6 +17,8 @@ void Content::init() {
     frameoffset = 0;
     lineoffset = 0;
     localoffset = 0;
+    localpos = 0;
+    linesizes.clear();
     updateResize();
     updateCursor();
 }
@@ -48,8 +50,8 @@ void Content::destroyNode(nod* c) {
 
 void Content::onKeyPress(sf::Uint32 code) {
     if (code == 'z') { // debug purposes
-        //std::cout << lineoffset << " " << offset << '\n';
-        //return;
+        updateSizes();
+        return;
     }
     if (code >= ' ' && code <= '~') { // Character
         insert(getPhrasePosition(lines() - lineoffset - 1) + offset, code);        
@@ -65,6 +67,7 @@ void Content::onKeyPress(sf::Uint32 code) {
             offset = 0;
             if (localoffset < propcount - 1 && lines() <= propcount) localoffset++;
             text.setString(composeStrings());
+            updateSizes();
             updateCursor();
             break;
         }
@@ -85,6 +88,7 @@ void Content::onKeyPress(sf::Uint32 code) {
             if (at(pos) == '\n') {
                 if (localoffset > 0 && lines() <= propcount) localoffset--;
                 offset = getPhrasePosition(lines() - lineoffset - 1) - getPhrasePosition(lines() - lineoffset - 2);
+                updateSizes();
             }
             offset--;
             erase(pos);
@@ -101,6 +105,7 @@ void Content::onKeyPress(sf::Uint32 code) {
                 if (ch == '\n') {
                     if (localoffset > 0 && lines() - lineoffset <= propcount && !lineoffset) localoffset--;
                     offset = getPhrasePosition(lines() - lineoffset - 1) - getPhrasePosition(lines() - lineoffset - 2);
+                    updateSizes();
                 }
                 offset--;
                 erase(pos);
@@ -123,7 +128,7 @@ void Content::onKeyPress(sf::Uint32 code) {
         }
         }
     }
-    std::cout << localoffset << '\n';
+    cursorState = false;
 }
 void Content::onKeyPress(sf::Keyboard::Key key) {
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
@@ -157,8 +162,6 @@ void Content::draw_content() {
 }
 
 
-
-
 void Content::left(bool isCtrlPressed) {
     if (offset >= 1 || lines() - lineoffset - 1 > 0) {
         if (!isCtrlPressed) {
@@ -168,6 +171,7 @@ void Content::left(bool isCtrlPressed) {
                 lineoffset++;
                 if (localoffset > 0) localoffset--;
                 else if (localoffset == 0) frameoffset++;
+                updateSizes();
             }
             offset--;
         }
@@ -186,6 +190,7 @@ void Content::left(bool isCtrlPressed) {
             }
         }
     }
+    cursorState = false;
     text.setString(composeStrings());
     updateCursor();
 }
@@ -201,6 +206,7 @@ void Content::right(bool isCtrlPressed) {
                 else if (localoffset >= propcount - 1 && frameoffset > 0) {
                     frameoffset--;
                 }
+                updateSizes();
             }
             offset++;
         }
@@ -219,6 +225,7 @@ void Content::right(bool isCtrlPressed) {
             }
         }
     }
+    cursorState = false;
     text.setString(composeStrings());
     updateCursor();
 }
@@ -231,9 +238,11 @@ void Content::up() {
         else if (localoffset == 0) {
             frameoffset++;
         }
+        updateSizes();
     }
     //if (lines() - frameoffset - propcount > 0) frameoffset++;
     std::cout << lineoffset << '\n';
+    cursorState = false;
     text.setString(composeStrings());
     //std::cout << lineoffset << " " << getPhrase(lines() - lineoffset - 1) << '\n';
     updateCursor();
@@ -247,9 +256,11 @@ void Content::down() { // DE REVAZUT CAZUL CAND DAI SCROLL DE PE O PROPOZITIE CU
         else if (localoffset >= propcount - 1) {
             frameoffset--;
         }
+        updateSizes();
     }
     //if (frameoffset > 0) frameoffset--;
     std::cout << lineoffset << '\n';
+    cursorState = false;
     text.setString(composeStrings());
     //std::cout << lineoffset << " " << getPhrase(lines() - lineoffset - 1) << '\n';
     updateCursor();
@@ -275,8 +286,12 @@ void Content::updateResize() {
 }
 
 void Content::updateCursor() {
-    //int pos = (lines() == 0 ? 0 : getPhrasePosition(lines() - lineoffset - 1));
-    //cursor.setPosition(sf::Vector2f(text.findCharacterPos(pos).x + 2.f, text.findCharacterPos(pos).y + 1.f));
+    localpos = 0;
+    for (int i = 0; i < localoffset; ++i) {
+        localpos += linesizes[i];
+    }
+    localpos += offset;
+    cursor.setPosition(sf::Vector2f(text.findCharacterPos(localpos).x + 2.f, text.findCharacterPos(localpos).y + 1.f));
 }
 void Content::loadText(std::string str) {
     offset = 0;
@@ -325,28 +340,53 @@ std::string Content::composeStrings() {
     return str;
 }
 
+void Content::updateSizes() {
+    linesizes.clear();
+    for (int i = (lines() - frameoffset - propcount + 1 > 0 ? lines() - frameoffset - propcount + 1 : 1); i <= lines() - frameoffset; ++i) {
+        linesizes.push_back(getLineLength(i - 1));
+    }
+}
+
 void Content::onMousePress() {
     sf::Vector2f mpos = sf::Vector2f(sf::Mouse::getPosition(window));
     if (mpos.x <= text.getGlobalBounds().left || mpos.y <= text.getGlobalBounds().top) return;
+    updateSizes();
+    int pos = 0;
+    for (int i = 0; i < linesizes.size(); ++i) {
+        pos += linesizes[i];
+    }
+    offset = linesizes[linesizes.size() - 1];
     if (mpos.y > text.getGlobalBounds().height + text.getGlobalBounds().top) {
-        if (mpos.x > text.findCharacterPos(getLength(root)).x) {
-            offset = 0;
-        }
-        else {
-            offset = 0;
-            while (mpos.x <= text.findCharacterPos(getLength(root) - offset).x && text.findCharacterPos(getLength(root) - offset).x > text.getGlobalBounds().left) {
-                offset++;
-            }
-        }
+        //if (mpos.x <= text.findCharacterPos(pos).x) {
+        //    // de verificat si cazul in care este mai mare decat lungimea ultimului sir
+
+
+        //    while (mpos.x <= text.findCharacterPos(pos).x && text.findCharacterPos(pos).x > text.getGlobalBounds().left) {
+        //        offset--;
+        //        pos--;
+        //    }
+        //}
     }
     else {
-        offset = 0;
-        while (mpos.y <= text.findCharacterPos(getLength(root) - offset).y) {
-            offset++;
+        while (localoffset <= propcount - 1 && lineoffset > 0) {
+            lineoffset--;
+            localoffset++;
         }
-        while (mpos.x <= text.findCharacterPos(getLength(root) - offset).x && text.findCharacterPos(getLength(root) - offset).x > text.getGlobalBounds().left) {
-            offset++;
+        int cnt = 0;
+        while (mpos.y <= text.findCharacterPos(pos).y) {
+            if (text.getString()[pos] == '\n') {
+                localoffset--;
+                lineoffset++;
+                offset = linesizes[linesizes.size() - 1 - cnt];
+                cnt++;
+            }
+            offset--;
+            pos--;
         }
+        /*while (mpos.x <= text.findCharacterPos(pos).x && text.findCharacterPos(pos).x > text.getGlobalBounds().left) {
+            offset--;
+            pos--;
+        }*/
     }
     updateCursor();
 }
@@ -399,7 +439,13 @@ void Content::insert(int pos, char val)
         }
     }
 }
-
+int Content::getLineLength(int line) {
+    if (root == nullptr)
+        return 0;
+    if (line == lines() - 1)
+        return root->subtree_size - getPhrasePosition(line);
+    return getPhrasePosition(line + 1) - getPhrasePosition(line);
+}
 char Content::at(int pos) {
     int newPos = 0;
     nod* c = get_node_at_pos(pos, root, newPos);

@@ -261,21 +261,21 @@ Menu::Menu() :
 			Button("View", onPressView)
 		})),
 	filePopUp({
+		Button("New", onNewFile),
 		Button("Open", onOpenFile),
 		Button("Save", onSaveFile),
-		Button("Close", onCloseFile),
-		Button("New", onNewFile)
+		Button("Close", onCloseFile)
 	}),
 	editPopUp({
 		Button("Find", nullptr),
+		Button("Cut", nullptr),
 		Button("Copy", nullptr),
 		Button("Paste", nullptr),
-		Button("Cut", nullptr),
 		Button("Select All", nullptr)
 	}),
 	viewPopUp({
-		Button("Zoom out", nullptr),
 		Button("Zoom in", nullptr),
+		Button("Zoom out", nullptr),
 		Button("Show lines", nullptr),
 		Button("Word wrap", nullptr),
 	})
