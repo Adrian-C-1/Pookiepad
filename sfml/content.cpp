@@ -11,17 +11,13 @@ void Content::init() {
     cursor.setFillColor(sf::Color::Black);
     cursorState = false;
     numberCount = 1;
-    offset = 0;
     date = std::time(0);
     numbersString = "1\n";
-    int size1, size2;
-    sf::Text temp("Mp", font, 24);
-    size1 = temp.getLocalBounds().height;
-    temp.setString("Mp\nMp");
-    size2 = temp.getLocalBounds().height;
-    propsize = size2 - size1;
+    offset = 0;
     frameoffset = 0;
-    propcount = (window.getSize().y - BAR::HEIGHT) / propsize;
+    lineoffset = 0;
+    localoffset = 0;
+    updateResize();
     updateCursor();
 }
 
@@ -40,6 +36,7 @@ Content::Content(std::string str)
         createRope(str, 0, str.size() - 1, root, nullptr);
     }
     init();
+    text.setString(composeStrings());
 }
 
 void Content::destroyNode(nod* c) {
@@ -50,49 +47,83 @@ void Content::destroyNode(nod* c) {
 }
 
 void Content::onKeyPress(sf::Uint32 code) {
+    if (code == 'z') { // debug purposes
+        //std::cout << lineoffset << " " << offset << '\n';
+        //return;
+    }
     if (code >= ' ' && code <= '~') { // Character
-        insert(getLength(root) - offset, code);
+        insert(getPhrasePosition(lines() - lineoffset - 1) + offset, code);        
+        offset++;
         text.setString(composeStrings());
         updateCursor();
     }
     else {
         switch (code) {
         case (13): // 13 = Enter
-            insert(getLength(root) - offset, '\n');
+        {
+            insert(getPhrasePosition(lines() - lineoffset - 1) + offset, '\n');
+            offset = 0;
+            if (localoffset < propcount - 1 && lines() <= propcount) localoffset++;
             text.setString(composeStrings());
             updateCursor();
             break;
+        }
         case (9): // 9 = Tab
+        {
             for (int i = 0; i < 6; ++i) {
-                insert(getLength(root) - offset, ' ');
+                insert(getPhrasePosition(lines() - lineoffset - 1) + offset, ' ');
             }
+            offset += 6;
             text.setString(composeStrings());
             updateCursor();
             break;
+        }
         case (8): // 8 = Backspace
-            if (getLength(root) - offset <= 0) return;
-            erase(getLength(root) - offset - 1);
+        {
+            if (offset == 0 && lines() - lineoffset - 1 <= 0) return;
+            int pos = getPhrasePosition(lines() - lineoffset - 1) + offset - 1;
+            if (at(pos) == '\n') {
+                if (localoffset > 0 && lines() <= propcount) localoffset--;
+                offset = getPhrasePosition(lines() - lineoffset - 1) - getPhrasePosition(lines() - lineoffset - 2);
+            }
+            offset--;
+            erase(pos);
             text.setString(composeStrings());
             updateCursor();
             break;
+        }
         case (127): // 127 = Ctrl - Backspace
-            if (getLength(root) - offset <= 0) return;
-            char ch = at(getLength(root) - offset - 1);
+        {
+            if (offset == 0 && lines() - lineoffset - 1 <= 0) return;
+            int pos = getPhrasePosition(lines() - lineoffset - 1) + offset - 1;
+            char ch = at(pos);
             if (ch == ' ' || ch == '\n') {
-                erase(getLength(root) - offset - 1);
+                if (ch == '\n') {
+                    if (localoffset > 0 && lines() - lineoffset <= propcount && !lineoffset) localoffset--;
+                    offset = getPhrasePosition(lines() - lineoffset - 1) - getPhrasePosition(lines() - lineoffset - 2);
+                }
+                offset--;
+                erase(pos);
             }
             else {
-                while (getLength(root) - offset > 1 && (ch != ' ' && ch != '\n')) {
-                    erase(getLength(root) - offset - 1);
-                    ch = at(getLength(root) - offset - 1);
+                while ((offset > 1 || lines() - lineoffset - 1 > 0) && (ch != ' ' && ch != '\n')) {
+                    offset--;
+                    erase(pos);
+                    pos--;
+                    ch = at(pos);
                 }
-                if (ch != ' ' && ch != '\n') erase(getLength(root) - offset - 1);
+                if (ch != ' ' && ch != '\n') {
+                    offset--;
+                    erase(pos);
+                }
             }
             text.setString(composeStrings());
             updateCursor();
             break;
         }
+        }
     }
+    std::cout << localoffset << '\n';
 }
 void Content::onKeyPress(sf::Keyboard::Key key) {
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
@@ -129,12 +160,16 @@ void Content::draw_content() {
 
 
 void Content::left(bool isCtrlPressed) {
-    if (getLength(root) - offset > 0) {
+    if (offset >= 1 || lines() - lineoffset - 1 > 0) {
         if (!isCtrlPressed) {
-            if (offset < getLength(root)) {
-                if (at(getLength(root) - offset - 1) == '\n') lineoffset++;
-                offset++;
+            int pos = getPhrasePosition(lines() - lineoffset - 1) + offset - 1;
+            if (at(pos) == '\n') {
+                offset = getPhrasePosition(lines() - lineoffset - 1) - getPhrasePosition(lines() - lineoffset - 2);
+                lineoffset++;
+                if (localoffset > 0) localoffset--;
+                else if (localoffset == 0) frameoffset++;
             }
+            offset--;
         }
         else {
             char ch = at(getLength(root) - offset - 1);
@@ -151,15 +186,23 @@ void Content::left(bool isCtrlPressed) {
             }
         }
     }
-    //std::cout << lineoffset << " " << getPhrase(lines() - lineoffset - 1) << '\n';
+    text.setString(composeStrings());
     updateCursor();
 }
 
 void Content::right(bool isCtrlPressed) {
-    if (offset > 0) {
+    if (getPhrasePosition(lines() - lineoffset - 1) + offset < getLength(root)) {
         if (!isCtrlPressed) {
-            if (at(getLength(root) - offset) == '\n') lineoffset--;
-            offset--;
+            int pos = getPhrasePosition(lines() - lineoffset - 1) + offset;
+            if (at(pos) == '\n') {
+                lineoffset--;
+                offset = -1;
+                if (localoffset < propcount - 1) localoffset++;
+                else if (localoffset >= propcount - 1 && frameoffset > 0) {
+                    frameoffset--;
+                }
+            }
+            offset++;
         }
         else {
             char ch = at(getLength(root) - offset);
@@ -176,21 +219,37 @@ void Content::right(bool isCtrlPressed) {
             }
         }
     }
-    //std::cout << lineoffset << " " << getPhrase(lines() - lineoffset - 1) << '\n';
+    text.setString(composeStrings());
     updateCursor();
 }
 
 void Content::up() {
-    if (lines() - frameoffset - propcount > 0) frameoffset++;
-    std::cout << frameoffset << '\n';
+    if (lines() - lineoffset > 1) {
+        lineoffset++;
+        offset = 0;
+        if (localoffset > 0) localoffset--;
+        else if (localoffset == 0) {
+            frameoffset++;
+        }
+    }
+    //if (lines() - frameoffset - propcount > 0) frameoffset++;
+    std::cout << lineoffset << '\n';
     text.setString(composeStrings());
     //std::cout << lineoffset << " " << getPhrase(lines() - lineoffset - 1) << '\n';
     updateCursor();
 }
 
 void Content::down() { // DE REVAZUT CAZUL CAND DAI SCROLL DE PE O PROPOZITIE CU MAI MULTE CARACTERE PE 2-3 PROPOZITII FARA NIMIC PE ELE IAR LA FINAL E O PROPOZITIE CU CARACTERE PE ELE (SE DUCE DE MAI MULTE ORI IN JOS)
-	if (frameoffset > 0) frameoffset--;
-    std::cout << frameoffset << '\n';
+    if (lineoffset > 0) {
+        lineoffset--;
+        offset = 0;
+        if (localoffset < propcount - 1) localoffset++;
+        else if (localoffset >= propcount - 1) {
+            frameoffset--;
+        }
+    }
+    //if (frameoffset > 0) frameoffset--;
+    std::cout << lineoffset << '\n';
     text.setString(composeStrings());
     //std::cout << lineoffset << " " << getPhrase(lines() - lineoffset - 1) << '\n';
     updateCursor();
@@ -204,8 +263,20 @@ void Content::update() {
     }
 }
 
+void Content::updateResize() {
+    int size1, size2;
+    sf::Text temp("Mp", font, 24);
+    size1 = temp.getLocalBounds().height;
+    temp.setString("Mp\nMp");
+    size2 = temp.getLocalBounds().height;
+    propsize = size2 - size1;
+    propcount = (window.getSize().y - BAR::HEIGHT) / propsize;
+    text.setString(composeStrings());
+}
+
 void Content::updateCursor() {
-    cursor.setPosition(sf::Vector2f(text.findCharacterPos(getLength(root) - offset).x + 2.f, text.findCharacterPos(getLength(root) - offset).y + 1.f));
+    //int pos = (lines() == 0 ? 0 : getPhrasePosition(lines() - lineoffset - 1));
+    //cursor.setPosition(sf::Vector2f(text.findCharacterPos(pos).x + 2.f, text.findCharacterPos(pos).y + 1.f));
 }
 void Content::loadText(std::string str) {
     offset = 0;
@@ -234,7 +305,7 @@ void Content::loadText(std::string str) {
 }
 
 int Content::lines() { // indexare de la 1, adica daca e o linie, se va returna 1
-    if (root == nullptr) return 0;
+    if (root == nullptr) return 1;
     else return 1 + root->newline_characters;
 }
 
@@ -328,6 +399,42 @@ char Content::at(int pos) {
     int newPos = 0;
     nod* c = get_node_at_pos(pos, root, newPos);
     return c->data[newPos];
+}
+int Content::get_phrase_position(nod* c, int phrase_index, int left_positions)
+{
+    if (c->l == nullptr && c->r == nullptr)
+    {
+        // frunza
+        int cnt = 0;
+        int i = 0;
+        while (cnt < phrase_index && i < c->data.size())
+        {
+            if (c->data[i] == '\n')
+                cnt++;
+            i++;
+        }
+        return left_positions + i;
+    }
+    else
+    {
+        int l = c->l->newline_characters;
+        int r = c->r->newline_characters;
+        if (l >= phrase_index)
+        { // primul caracter e in partea din stanga (positibl cazu dubios)
+            return get_phrase_position(c->l, phrase_index, left_positions);
+        }
+        else
+        { // primul caracter e in drepata
+            return get_phrase_position(c->r, phrase_index - l, left_positions + c->l->subtree_size);
+        }
+    }
+}
+int Content::getPhrasePosition(int phrase_index)
+{
+    if (root == nullptr) {
+        return 0;
+    }
+    return get_phrase_position(root, phrase_index, 0);
 }
 void Content::erase(int pos)
 {

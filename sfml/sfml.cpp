@@ -41,6 +41,7 @@ int main()
             {
                 sf::FloatRect* view = new sf::FloatRect(0, 0, event.size.width, event.size.height);
                 window.setView(sf::View(*view));
+                CONTENT::content->updateResize();
                 break;
             }
             case sf::Event::MouseButtonPressed:

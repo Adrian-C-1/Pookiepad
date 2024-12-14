@@ -28,6 +28,7 @@ public:
 
     void loadText(std::string str);
     void update();
+    void updateResize();
     void draw_content(); // asta va ramane mereu cu case-ul asta xDDD
 
 
@@ -45,6 +46,7 @@ private: // private
     int offset;
     int lineoffset;
     int frameoffset;
+    int localoffset;
     int propcount;
     int propsize;
     time_t date;
@@ -100,7 +102,7 @@ private: // private
     
     int getLength(nod* c);
     void get_string(nod* c, std::string& str);
-    char charAt(nod* c, int pos);
+    int get_phrase_position(nod* c, int phrase_index, int left_positions);
 
     std::string composeStrings();
 
@@ -114,6 +116,7 @@ private: // private
     void erase(int pos);
     char at(int pos);
     int lines();
+    int getPhrasePosition(int phrase_index);
 
     void left(bool isCtrlPressed);
     void right(bool isCtrlPressed);
