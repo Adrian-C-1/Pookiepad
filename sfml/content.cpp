@@ -50,7 +50,7 @@ void Content::destroyNode(nod* c) {
 
 void Content::onKeyPress(sf::Uint32 code) {
     if (code == 'z') { // debug purposes
-        updateSizes();
+        std::cout << "\na\n\n" << composeStrings() << "\n\na\n";
         return;
     }
     if (code >= ' ' && code <= '~') { // Character
@@ -241,7 +241,6 @@ void Content::up() {
         updateSizes();
     }
     //if (lines() - frameoffset - propcount > 0) frameoffset++;
-    std::cout << lineoffset << '\n';
     cursorState = false;
     text.setString(composeStrings());
     //std::cout << lineoffset << " " << getPhrase(lines() - lineoffset - 1) << '\n';
@@ -259,7 +258,6 @@ void Content::down() { // DE REVAZUT CAZUL CAND DAI SCROLL DE PE O PROPOZITIE CU
         updateSizes();
     }
     //if (frameoffset > 0) frameoffset--;
-    std::cout << lineoffset << '\n';
     cursorState = false;
     text.setString(composeStrings());
     //std::cout << lineoffset << " " << getPhrase(lines() - lineoffset - 1) << '\n';
@@ -291,6 +289,7 @@ void Content::updateCursor() {
         localpos += linesizes[i];
     }
     localpos += offset;
+    
     cursor.setPosition(sf::Vector2f(text.findCharacterPos(localpos).x + 2.f, text.findCharacterPos(localpos).y + 1.f));
 }
 void Content::loadText(std::string str) {
@@ -336,7 +335,6 @@ std::string Content::composeStrings() {
     for (int i = (lines() - frameoffset - propcount + 1 > 0 ? lines() - frameoffset - propcount + 1 : 1); i <= lines() - frameoffset; ++i) {
         str += getPhrase(i - 1);
     }
-    //std::cout << "\n\n" << str << "\n\n";
     return str;
 }
 
@@ -355,38 +353,47 @@ void Content::onMousePress() {
     for (int i = 0; i < linesizes.size(); ++i) {
         pos += linesizes[i];
     }
-    offset = linesizes[linesizes.size() - 1];
+
     if (mpos.y > text.getGlobalBounds().height + text.getGlobalBounds().top) {
-        //if (mpos.x <= text.findCharacterPos(pos).x) {
-        //    // de verificat si cazul in care este mai mare decat lungimea ultimului sir
-
-
-        //    while (mpos.x <= text.findCharacterPos(pos).x && text.findCharacterPos(pos).x > text.getGlobalBounds().left) {
-        //        offset--;
-        //        pos--;
-        //    }
-        //}
-    }
-    else {
-        while (localoffset <= propcount - 1 && lineoffset > 0) {
+        offset = linesizes[linesizes.size() - 1];
+        while (localoffset <= propcount - 1 && lineoffset > 0) { // daca nu da bine ceva, incearca sa scoti egalul, ca in while-ul de mai jos
             lineoffset--;
             localoffset++;
         }
-        int cnt = 0;
-        while (mpos.y <= text.findCharacterPos(pos).y) {
-            if (text.getString()[pos] == '\n') {
-                localoffset--;
-                lineoffset++;
-                offset = linesizes[linesizes.size() - 1 - cnt];
-                cnt++;
-            }
+
+        while (mpos.x <= text.findCharacterPos(pos).x && text.findCharacterPos(pos).x > text.getGlobalBounds().left) {
             offset--;
             pos--;
         }
-        /*while (mpos.x <= text.findCharacterPos(pos).x && text.findCharacterPos(pos).x > text.getGlobalBounds().left) {
+    }
+    else {
+        int oldlocal = localoffset;
+        while (localoffset < propcount - 1 && lineoffset > 0) {
+            lineoffset--;
+            localoffset++;
+        }
+        std::string str = text.getString();
+        if (frameoffset <= 0) str += '\n';
+
+        int cnt = 0;
+        while (mpos.y <= text.findCharacterPos(pos).y) {
+            if (str[pos] == '\n') {
+                localoffset--;
+                lineoffset++;
+                cnt++;
+            }
+            pos--;
+        }
+
+        offset = linesizes[linesizes.size() - cnt - 1] - 1;
+        if (lineoffset <= 0) {
+            offset++;
+        }
+
+        while (mpos.x <= text.findCharacterPos(pos).x && text.findCharacterPos(pos).x > text.getGlobalBounds().left) {
             offset--;
             pos--;
-        }*/
+        }
     }
     updateCursor();
 }
