@@ -237,23 +237,34 @@ void Content::up() {
         else if (localoffset == 0) {
             frameoffset++;
         }
+        text.setString(composeStrings());
         updateSizes();
-        int pos = 0;
-        for (int i = 0; i <= localoffset; ++i) {
-            pos += linesizes[i];
-        }
-        pos += offset;
-        sf::Vector2f oldPos = text.findCharacterPos(pos);
-        pos = pos - offset - linesizes[localoffset] - 1;
-        offset = linesizes[localoffset - 1];
-        while (oldPos.x < text.findCharacterPos(pos).x && text.findCharacterPos(pos).x > text.getGlobalBounds().left) {
-            pos--;
-            offset--;
+        if (offset > 0) {
+            int pos = 0;
+            for (int i = 0; i <= localoffset; ++i) {
+                std::cout << i << '\n';
+                pos += linesizes[i];
+            }
+            pos += offset;
+            sf::Vector2f oldPos = text.findCharacterPos(pos); // pozitia pe care se afla cuvantul de pe care am plecat
+            pos = pos - offset - 1; // revenirea la randul anterior
+            offset = linesizes[localoffset];
+            if (text.findCharacterPos(pos).x < oldPos.x) { // de pe un rand mai mare pe un rand mai mic
+                offset--;
+            }
+            else { // invers
+                while (oldPos.x <= text.findCharacterPos(pos).x && text.findCharacterPos(pos).x > text.getGlobalBounds().left) {
+                    pos--;
+                    offset--;
+                }
+            }
         }
     }
-    else if (lines() - lineoffset == 1) offset = 0;
+    else {
+        if (lines() - lineoffset == 1) offset = 0;
+        text.setString(composeStrings());
+    }
     cursorState = false;
-    text.setString(composeStrings());
     updateCursor();
 }
 
@@ -264,25 +275,33 @@ void Content::down() { // DE REVAZUT CAZUL CAND DAI SCROLL DE PE O PROPOZITIE CU
         else if (localoffset >= propcount - 1) {
             frameoffset--;
         }
+        text.setString(composeStrings());
         updateSizes();
-        int totalSize = 0;
-        for (int i = 0; i <= localoffset; ++i) {
-            totalSize += linesizes[i];
+        if (offset > 0) {
+            int pos = 0;
+            for (int i = 0; i < localoffset - 1; ++i) {
+                pos += linesizes[i];
+            }
+            pos += offset;
+            sf::Vector2f oldPos = text.findCharacterPos(pos); // pozitia caracterului de pe care plec
+            pos = pos - offset + linesizes[localoffset - 1] + linesizes[localoffset]; // pozitia caracterului de pe propozitia pe care ma duc
+            offset = linesizes[localoffset];
+            if (lineoffset > 0) { // caz in care ma aflu pe ultima propozitie din sir si nu e \n la final (lineoffset se modifica mai sus)
+                offset--;
+                pos--;
+            }
+            while (oldPos.x < text.findCharacterPos(pos).x && text.findCharacterPos(pos).x > text.getGlobalBounds().left) {
+                pos--;
+                offset--;
+            }
         }
-        int pos = totalSize - linesizes[localoffset] - linesizes[localoffset - 1] + offset;
-        sf::Vector2f oldPos = text.findCharacterPos(pos);
-        pos = pos - offset + linesizes[localoffset - 1] + linesizes[localoffset];
-        while (oldPos.x >= text.findCharacterPos(pos).x && pos <= totalSize) {
-            pos++;
-        }
-        offset = pos;
     }
     else if (lineoffset == 0) {
+        text.setString(composeStrings());
         updateSizes();
         offset = linesizes[linesizes.size() - 1];
     }
     cursorState = false;
-    text.setString(composeStrings());
     updateCursor();
 }
 
