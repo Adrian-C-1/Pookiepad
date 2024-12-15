@@ -50,7 +50,7 @@ void Content::destroyNode(nod* c) {
 
 void Content::onKeyPress(sf::Uint32 code) {
     if (code == 'z') { // debug purposes
-        std::cout << "\na\n\n" << composeStrings() << "\n\na\n";
+        std::cout << offset << '\n';
         return;
     }
     if (code >= ' ' && code <= '~') { // Character
@@ -233,34 +233,56 @@ void Content::right(bool isCtrlPressed) {
 void Content::up() {
     if (lines() - lineoffset > 1) {
         lineoffset++;
-        offset = 0;
         if (localoffset > 0) localoffset--;
         else if (localoffset == 0) {
             frameoffset++;
         }
         updateSizes();
+        int pos = 0;
+        for (int i = 0; i <= localoffset; ++i) {
+            pos += linesizes[i];
+        }
+        pos += offset;
+        sf::Vector2f oldPos = text.findCharacterPos(pos);
+        pos = pos - offset - linesizes[localoffset] - 1;
+        offset = linesizes[localoffset - 1];
+        while (oldPos.x < text.findCharacterPos(pos).x && text.findCharacterPos(pos).x > text.getGlobalBounds().left) {
+            pos--;
+            offset--;
+        }
     }
-    //if (lines() - frameoffset - propcount > 0) frameoffset++;
+    else if (lines() - lineoffset == 1) offset = 0;
     cursorState = false;
     text.setString(composeStrings());
-    //std::cout << lineoffset << " " << getPhrase(lines() - lineoffset - 1) << '\n';
     updateCursor();
 }
 
 void Content::down() { // DE REVAZUT CAZUL CAND DAI SCROLL DE PE O PROPOZITIE CU MAI MULTE CARACTERE PE 2-3 PROPOZITII FARA NIMIC PE ELE IAR LA FINAL E O PROPOZITIE CU CARACTERE PE ELE (SE DUCE DE MAI MULTE ORI IN JOS)
     if (lineoffset > 0) {
         lineoffset--;
-        offset = 0;
         if (localoffset < propcount - 1) localoffset++;
         else if (localoffset >= propcount - 1) {
             frameoffset--;
         }
         updateSizes();
+        int totalSize = 0;
+        for (int i = 0; i <= localoffset; ++i) {
+            totalSize += linesizes[i];
+        }
+        int pos = totalSize - linesizes[localoffset] - linesizes[localoffset - 1] + offset;
+        sf::Vector2f oldPos = text.findCharacterPos(pos);
+        pos = pos - offset + linesizes[localoffset - 1] + linesizes[localoffset];
+        while (oldPos.x >= text.findCharacterPos(pos).x && pos <= totalSize) {
+            pos++;
+        }
+        offset = pos;
     }
-    //if (frameoffset > 0) frameoffset--;
+    else if (lineoffset == 0) {
+        updateSizes();
+        offset = linesizes[linesizes.size() - 1];
+    }
     cursorState = false;
     text.setString(composeStrings());
-    //std::cout << lineoffset << " " << getPhrase(lines() - lineoffset - 1) << '\n';
     updateCursor();
 }
 
