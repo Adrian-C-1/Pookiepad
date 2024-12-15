@@ -16,6 +16,8 @@ namespace BAR {
 	extern const sf::Color BG_COLOR;
 	extern const sf::Color POPUP_COLOR;
 	extern const sf::Color HOVER_COLOR;
+	extern const sf::Color OUTLINE_COLOR;
+	extern const float OUTLINE_THICKNESS;
 	extern const sf::Color TEXT_COLOR;
 	extern const float spacing;
 
@@ -27,7 +29,8 @@ namespace BAR {
 	SHOULD_CLOSE_POPUP,
 	OPEN_FILE_POPUP,
 	OPEN_EDIT_POPUP,
-	OPEN_VIEW_POPUP
+	OPEN_VIEW_POPUP,
+	OPEN_FIND_POPUP
 	};
 	extern std::queue<EVENT> events;
 

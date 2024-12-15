@@ -2,6 +2,8 @@
 
 #include "globals.h"
 
+void onCloseFile();
+
 
 class Button {
 public:
@@ -25,18 +27,34 @@ private:
 class PopUp {
 public:
 	PopUp(std::vector<Button> buttons);
-	void spaceAround(Button& button);
+	PopUp();
+	virtual void spaceAround(Button& button);
 
-	void draw(Button* hover);
+	virtual void draw(Button* hover);
 	/// <summary>
 	/// returns 1 if I did press inside it, 0 otherwise
 	/// </summary>
 	/// <returns></returns>
-	bool onPress();
-	Button* onHover(sf::Vector2f mpos);
-private:
+	virtual bool onPress();
+	virtual Button* onHover(sf::Vector2f mpos);
+protected:
 	std::vector<Button> children;
 	sf::RectangleShape background;
+};
+class FindPopUp : public PopUp {
+public:
+	FindPopUp();
+	void draw(Button* hover) override;
+	bool onPress() override;
+	Button* onHover(sf::Vector2f mpos) override;
+	void focus();
+private:
+	Button Find, Next, Prev, Cancel;
+
+	bool focused = 0;
+
+	sf::RectangleShape TextBackground;
+	sf::Text text;
 };
 
 class Menu {
@@ -50,6 +68,8 @@ private:
 	std::vector<Button> buttons;
 
 	PopUp filePopUp, editPopUp, viewPopUp;
+	FindPopUp findPopUp;
+
 	PopUp* currentPopUp;
 
 	Button* hovering;

@@ -3,6 +3,7 @@
 #include <SFML/Graphics.hpp>
 
 #include "Windows.h"
+#include "dwmapi.h"
 
 #include "globals.h"
 #include "menu.h"
@@ -21,11 +22,6 @@ void initiate() {
 
 int main()
 {
-    if (!window.isOpen()) {
-        std::cout << "Error, could not open window or initialize SFML\n";
-        return 0;
-    }
-
     initiate();
 
     CONTENT::content = new Content();
@@ -42,13 +38,11 @@ int main()
 
         window.display();
 
-
         sf::Event event;
         while (window.pollEvent(event)) { // todo wait ev ADRIAN NU UITA (don't waste CPU !! )
             switch (event.type) {
             case sf::Event::Closed:
-                window.close();
-                return 0;
+                onCloseFile();
                 break;
             case (sf::Event::Resized):
             {

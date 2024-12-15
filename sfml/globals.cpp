@@ -8,9 +8,11 @@ sf::WindowHandle handle;
 namespace BAR {
 	sf::Font font;
 	const float HEIGHT = 24.0f;
-	const sf::Color BG_COLOR = sf::Color::Black;
-	const sf::Color POPUP_COLOR = sf::Color(45, 45, 45, 255);
-	const sf::Color HOVER_COLOR = sf::Color(95, 95, 95, 255);
+	const sf::Color BG_COLOR = sf::Color(40, 26, 38, 255);
+	const sf::Color POPUP_COLOR = sf::Color(44, 44, 44, 255); // unused
+	const sf::Color OUTLINE_COLOR = sf::Color(70, 56, 68, 255);
+	const float OUTLINE_THICKNESS = 1.0f;
+	const sf::Color HOVER_COLOR = sf::Color(58, 44, 57, 255);
 	const sf::Color TEXT_COLOR = sf::Color::White;
 	const float spacing = 4;
 
