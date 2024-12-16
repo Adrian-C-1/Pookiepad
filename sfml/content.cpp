@@ -306,7 +306,7 @@ void Content::up() {
     updateCursor();
 }
 
-void Content::down() { // DE REVAZUT CAZUL CAND DAI SCROLL DE PE O PROPOZITIE CU MAI MULTE CARACTERE PE 2-3 PROPOZITII FARA NIMIC PE ELE IAR LA FINAL E O PROPOZITIE CU CARACTERE PE ELE (SE DUCE DE MAI MULTE ORI IN JOS)
+void Content::down() {
     if (lineoffset > 0) {
         lineoffset--;
         if (localoffset < propcount - 1) localoffset++;
