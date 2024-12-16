@@ -39,19 +39,17 @@ private: // private
 
     sf::Text text;
     sf::Text numbers;
-    std::string numbersString;
 
     sf::RectangleShape cursor;
     bool cursorState;
-    int numberCount;
-    int offset;
-    int lineoffset;
-    int frameoffset;
-    int localoffset;
-    int propcount;
-    int propsize;
-    int localpos;
-    std::vector<int> linesizes;
+
+    int offset; // distanta de la inceputul liniei si pana la cursor | [0, m] (m = numarul de caractere din propozitie, incluzand ultimul \n, daca exista)
+    int lineoffset; // distanta de la sfarsitul textului la cursor | [0, n] (n = numarul de linii din tot fisierul)
+    int frameoffset; // diferenta de frame-uri vizibile de la ultimul si pana la cel vizibil | [0, n - propcount] cred (propcount = numarul de propozitii care pot incapea in frame)
+    int localoffset; // distanta de la cea mai de sus linie vizibila pe ecran la linia pe care se afla cursorul | [0, propcount]
+    int propcount; // numarul de propozitii care se pot afla pe ecran in orice moment in functie de marimea ferestrei
+    int propsize; // cat de mare poate fi o propozitie in functie de marimea ferestrei
+    std::vector<int> linesizes; // lungimea tuturor liniilor vizibile pe ecran (cam in orice moment)
     time_t date;
 
     // now
@@ -127,6 +125,7 @@ private: // private
     void down();
 
     void updateCursor();
+    void updateNumbers();
     void updateSizes();
 
     /// Will return The n-th phrase that ends with newline.
