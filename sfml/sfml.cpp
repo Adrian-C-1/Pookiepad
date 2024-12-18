@@ -61,13 +61,21 @@ int main()
             case sf::Event::MouseMoved:
                 BAR::menu->onMouseMove();
                 break;
-            case (sf::Event::TextEntered):
+            case sf::Event::TextEntered:
                 BAR::markChanged();
                 CONTENT::content->onKeyPress(event.text.unicode);
                 break;
-            case (sf::Event::KeyPressed):
+            case sf::Event::KeyPressed:
                 BAR::markChanged();
                 CONTENT::content->onKeyPress(event.key.code);
+                break;
+            case sf::Event::MouseWheelScrolled:
+                if (event.mouseWheelScroll.delta > 0) {
+                   CONTENT::content->onKeyPress(sf::Keyboard::Up);
+                }
+                else {
+                    CONTENT::content->onKeyPress(sf::Keyboard::Down);
+                }
                 break;
             }
         }
