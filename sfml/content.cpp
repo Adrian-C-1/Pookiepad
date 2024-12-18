@@ -131,6 +131,7 @@ void Content::onKeyPress(sf::Uint32 code) {
     cursorState = false;
 }
 void Content::onKeyPress(sf::Keyboard::Key key) {
+    std::cout << key << '\n';
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
         if ((sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl))) {
             left(true);
