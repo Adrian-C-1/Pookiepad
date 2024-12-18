@@ -144,7 +144,7 @@ void Content::onKeyPress(sf::Uint32 code) {
     cursorState = false;
 }
 void Content::onKeyPress(sf::Keyboard::Key key) {
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
+    if (key == sf::Keyboard::Left) {
         if ((sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl))) {
             left(true);
         }
@@ -152,7 +152,7 @@ void Content::onKeyPress(sf::Keyboard::Key key) {
             left(false);
         }
     }
-    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
+    else if (key == sf::Keyboard::Right) {
         if ((sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl))) {
             right(true);
         }
@@ -161,10 +161,10 @@ void Content::onKeyPress(sf::Keyboard::Key key) {
 
         }
     }
-    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) {
+    else if (key == sf::Keyboard::Up) {
         up();
     }
-    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
+    else if (key == sf::Keyboard::Down) {
         down();
     }
 }
