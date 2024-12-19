@@ -33,6 +33,8 @@ public:
     void draw_content(); // asta va ramane mereu cu case-ul asta xDDD
     
     std::string getString();
+
+    inline void destroyTree() { destroyNode(root); }
 private: // private
     
     /*Old content*/

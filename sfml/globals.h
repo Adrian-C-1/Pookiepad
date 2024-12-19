@@ -30,14 +30,16 @@ namespace BAR {
 	OPEN_FILE_POPUP,
 	OPEN_EDIT_POPUP,
 	OPEN_VIEW_POPUP,
-	OPEN_FIND_POPUP
+	OPEN_FIND_POPUP,
+	NEW_FILE,
+	SAVE_FILE,
+	CLOSE_FILE,
+	OPEN_FILE,
+	CLOSE_ALL,
 	};
 	extern std::queue<EVENT> events;
 
-	extern std::string filepath_opened;
-	void markUnchanged();
-	void markChanged();
-	bool safeToExit();
+	std::string getFileFromFilepath(std::string path);
 }
 
 class Content;

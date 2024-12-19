@@ -1,9 +1,7 @@
 #pragma once
 
 #include "globals.h"
-
-void onCloseFile();
-
+#include "content.h"
 
 class Button {
 public:
@@ -18,6 +16,9 @@ public:
 
 	void onHover();
 	void onUnHover();
+	void setFillColor(sf::Color col);
+	void setText(std::string text);
+	std::string getText();
 private:
 	void(*onPressFunc)();
 
@@ -63,8 +64,16 @@ public:
 	void draw();
 	bool onPress();
 	void onMouseMove();
+	void onResize();
+	void markChanged();
+	void markUnchanged();
 private:
+	void ordonPages();
+	float getPage0x();
+	void saveFile();
+	void closeFile();
 	sf::RectangleShape background;
+	sf::RectangleShape background_butoane;
 	std::vector<Button> buttons;
 
 	PopUp filePopUp, editPopUp, viewPopUp;
@@ -73,4 +82,16 @@ private:
 	PopUp* currentPopUp;
 
 	Button* hovering;
+
+
+	struct page {
+		Content *content;
+		Button button;
+		std::string path = "";
+		bool saved = 1;
+	};
+	std::vector<page> pages;
+	int current_page = 0;
+	float page_draw_offset = 0.0;
+	sf::Vector2f last_mouse_press_position = {-1, -1};
 };

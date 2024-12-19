@@ -48,6 +48,20 @@ void Button::onHover() {
 void Button::onUnHover() {
 	background.setFillColor(sf::Color::Transparent);
 }
+void Button::setFillColor(sf::Color col) {
+	text.setFillColor(col);
+}
+void Button::setText(std::string text) {
+	this->text.setString(text);
+	background.setSize(sf::Vector2f(
+		this->text.getGlobalBounds().width + 2.0 * BAR::spacing,
+		this->text.getGlobalBounds().height
+	) + sf::Vector2f(5, 8));
+	background.setFillColor(sf::Color::Transparent);
+}
+std::string Button::getText() {
+	return text.getString();
+}
 
 PopUp::PopUp(std::vector<Button> buttons) :children(buttons) {
 	;
@@ -118,7 +132,6 @@ Button* PopUp::onHover(sf::Vector2f mpos) {
 	return nullptr;
 }
 
-
 void onPressFile() {
 	BAR::events.push(BAR::OPEN_FILE_POPUP);
 }
@@ -131,7 +144,7 @@ void onPressView() {
 void onPressFind() {
 	BAR::events.push(BAR::OPEN_FIND_POPUP);
 }
-void onOpenFile() {
+std::string getOpenPath(){
 	OPENFILENAMEA open = { 0 };
 
 	char buffer[2048];
@@ -152,114 +165,53 @@ void onOpenFile() {
 
 	BOOL selected = GetOpenFileNameA(&open);
 
-	if (!selected){
+	if (!selected) {
 		// sth happeded
-		return;
+		return "";
 	}
 
-	if (BAR::safeToExit() == 0) {
-		int rez = MessageBoxA(0, "You have unsaved changes! Discard them?", "Warning", MB_YESNO | MB_ICONWARNING);
-		switch (rez) {
-		case IDNO:
-			return;
-			break;
-		case IDYES:
-			break;
-		}
+	return std::string(buffer);
+}
+std::string getSavePath() {
+
+	OPENFILENAMEA open = { 0 };
+
+	char buffer[2048];
+	buffer[0] = '\0';
+
+	open.hwndOwner = handle;
+	open.hInstance = GetModuleHandleA(NULL);
+	open.lStructSize = sizeof(OPENFILENAMEA);
+	open.lpstrFile = buffer;
+	open.nMaxFile = sizeof(buffer);
+	open.lpstrFilter = "All files\0*.*\0";
+	open.nFilterIndex = 1;
+	open.lpstrFileTitle = NULL;
+	open.nMaxFileTitle = 0;
+	open.lpstrInitialDir = NULL;
+	open.lpstrTitle = "Open File";
+	open.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
+
+	BOOL selected = GetSaveFileNameA(&open);
+
+	if (!selected) {
+		// sth happeded
+		return "";
 	}
-	
-	std::ifstream in(buffer, std::ios::ate);
-	if (!in.is_open()) {
-		std::cout << "Couldn't open file\n";
-		return;
-	}
-	int size = in.tellg();
-	char* ch = new char[size + 1];
-	std::memset(ch, 0, size + 1);
-	in.seekg(0);
-	in.read(ch, size);
-	ch[size] = NULL;
-	in.close();
 
-	BAR::filepath_opened = std::string(buffer);
-	BAR::markUnchanged();
-
-	std::string str(ch);
-
-	CONTENT::content->loadText(str);
-
-	delete[] ch;
+	return std::string(buffer);
+}
+void onOpenFile() {
+	BAR::events.push(BAR::OPEN_FILE);
 }
 void onSaveFile() {
-	if (BAR::filepath_opened == "") {
-		OPENFILENAMEA open = { 0 };
-
-		char buffer[2048];
-		buffer[0] = '\0';
-
-		open.hwndOwner = handle;
-		open.hInstance = GetModuleHandleA(NULL);
-		open.lStructSize = sizeof(OPENFILENAMEA);
-		open.lpstrFile = buffer;
-		open.nMaxFile = sizeof(buffer);
-		open.lpstrFilter = "All files\0*.*\0";
-		open.nFilterIndex = 1;
-		open.lpstrFileTitle = NULL;
-		open.nMaxFileTitle = 0;
-		open.lpstrInitialDir = NULL;
-		open.lpstrTitle = "Open File";
-		open.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
-
-		BOOL selected = GetSaveFileNameA(&open);
-
-		if (!selected) {
-			// sth happeded
-			return;
-		}
-		
-		BAR::filepath_opened = std::string(buffer);
-	}
-	//std::cout << buffer << '\n';
-
-	std::ofstream fout(BAR::filepath_opened);
-	if (!fout.is_open()) {
-		std::cout << "Couldn't open or create file\n";
-		return;
-	}
-
-	BAR::markUnchanged();
-
-	std::string text = CONTENT::content->getString();
-	fout << text;
-	fout.close();
+	BAR::events.push(BAR::SAVE_FILE);
 }
 void onCloseFile() {
-	if (BAR::safeToExit() == 0) {
-		int rez = MessageBoxA(0, "You have unsaved changes! Discard them?", "Warning", MB_YESNO | MB_ICONWARNING);
-		switch (rez) {
-		case IDNO:
-			return;
-			break;
-		case IDYES:
-			break;
-		}
-	}
-	window.close(); 
+	BAR::events.push(BAR::CLOSE_FILE);
 }
 void onNewFile() {
-	if (BAR::safeToExit() == 0) {
-		int rez = MessageBoxA(0, "You have unsaved changes! Discard them?", "Warning", MB_YESNO | MB_ICONWARNING);
-		switch (rez) {
-		case IDNO:
-			return;
-			break;
-		case IDYES:
-			break;
-		}
-	}
-	BAR::filepath_opened = "";
-	BAR::markUnchanged();
-	CONTENT::content->loadText("");
+	BAR::events.push(BAR::NEW_FILE);
 }
 
 Menu::Menu() :
@@ -307,8 +259,85 @@ Menu::Menu() :
 	viewPopUp.spaceAround(buttons[2]);
 	currentPopUp = nullptr;
 
-}
+	background_butoane.setPosition({ 0, 0 });
+	background_butoane.setSize(sf::Vector2f(buttons[2].getPosition().x + buttons[2].getSize().x, BAR::HEIGHT));
+	background_butoane.setFillColor(BAR::BG_COLOR);
 
+	pages.push_back({ new Content(), Button("Untitled", nullptr) });
+	ordonPages();
+	current_page = 0;
+	CONTENT::content = pages[0].content;
+}
+float Menu::getPage0x() {
+	return buttons[2].getPosition().x + buttons[2].getSize().x + BAR::spacing * 3;
+}
+void Menu::ordonPages() {
+	pages[0].button.setPosition(sf::Vector2f(getPage0x(), buttons[2].getPosition().y));
+	for (int i = 1; i < pages.size(); i++) {
+		sf::Vector2f pos = pages[i - 1].button.getPosition();
+		sf::Vector2f siz = pages[i - 1].button.getSize();
+		pages[i].button.setPosition(pos + sf::Vector2f(siz.x, 0.0));
+	}
+	for (int i = 0; i < pages.size(); i++) {
+		if (i == current_page) {
+			pages[i].button.setFillColor(sf::Color(255, 255, 255, 255));
+		}
+		else {
+			pages[i].button.setFillColor(sf::Color(120, 120, 120, 255));
+		}
+	}
+	CONTENT::content = pages[current_page].content;
+}
+void Menu::onResize() {
+	background.setSize({ float(window.getSize().x), BAR::HEIGHT });
+}
+void Menu::saveFile() {
+	if (pages[current_page].path.size() == 0) { // no path selected
+		pages[current_page].path = getSavePath();
+
+		if (pages[current_page].path.size() == 0) return;
+		pages[current_page].button.setText(BAR::getFileFromFilepath(pages[current_page].path));
+		ordonPages();
+	}
+	if (pages[current_page].path.size() == 0) return;
+
+	std::ofstream fout(pages[current_page].path);
+	if (!fout.is_open()) {
+		std::cout << "Couldn't open or create file\n";
+		return;
+	}
+	markUnchanged();
+	std::string text = CONTENT::content->getString();
+	fout << text;
+	fout.close();
+}
+void Menu::closeFile() {
+	if (pages[current_page].saved == 0) {
+		std::string smallp = BAR::getFileFromFilepath(pages[current_page].path);
+		std::string str = std::string("You have unsaved changed for the file ") + (smallp == "" ? "Untitled" : smallp);
+		str += std::string("\nWould you like to save?");
+		int response = MessageBoxA(NULL, str.c_str(), "Warning!", MB_YESNOCANCEL | MB_ICONWARNING);
+		switch (response) {
+		case IDYES:
+			saveFile();
+			if (pages[current_page].path == "") return;
+			break;
+		case IDNO:
+			break;
+		case IDCANCEL:
+			return;
+		}
+	}
+	pages[current_page].content->destroyTree();
+	delete pages[current_page].content;
+	pages.erase(pages.begin() + current_page);
+	current_page = 0;
+	if (pages.size() == 0) {
+		window.close();
+		return;
+	}
+	ordonPages();
+}
 void Menu::draw() {
 	; // updates
 
@@ -335,14 +364,88 @@ void Menu::draw() {
 			currentPopUp = &findPopUp;
 			reinterpret_cast<FindPopUp*>(currentPopUp)->focus();
 			break;
+		case BAR::NEW_FILE:
+			pages.push_back({ new Content(), Button("Untitled", nullptr) });
+			current_page = pages.size() - 1;
+			pages[current_page].saved = 1;
+			ordonPages();
+			break;
+		case BAR::SAVE_FILE:
+		{
+			saveFile();
+			break;
+		}
+		case BAR::OPEN_FILE:
+		{
+			std::string buffer = getOpenPath();
+			if (buffer == "") break;
+
+			std::ifstream in(buffer, std::ios::ate);
+			if (!in.is_open()) {
+				std::cout << "Couldn't open file\n";
+				return;
+			}
+			int size = in.tellg();
+			char* ch = new char[size + 1];
+			std::memset(ch, 0, size + 1);
+			in.seekg(0);
+			in.read(ch, size);
+			ch[size] = NULL;
+			in.close();
+
+			std::string str(ch);
+
+			pages.push_back({ new Content(str), Button(BAR::getFileFromFilepath(buffer), nullptr) });
+			current_page = pages.size() - 1;
+			pages[current_page].saved = 1;
+			pages[current_page].path = buffer;
+			ordonPages();
+
+			delete[] ch;
+			break;
+		}
+		case BAR::CLOSE_FILE:
+		{
+			closeFile();
+			if (pages.size() == 0) return;
+			break;
+		}
+		case BAR::CLOSE_ALL:
+		{
+			while(pages.size()){
+				int old = pages.size();
+				closeFile();
+				if (pages.size() == old) break;
+			}
+			if (pages.size() == 0) {
+				window.close();
+				return;
+			}
+			break;
+		}
 		default:
 			break;
+		
 		}
 	}
 
 	; // draws
 
 	window.draw(background);
+
+	for (int i = 0; i < pages.size(); i++) {
+		if (&pages[i].button == hovering) {
+			pages[i].button.onHover();
+		}
+		pages[i].button.setPosition(pages[i].button.getPosition() + sf::Vector2f(page_draw_offset, 0.0));
+		pages[i].button.draw(); // draw on left a bar and draw buttons on top
+		pages[i].button.setPosition(pages[i].button.getPosition() + sf::Vector2f(-page_draw_offset, 0.0));
+		if (&pages[i].button == hovering) {
+			pages[i].button.onUnHover();
+		}
+	}
+
+	window.draw(background_butoane);
 
 	for (int i = 0; i < buttons.size(); i++) {
 		if (&buttons[i] == hovering) {
@@ -356,8 +459,27 @@ void Menu::draw() {
 	if (currentPopUp != nullptr) {
 		currentPopUp->draw(hovering);
 	}
+	
 }
-
+void Menu::markChanged() {
+	if (pages[current_page].saved == 1) {
+		std::string acm = pages[current_page].button.getText();
+		acm.insert(acm.begin(), '*');
+		pages[current_page].button.setText(acm);
+		ordonPages();
+		pages[current_page].saved = 0;
+	}
+}
+void Menu::markUnchanged() {
+	if (pages[current_page].saved == 0) {
+		std::string acm = pages[current_page].button.getText();
+		acm.erase(acm.begin());
+		if (pages[current_page].path != "") acm = BAR::getFileFromFilepath(pages[current_page].path);
+		pages[current_page].button.setText(acm);
+		ordonPages();
+		pages[current_page].saved = 1;
+	}
+}
 bool Menu::onPress() {
 	bool pressed_inside = 0;
 
@@ -381,9 +503,25 @@ bool Menu::onPress() {
 		}
 	}
 
+	for (int i = 0; i < pages.size(); i++) {
+		mpos.x -= page_draw_offset;
+		if (pages[i].button.getGlobalRect().contains(mpos)) {
+			current_page = i;
+			ordonPages();
+			CONTENT::content = pages[i].content;
+		}
+		mpos.x += page_draw_offset;
+	}
+
+	if (!pressed_inside && background.getGlobalBounds().contains(mpos)) {
+		last_mouse_press_position = mpos;
+	}
+	else
+		last_mouse_press_position = { -1, -1 };
 	return pressed_inside;
 }
 void Menu::onMouseMove() {
+	
 	; // todo hover show button
 	sf::Vector2f mpos = sf::Vector2f(sf::Mouse::getPosition(window));
 
@@ -396,6 +534,29 @@ void Menu::onMouseMove() {
 	if (hovering == nullptr) {
 		if (currentPopUp != nullptr) {
 			hovering = currentPopUp->onHover(mpos);
+		}
+	}
+	if (hovering == nullptr) {
+		mpos.x -= page_draw_offset;
+		for (int i = 0; i < pages.size(); i++) {
+			if (pages[i].button.getGlobalRect().contains(mpos)) {
+				hovering = &pages[i].button;
+			}
+		}
+		mpos.x += page_draw_offset;
+	}
+
+	if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+		if (last_mouse_press_position.x != -1 || last_mouse_press_position.y != -1) {
+			page_draw_offset += mpos.x - last_mouse_press_position.x;
+			last_mouse_press_position = mpos;
+			
+			float last_page_x_after = pages[pages.size() - 1].button.getPosition().x + pages[pages.size() - 1].button.getSize().x + page_draw_offset;
+			if (last_page_x_after < window.getSize().x) {
+				page_draw_offset += (window.getSize().x - last_page_x_after);
+			}
+			if (pages[0].button.getPosition().x + page_draw_offset > getPage0x())
+				page_draw_offset -= (getPage0x() - pages[0].button.getPosition().x + page_draw_offset);
 		}
 	}
 }
@@ -517,6 +678,7 @@ bool FindPopUp::onPress() {
 	if (background.getGlobalBounds().contains(mpos) == 1) {
 		return 1;
 	}
+
 	return 0;
 }
 Button* FindPopUp::onHover(sf::Vector2f mpos) {

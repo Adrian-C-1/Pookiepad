@@ -24,16 +24,22 @@ int main()
 {
     initiate();
 
-    CONTENT::content = new Content();
+    //CONTENT::content = new Content();
     BAR::menu = new Menu(); // initialize it here not there
+
+    if (CONTENT::content == nullptr) {
+        std::cout << "Zii lui Adrian ca e prost daca ajungi aici\n";
+        return 0;
+    }
 
     while (window.isOpen()) {
 
         CONTENT::content->update();
-
+        
         window.clear(/*sf::Color::White*/);
 
         CONTENT::content->draw_content();
+
         BAR::menu->draw(); // menu on top
 
         window.display();
@@ -42,31 +48,34 @@ int main()
         while (window.pollEvent(event)) { // todo wait ev ADRIAN NU UITA (don't waste CPU !! )
             switch (event.type) {
             case sf::Event::Closed:
-                onCloseFile();
+                BAR::events.push(BAR::CLOSE_ALL);
                 break;
             case (sf::Event::Resized):
             {
                 sf::FloatRect* view = new sf::FloatRect(0, 0, event.size.width, event.size.height);
                 window.setView(sf::View(*view));
                 CONTENT::content->updateResize();
+                BAR::menu->onResize();
                 break;
             }
             case sf::Event::MouseButtonPressed:
             {
                 bool pressed_on_menu = BAR::menu->onPress();
-                if (!pressed_on_menu)
+                if (!pressed_on_menu) {
                     CONTENT::content->onMousePress();
+                }
                 break;
             }
             case sf::Event::MouseMoved:
                 BAR::menu->onMouseMove();
                 break;
             case sf::Event::TextEntered:
-                BAR::markChanged();
+                if (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl)) break;
+                BAR::menu->markChanged();
                 CONTENT::content->onKeyPress(event.text.unicode);
                 break;
             case sf::Event::KeyPressed:
-                BAR::markChanged();
+                BAR::menu->markChanged();
                 CONTENT::content->onKeyPress(event.key.code);
                 break;
             case sf::Event::MouseWheelScrolled:
