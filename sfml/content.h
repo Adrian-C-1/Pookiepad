@@ -28,7 +28,7 @@ public:
     void onMousePress();
 
     void loadText(std::string str);
-    void update();
+    void updateBlinker();
     void updateResize();
     void draw_content(); // asta va ramane mereu cu case-ul asta xDDD
 

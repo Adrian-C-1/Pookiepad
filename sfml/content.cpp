@@ -1,34 +1,9 @@
 #include "content.h"
 
-void Content::init() {
-    text.setFont(font);
-    text.setFillColor(CONTENT::TEXT_COLOR);
-    zoomstates = {12, 18, 24, 30, 36, 42, 48}; // min = 0 , max = 6 | 24 = 100% , 48 = 200% | 50% - 200%
-    zoompercentages = { 50, 75, 100, 125, 150, 175, 200 };
-    state = 2;
-    text.setCharacterSize(zoomstates[state]);
-    numbers.setFont(font);
-    numbers.setCharacterSize(zoomstates[state]);
-    numbers.setFillColor(CONTENT::LINE_NR_COLOR);
-    cursor.setSize(sf::Vector2f((float) zoomstates[state] / 2, (float)zoomstates[state]));
-    cursor.setFillColor(sf::Color::Black);
-    cursorState = false;
-    date = std::time(0);
-    offset = 0;
-    showLines = 1;
-    frameoffset = 0;
-    lineoffset = 0;
-    localoffset = 0;
-    
-    linesizes.clear();
-    updateResize();
-}
-
 Content::Content() {
     root = nullptr;
     init();
 }
-
 Content::Content(std::string str)
 {
     if (str.size() == 0)
@@ -41,13 +16,36 @@ Content::Content(std::string str)
     init();
     text.setString(composeStrings());
 }
-
 void Content::destroyNode(nod* c) {
 	if (c == nullptr) return;
 	destroyNode(c->l);
 	destroyNode(c->r);
 	delete c;
 }
+void Content::init() {
+    text.setFont(font);
+    text.setFillColor(CONTENT::TEXT_COLOR);
+    zoomstates = { 12, 18, 24, 30, 36, 42, 48 }; // min = 0 , max = 6 | 24 = 100% , 48 = 200% | 50% - 200%
+    zoompercentages = { 50, 75, 100, 125, 150, 175, 200 };
+    state = 2;
+    text.setCharacterSize(zoomstates[state]);
+    numbers.setFont(font);
+    numbers.setCharacterSize(zoomstates[state]);
+    numbers.setFillColor(CONTENT::LINE_NR_COLOR);
+    cursor.setSize(sf::Vector2f((float)zoomstates[state] / 2, (float)zoomstates[state]));
+    cursor.setFillColor(sf::Color::Black);
+    cursorState = false;
+    date = std::time(0);
+    offset = 0;
+    showLines = 1;
+    frameoffset = 0;
+    lineoffset = 0;
+    localoffset = 0;
+
+    linesizes.clear();
+    updateResize();
+}
+
 
 void Content::onKeyPress(sf::Uint32 code) {
     if (code == 'z') { // debug purposes
@@ -176,12 +174,58 @@ void Content::onKeyPress(sf::Keyboard::Key key) {
         zoomOut();
     }
 }
+void Content::onMousePress() {
+    sf::Vector2f mpos = sf::Vector2f(sf::Mouse::getPosition(window));
+    if (mpos.x <= text.getLocalBounds().left || mpos.y <= text.getLocalBounds().top) return;
+    updateSizes();
+    int pos = 0;
+    for (int i = 0; i < linesizes.size(); ++i) {
+        pos += linesizes[i];
+    }
 
-void Content::draw_content() {
-    window.draw(text);
-    window.draw(cursor);
-    if (showLines)
-        window.draw(numbers);
+    if (mpos.y > text.getLocalBounds().height + text.getLocalBounds().top) {
+        offset = linesizes[linesizes.size() - 1];
+        while (localoffset <= propcount - 1 && lineoffset > 0) { // daca nu da bine ceva, incearca sa scoti egalul, ca in while-ul de mai jos
+            lineoffset--;
+            localoffset++;
+        }
+
+        while (mpos.x <= text.findCharacterPos(pos).x && text.findCharacterPos(pos).x > text.getLocalBounds().left) {
+            offset--;
+            pos--;
+        }
+    }
+    else {
+        int oldlocal = localoffset;
+        while (localoffset < propcount - 1 && lineoffset > 0) {
+            lineoffset--;
+            localoffset++;
+        }
+        std::string str = text.getString();
+        if (frameoffset <= 0) str += '\n';
+
+        int cnt = 0;
+        while (mpos.y <= text.findCharacterPos(pos).y) {
+            if (str[pos] == '\n') {
+                localoffset--;
+                lineoffset++;
+                cnt++;
+            }
+            pos--;
+        }
+
+        offset = linesizes[linesizes.size() - cnt - 1] - 1;
+        if (lineoffset <= 0) {
+            offset++;
+        }
+
+        while (mpos.x <= text.findCharacterPos(pos).x && text.findCharacterPos(pos).x > text.getLocalBounds().left) {
+            offset--;
+            pos--;
+        }
+    }
+    cursorState = false;
+    updateCursor();
 }
 
 
@@ -227,7 +271,6 @@ void Content::left(bool isCtrlPressed) {
     text.setString(composeStrings());
     updateCursor();
 }
-
 void Content::right(bool isCtrlPressed) {
     if (getPhrasePosition(lines() - lineoffset - 1) + offset < getLength(root)) {
         if (!isCtrlPressed) {
@@ -276,7 +319,6 @@ void Content::right(bool isCtrlPressed) {
     text.setString(composeStrings());
     updateCursor();
 }
-
 void Content::up() {
     if (lines() - lineoffset > 1) {
         lineoffset++;
@@ -314,7 +356,6 @@ void Content::up() {
     cursorState = false;
     updateCursor();
 }
-
 void Content::down() {
     if (lineoffset > 0) {
         lineoffset--;
@@ -353,7 +394,6 @@ void Content::down() {
     cursorState = false;
     updateCursor();
 }
-
 void Content::zoomIn() {
     if (state < 6) state++;
     text.setCharacterSize(zoomstates[state]);
@@ -361,7 +401,6 @@ void Content::zoomIn() {
     cursor.setSize(sf::Vector2f((float)zoomstates[state] / 2, (float)zoomstates[state]));
     updateResize();
 }
-
 void Content::zoomOut() {
     if (state > 0) state--;
     text.setCharacterSize(zoomstates[state]);
@@ -370,14 +409,23 @@ void Content::zoomOut() {
     updateResize();
 }
 
-void Content::update() {
+
+int digitsCount(int x) {
+    int result = 0;
+    while (x) {
+        result++;
+        x /= 10;
+    }
+    return result;
+}
+
+void Content::updateBlinker() {
     if (std::time(0) > date) { // efectul de "blink" al cursorului
         date = std::time(0);
         cursorState = !cursorState;
         cursor.setFillColor((cursorState ? sf::Color(206, 206, 206) : sf::Color::Transparent));
     }
 }
-
 void Content::updateResize() {
     int size1, size2;
     sf::Text temp("Mp", font, zoomstates[state]);
@@ -396,7 +444,6 @@ void Content::updateResize() {
     updateNumbers();
     updateCursor();
 }
-
 void Content::updateCursor() {
     int localpos = 0;
     for (int i = 0; i < localoffset; ++i) {
@@ -406,16 +453,6 @@ void Content::updateCursor() {
     
     cursor.setPosition(sf::Vector2f(text.findCharacterPos(localpos).x + 2.f, text.findCharacterPos(localpos).y + 1.f));
 }
-
-int digitsCount(int x) {
-    int result = 0;
-    while (x) {
-        result++;
-        x /= 10;
-    }
-    return result;
-}
-
 void Content::updateNumbers() {
     std::string str;
     for (int i = (lines() - frameoffset - propcount + 1 > 0 ? lines() - frameoffset - propcount + 1 : 1); i <= lines() - frameoffset; ++i) {
@@ -429,16 +466,37 @@ void Content::updateNumbers() {
         tempString += '4';
     }
     sf::Text temp(tempString, font, zoomstates[state]);
-    
+
     float leftsize = showLines * (temp.getLocalBounds().width - temp.getLocalBounds().left) + ((float)zoompercentages[state] / 100) * 15;    text.setPosition(sf::Vector2f(leftsize, BAR::HEIGHT));
     text.setPosition(sf::Vector2f(leftsize, BAR::HEIGHT));
 
 }
+void Content::updateSizes() {
+    linesizes.clear();
+    for (int i = (lines() - frameoffset - propcount + 1 > 0 ? lines() - frameoffset - propcount + 1 : 1); i <= lines() - frameoffset; ++i) {
+        linesizes.push_back(getLineLength(i - 1));
+    }
+}
+std::string Content::composeStrings() {
+    // Effective y size: window.getSize().y - BAR::HEIGHT - 10
+
+    std::string str;
+    for (int i = (lines() - frameoffset - propcount + 1 > 0 ? lines() - frameoffset - propcount + 1 : 1); i <= lines() - frameoffset; ++i) {
+        str += getPhrase(i - 1);
+    }
+    return str;
+}
+void Content::draw_content() {
+    window.draw(text);
+    window.draw(cursor);
+    if (showLines)
+        window.draw(numbers);
+}
+
 
 int Content::getPercentage() {
     return zoompercentages[state];
 }
-
 void Content::loadText(std::string str) {
     destroyNode(root);
     if (str.size() == 0)
@@ -460,87 +518,35 @@ void Content::loadText(std::string str) {
     updateCursor();
 }
 
+
 int Content::lines() { // indexare de la 1, adica daca e o linie, se va returna 1
     if (root == nullptr) return 1;
     else return 1 + root->newline_characters;
 }
-
-std::string Content::composeStrings() {
-    // Effective y size: window.getSize().y - BAR::HEIGHT - 10
-    
-    std::string str;
-    for (int i = (lines() - frameoffset - propcount + 1 > 0 ? lines() - frameoffset - propcount + 1 : 1); i <= lines() - frameoffset; ++i) {
-        str += getPhrase(i - 1);
-    }
-    return str;
-}
-
-void Content::updateSizes() {
-    linesizes.clear();
-    for (int i = (lines() - frameoffset - propcount + 1 > 0 ? lines() - frameoffset - propcount + 1 : 1); i <= lines() - frameoffset; ++i) {
-        linesizes.push_back(getLineLength(i - 1));
-    }
-}
-
-void Content::onMousePress() {
-    sf::Vector2f mpos = sf::Vector2f(sf::Mouse::getPosition(window));
-    if (mpos.x <= text.getGlobalBounds().left || mpos.y <= text.getGlobalBounds().top) return;
-    updateSizes();
-    int pos = 0;
-    for (int i = 0; i < linesizes.size(); ++i) {
-        pos += linesizes[i];
-    }
-
-    if (mpos.y > text.getGlobalBounds().height + text.getGlobalBounds().top) {
-        offset = linesizes[linesizes.size() - 1];
-        while (localoffset <= propcount - 1 && lineoffset > 0) { // daca nu da bine ceva, incearca sa scoti egalul, ca in while-ul de mai jos
-            lineoffset--;
-            localoffset++;
-        }
-
-        while (mpos.x <= text.findCharacterPos(pos).x && text.findCharacterPos(pos).x > text.getGlobalBounds().left) {
-            offset--;
-            pos--;
-        }
-    }
-    else {
-        int oldlocal = localoffset;
-        while (localoffset < propcount - 1 && lineoffset > 0) {
-            lineoffset--;
-            localoffset++;
-        }
-        std::string str = text.getString();
-        if (frameoffset <= 0) str += '\n';
-
-        int cnt = 0;
-        while (mpos.y <= text.findCharacterPos(pos).y) {
-            if (str[pos] == '\n') {
-                localoffset--;
-                lineoffset++;
-                cnt++;
-            }
-            pos--;
-        }
-
-        offset = linesizes[linesizes.size() - cnt - 1] - 1;
-        if (lineoffset <= 0) {
-            offset++;
-        }
-
-        while (mpos.x <= text.findCharacterPos(pos).x && text.findCharacterPos(pos).x > text.getGlobalBounds().left) {
-            offset--;
-            pos--;
-        }
-    }
-    cursorState = false;
-    updateCursor();
-}
-
 void Content::out()
 {
     if (root == nullptr)
         return;
     out(root, 0);
+}
+int Content::getLineLength(int line) {
+    if (root == nullptr)
+        return 0;
+    if (line == lines() - 1)
+        return root->subtree_size - getPhrasePosition(line);
+    return getPhrasePosition(line + 1) - getPhrasePosition(line);
+}
+int Content::getPhrasePosition(int phrase_index)
+{
+    if (root == nullptr) {
+        return 0;
+    }
+    return get_phrase_position(root, phrase_index, 0);
+}
+char Content::at(int pos) {
+    int newPos = 0;
+    nod* c = get_node_at_pos(pos, root, newPos);
+    return c->data[newPos];
 }
 void Content::insert(int pos, char val)
 {
@@ -591,54 +597,6 @@ void Content::insert(int pos, std::string text)
         insert(pos + i, text[i]);
     }
 }
-int Content::getLineLength(int line) {
-    if (root == nullptr)
-        return 0;
-    if (line == lines() - 1)
-        return root->subtree_size - getPhrasePosition(line);
-    return getPhrasePosition(line + 1) - getPhrasePosition(line);
-}
-char Content::at(int pos) {
-    int newPos = 0;
-    nod* c = get_node_at_pos(pos, root, newPos);
-    return c->data[newPos];
-}
-int Content::get_phrase_position(nod* c, int phrase_index, int left_positions)
-{
-    if (c->l == nullptr && c->r == nullptr)
-    {
-        // frunza
-        int cnt = 0;
-        int i = 0;
-        while (cnt < phrase_index && i < c->data.size())
-        {
-            if (c->data[i] == '\n')
-                cnt++;
-            i++;
-        }
-        return left_positions + i;
-    }
-    else
-    {
-        int l = c->l->newline_characters;
-        int r = c->r->newline_characters;
-        if (l >= phrase_index)
-        { // primul caracter e in partea din stanga (positibl cazu dubios)
-            return get_phrase_position(c->l, phrase_index, left_positions);
-        }
-        else
-        { // primul caracter e in drepata
-            return get_phrase_position(c->r, phrase_index - l, left_positions + c->l->subtree_size);
-        }
-    }
-}
-int Content::getPhrasePosition(int phrase_index)
-{
-    if (root == nullptr) {
-        return 0;
-    }
-    return get_phrase_position(root, phrase_index, 0);
-}
 void Content::erase(int pos)
 {
     if (root == nullptr)
@@ -681,6 +639,37 @@ void Content::erase(int pos)
         delete c;
         nod* new_nod = resolve_removal(p);
         rebalance_nodes_up_from(new_nod->p);
+    }
+}
+
+
+int Content::get_phrase_position(nod* c, int phrase_index, int left_positions)
+{
+    if (c->l == nullptr && c->r == nullptr)
+    {
+        // frunza
+        int cnt = 0;
+        int i = 0;
+        while (cnt < phrase_index && i < c->data.size())
+        {
+            if (c->data[i] == '\n')
+                cnt++;
+            i++;
+        }
+        return left_positions + i;
+    }
+    else
+    {
+        int l = c->l->newline_characters;
+        int r = c->r->newline_characters;
+        if (l >= phrase_index)
+        { // primul caracter e in partea din stanga (positibl cazu dubios)
+            return get_phrase_position(c->l, phrase_index, left_positions);
+        }
+        else
+        { // primul caracter e in drepata
+            return get_phrase_position(c->r, phrase_index - l, left_positions + c->l->subtree_size);
+        }
     }
 }
 

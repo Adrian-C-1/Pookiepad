@@ -2,7 +2,7 @@
 #include <iostream>
 
 sf::Font font;
-sf::RenderWindow window(sf::VideoMode(600, 600), "Pookiepad");
+sf::RenderWindow window(sf::VideoMode(1450, 1050), "Pookiepad");
 sf::WindowHandle handle;
 
 namespace BAR {

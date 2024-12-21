@@ -36,7 +36,7 @@ int main()
 
     while (window.isOpen()) {
 
-        CONTENT::content->update();
+        CONTENT::content->updateBlinker();
         
         window.clear(CONTENT::BG_COLOR);
 
