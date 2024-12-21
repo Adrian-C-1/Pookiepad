@@ -219,6 +219,9 @@ void onZoomIn() {
 void onZoomOut() {
 	CONTENT::content->zoomOut();
 }
+void onEditpaste() {
+	//CONTENT::content->insert(BAR::getClipboardText());
+}
 
 Menu::Menu() :
 	buttons(std::vector<Button>({ // if modify order see the PopUp spaceAround() functions
@@ -236,7 +239,7 @@ Menu::Menu() :
 		Button("Find", onPressFind),
 		Button("Cut", nullptr),
 		Button("Copy", nullptr),
-		Button("Paste", nullptr),
+		Button("Paste", onEditpaste),
 		Button("Select All", nullptr)
 		}),
 	viewPopUp({
