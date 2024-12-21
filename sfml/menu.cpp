@@ -222,6 +222,9 @@ void onZoomOut() {
 void onEditpaste() {
 	//CONTENT::content->insert(BAR::getClipboardText());
 }
+void onShowLines() {
+	CONTENT::content->showlines();
+}
 
 Menu::Menu() :
 	buttons(std::vector<Button>({ // if modify order see the PopUp spaceAround() functions
@@ -236,7 +239,7 @@ Menu::Menu() :
 		Button("Close", onCloseFile)
 		}),
 	editPopUp({
-		Button("Find", onPressFind),
+		Button("Find", onPressFind), // todo
 		Button("Cut", nullptr),
 		Button("Copy", nullptr),
 		Button("Paste", onEditpaste),
@@ -245,7 +248,7 @@ Menu::Menu() :
 	viewPopUp({
 		Button("Zoom in", onZoomIn),
 		Button("Zoom out", onZoomOut),
-		Button("Show lines", nullptr),
+		Button("Show lines", onShowLines),
 		Button("Word wrap", nullptr),
 	})
 {
@@ -372,6 +375,7 @@ void Menu::draw() {
 		case BAR::OPEN_FIND_POPUP:
 			currentPopUp = &findPopUp;
 			reinterpret_cast<FindPopUp*>(currentPopUp)->focus();
+			reinterpret_cast<FindPopUp*>(currentPopUp)->reset();
 			break;
 		case BAR::NEW_FILE:
 			pages.push_back({ new Content(), Button("Untitled", nullptr) });
@@ -531,7 +535,6 @@ bool Menu::onPress() {
 }
 void Menu::onMouseMove() {
 	
-	; // todo hover show button
 	sf::Vector2f mpos = sf::Vector2f(sf::Mouse::getPosition(window));
 
 	hovering = nullptr;
@@ -569,15 +572,27 @@ void Menu::onMouseMove() {
 		}
 	}
 }
+/// returneaza 1 daca am facut ceva cu cheia (am deschid find)
+bool Menu::onKeyPress() {
+	return (currentPopUp == &findPopUp);
+}
+/// returneaza 1 daca am facut ceva cu cheia (am deschid find)
+bool Menu::onTextEntered(sf::Uint32 code) {
+	if (currentPopUp == &findPopUp) {
+		reinterpret_cast<FindPopUp*>(currentPopUp)->onKeyPress(code);
+		return 1;
+	}
+	return 0;
+}
 
 void onFindFind() {
-
+	std::cout << "Finding\n";
 }
 void onFindPrev() {
-
+	std::cout << "Finding prev\n";
 }
 void onFindNext() {
-
+	std::cout << "Finding next\n";
 }
 void onFindCancel() {
 	BAR::events.push(BAR::SHOULD_CLOSE_POPUP);
@@ -626,9 +641,43 @@ FindPopUp::FindPopUp() :
 	TextBackground.setOutlineThickness(BAR::OUTLINE_THICKNESS);
 	TextBackground.setFillColor(sf::Color::Transparent);
 	background.setSize(sf::Vector2f(background.getSize().x, TextBackground.getPosition().y - background.getPosition().y + TextBackground.getSize().y + BAR::spacing));
+
+	text.setFont(BAR::font);
+	text.setCharacterSize(BAR::HEIGHT - 2 - BAR::spacing - 2);
+	text.setPosition(TextBackground.getPosition() + sf::Vector2f(0.0f, -2.0f));
+	text.setString("NU TRB SA VEZI ASTA");
+	text.setFillColor(sf::Color::White);
+}
+void FindPopUp::reset() {
+	line = 0, occurence = 0;
+	text.setString("");
+	focused = 1;
 }
 void FindPopUp::focus() {
 	focused = 1;
+}
+void FindPopUp::onKeyPress(sf::Uint32 code) {
+	if (focused == 0) return;
+
+	// 8 = Backspace
+	// 13 = Enter
+	if (code >= ' ' && code <= '~') { // Character
+		text.setString(text.getString() + code);
+		if (text.getPosition().x + text.getGlobalBounds().width >= TextBackground.getPosition().x + TextBackground.getSize().x) {
+			code = 8; // backspace
+		}
+	}
+	if (code == 8) { // back
+		std::string str = text.getString();
+		if (str.size() != 0)
+			str.pop_back();
+		text.setString(str);
+	}
+	if (code == 13) { // enter
+		focused = 0;
+		Find.onPress();
+	}
+
 }
 void FindPopUp::draw(Button* hover) {
 	if (focused == 1) TextBackground.setOutlineColor(sf::Color::White);
@@ -662,6 +711,7 @@ void FindPopUp::draw(Button* hover) {
 		Cancel.onUnHover();
 
 	window.draw(TextBackground);
+	window.draw(text);
 }
 bool FindPopUp::onPress() {
 	sf::Vector2f mpos = sf::Vector2f(sf::Mouse::getPosition(window));

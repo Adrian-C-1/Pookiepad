@@ -40,8 +40,10 @@ public:
     std::string getString();
 
     inline void destroyTree() { destroyNode(root); }
+    // cu l mic ca deja se numeste showLines si nu ma pot gandi la nume originale
+    inline void showlines() { showLines = 1 - showLines; updateNumbers(); }
 private: // private
-    
+    bool showLines;
     /*Old content*/
 
     sf::Text text;

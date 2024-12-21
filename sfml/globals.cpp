@@ -65,4 +65,8 @@ namespace BAR {
 
 namespace CONTENT {
 	Content* content = nullptr;
+
+	const sf::Color BG_COLOR = sf::Color(39, 39, 39, 255);
+	const sf::Color TEXT_COLOR = sf::Color(255, 255, 255, 255);
+	const sf::Color LINE_NR_COLOR = sf::Color(110, 110, 110, 255);
 }

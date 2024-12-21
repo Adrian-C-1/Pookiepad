@@ -38,7 +38,7 @@ int main()
 
         CONTENT::content->update();
         
-        window.clear(/*sf::Color::White*/);
+        window.clear(CONTENT::BG_COLOR);
 
         CONTENT::content->draw_content();
 
@@ -73,11 +73,13 @@ int main()
                 break;
             case sf::Event::TextEntered:
                 BAR::menu->markChanged();
-                CONTENT::content->onKeyPress(event.text.unicode);
+                if (!BAR::menu->onTextEntered(event.text.unicode))
+                    CONTENT::content->onKeyPress(event.text.unicode);
                 break;
             case sf::Event::KeyPressed:
                 BAR::menu->markChanged();
-                CONTENT::content->onKeyPress(event.key.code);
+                if (!BAR::menu->onKeyPress())
+                    CONTENT::content->onKeyPress(event.key.code);
                 break;
             case sf::Event::MouseWheelScrolled:
                 if (event.mouseWheelScroll.delta > 0) { 

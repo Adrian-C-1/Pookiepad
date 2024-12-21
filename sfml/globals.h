@@ -48,4 +48,8 @@ namespace BAR {
 class Content;
 namespace CONTENT {
 	extern Content* content;
+
+	extern const sf::Color BG_COLOR;
+	extern const sf::Color TEXT_COLOR;
+	extern const sf::Color LINE_NR_COLOR;
 }

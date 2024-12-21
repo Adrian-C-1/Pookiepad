@@ -49,6 +49,8 @@ public:
 	bool onPress() override;
 	Button* onHover(sf::Vector2f mpos) override;
 	void focus();
+	void reset();
+	void onKeyPress(sf::Uint32 code);
 private:
 	Button Find, Next, Prev, Cancel;
 
@@ -56,6 +58,7 @@ private:
 
 	sf::RectangleShape TextBackground;
 	sf::Text text;
+	int line = 0, occurence = 0;
 };
 
 class Menu {
@@ -67,6 +70,11 @@ public:
 	void onResize();
 	void markChanged();
 	void markUnchanged();
+
+	/// returneaza 1 daca am facut ceva cu cheia (am deschid find)
+	bool onKeyPress();
+	/// returneaza 1 daca am facut ceva cu cheia (am deschid find)
+	bool onTextEntered(sf::Uint32 code);
 private:
 	void ordonPages();
 	float getPage0x();

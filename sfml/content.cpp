@@ -2,17 +2,20 @@
 
 void Content::init() {
     text.setFont(font);
+    text.setFillColor(CONTENT::TEXT_COLOR);
     zoomstates = {12, 18, 24, 30, 36, 42, 48}; // min = 0 , max = 6 | 24 = 100% , 48 = 200% | 50% - 200%
     zoompercentages = { 50, 75, 100, 125, 150, 175, 200 };
     state = 2;
     text.setCharacterSize(zoomstates[state]);
     numbers.setFont(font);
     numbers.setCharacterSize(zoomstates[state]);
+    numbers.setFillColor(CONTENT::LINE_NR_COLOR);
     cursor.setSize(sf::Vector2f((float) zoomstates[state] / 2, (float)zoomstates[state]));
     cursor.setFillColor(sf::Color::Black);
     cursorState = false;
     date = std::time(0);
     offset = 0;
+    showLines = 1;
     frameoffset = 0;
     lineoffset = 0;
     localoffset = 0;
@@ -177,7 +180,8 @@ void Content::onKeyPress(sf::Keyboard::Key key) {
 void Content::draw_content() {
     window.draw(text);
     window.draw(cursor);
-    window.draw(numbers);
+    if (showLines)
+        window.draw(numbers);
 }
 
 
@@ -425,7 +429,8 @@ void Content::updateNumbers() {
         tempString += '4';
     }
     sf::Text temp(tempString, font, zoomstates[state]);
-    float leftsize = temp.getLocalBounds().width - temp.getLocalBounds().left + ((float) zoompercentages[state] / 100) * 15;
+    
+    float leftsize = showLines * (temp.getLocalBounds().width - temp.getLocalBounds().left) + ((float)zoompercentages[state] / 100) * 15;    text.setPosition(sf::Vector2f(leftsize, BAR::HEIGHT));
     text.setPosition(sf::Vector2f(leftsize, BAR::HEIGHT));
 
 }
