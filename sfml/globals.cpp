@@ -20,7 +20,39 @@ namespace BAR {
 	Menu *menu = nullptr;
 
 	bool SHOW_HITBOX = 1;
-
+	
+	std::string getClipboardText() {
+		OpenClipboard(nullptr);
+		HANDLE handle = GetClipboardData(CF_TEXT);
+		if (handle == NULL) return "";
+		char* text = static_cast<char*>(GlobalLock(handle)); // NU E OBIECTUL MEU ! NU STERGE !
+		if (text == 0 || strlen(text) == 0) return "";
+		GlobalUnlock(handle);
+		CloseClipboard();
+		std::string str(text);
+		return str;
+	}
+	bool setClipBoardText(const std::string& text) {
+		OpenClipboard(nullptr);
+		EmptyClipboard();
+		int size = text.size() + 1; // null
+		HGLOBAL handle = GlobalAlloc(GMEM_MOVEABLE, size);
+		if (handle == 0) {
+			CloseClipboard();
+			return 0;
+		}
+		char* p = static_cast<char*>(GlobalLock(handle));
+		memcpy(p, text.c_str(), size);
+		GlobalUnlock(handle);
+		bool r = SetClipboardData(CF_TEXT, handle);
+		if (r == 0) {
+			GlobalFree(handle); // failed for whatever reason
+			CloseClipboard();
+			return 0;
+		}
+		CloseClipboard();
+		return 1;
+	}
 	std::string getFileFromFilepath(std::string path) {
 		std::string file = "";
 		int i = path.size() - 1;

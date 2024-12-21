@@ -38,7 +38,10 @@ namespace BAR {
 	CLOSE_ALL,
 	};
 	extern std::queue<EVENT> events;
-
+	
+	/// returns 1 on succes, 0 on fail
+	bool setClipBoardText(const std::string& text);
+	std::string getClipboardText();
 	std::string getFileFromFilepath(std::string path);
 }
 

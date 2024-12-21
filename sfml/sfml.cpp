@@ -20,6 +20,8 @@ void initiate() {
     handle = window.getSystemHandle();
 }
 
+
+
 int main()
 {
     initiate();
