@@ -34,6 +34,8 @@ public:
 
     void zoomIn();
     void zoomOut();
+
+    int getPercentage();
     
     std::string getString();
 
@@ -123,6 +125,7 @@ private: // private
 
     void out();
     void insert(int pos, char val);
+    void insert(int pos, std::string text);
     void erase(int pos);
     char at(int pos);
     int lines();

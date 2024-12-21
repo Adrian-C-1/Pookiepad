@@ -430,6 +430,10 @@ void Content::updateNumbers() {
 
 }
 
+int Content::getPercentage() {
+    return zoompercentages[state];
+}
+
 void Content::loadText(std::string str) {
     destroyNode(root);
     if (str.size() == 0)
@@ -573,6 +577,13 @@ void Content::insert(int pos, char val)
             // out();
             local_rebalance(c);
         }
+    }
+}
+void Content::insert(int pos, std::string text)
+{
+    for (int i = 0; i < text.size(); i++)
+    {
+        insert(pos + i, text[i]);
     }
 }
 int Content::getLineLength(int line) {
