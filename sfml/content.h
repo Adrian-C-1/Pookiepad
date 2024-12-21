@@ -31,6 +31,9 @@ public:
     void update();
     void updateResize();
     void draw_content(); // asta va ramane mereu cu case-ul asta xDDD
+
+    void zoomIn();
+    void zoomOut();
     
     std::string getString();
 
@@ -53,6 +56,10 @@ private: // private
     int propsize; // cat de mare poate fi o propozitie in functie de marimea ferestrei
     std::vector<int> linesizes; // lungimea tuturor liniilor vizibile pe ecran (cam in orice moment)
     time_t date;
+
+    std::vector<int> zoomstates;
+    std::vector<int> zoompercentages;
+    int state;
 
     // now
 	void destroyNode(nod* c);

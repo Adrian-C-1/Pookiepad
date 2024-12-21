@@ -70,7 +70,6 @@ int main()
                 BAR::menu->onMouseMove();
                 break;
             case sf::Event::TextEntered:
-                if (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl)) break;
                 BAR::menu->markChanged();
                 CONTENT::content->onKeyPress(event.text.unicode);
                 break;
@@ -79,10 +78,16 @@ int main()
                 CONTENT::content->onKeyPress(event.key.code);
                 break;
             case sf::Event::MouseWheelScrolled:
-                if (event.mouseWheelScroll.delta > 0) {
-                   CONTENT::content->onKeyPress(sf::Keyboard::Up);
+                if (event.mouseWheelScroll.delta > 0) { 
+                    if (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl)) {
+                        CONTENT::content->zoomIn();
+                    }
+                    else CONTENT::content->onKeyPress(sf::Keyboard::Up);
                 }
                 else {
+                    if (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl)) {
+                        CONTENT::content->zoomOut();
+                    }
                     CONTENT::content->onKeyPress(sf::Keyboard::Down);
                 }
                 break;

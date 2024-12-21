@@ -2,12 +2,13 @@
 
 void Content::init() {
     text.setFont(font);
-    text.setCharacterSize(24);
-    text.setPosition(sf::Vector2f(35.f, BAR::HEIGHT));
+    zoomstates = {12, 18, 24, 30, 36, 42, 48}; // min = 0 , max = 6 | 24 = 100% , 48 = 200% | 50% - 200%
+    zoompercentages = { 50, 75, 100, 125, 150, 175, 200 };
+    state = 2;
+    text.setCharacterSize(zoomstates[state]);
     numbers.setFont(font);
-    numbers.setCharacterSize(24);
-    numbers.setPosition(0.0f, BAR::HEIGHT);
-    cursor.setSize(sf::Vector2f(12.f, 24.f));
+    numbers.setCharacterSize(zoomstates[state]);
+    cursor.setSize(sf::Vector2f((float) zoomstates[state] / 2, (float)zoomstates[state]));
     cursor.setFillColor(sf::Color::Black);
     cursorState = false;
     date = std::time(0);
@@ -15,10 +16,9 @@ void Content::init() {
     frameoffset = 0;
     lineoffset = 0;
     localoffset = 0;
+    
     linesizes.clear();
     updateResize();
-    updateNumbers();
-    updateCursor();
 }
 
 Content::Content() {
@@ -48,8 +48,7 @@ void Content::destroyNode(nod* c) {
 
 void Content::onKeyPress(sf::Uint32 code) {
     if (code == 'z') { // debug purposes
-        //std::cout << localoffset << " " << offset << " " << frameoffset << " " << lineoffset << '\n';
-        //return;
+        ;
     }
     if (code >= ' ' && code <= '~') { // Character
         insert(getPhrasePosition(lines() - lineoffset - 1) + offset, code);        
@@ -144,7 +143,7 @@ void Content::onKeyPress(sf::Uint32 code) {
     cursorState = false;
 }
 void Content::onKeyPress(sf::Keyboard::Key key) {
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
+    if (key == sf::Keyboard::Left) {
         if ((sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl))) {
             left(true);
         }
@@ -166,6 +165,12 @@ void Content::onKeyPress(sf::Keyboard::Key key) {
     }
     else if (key == sf::Keyboard::Down) {
         down();
+    }
+    else if (key == 55) { // Ctrl + '+'
+        zoomIn();
+    }
+    else if (key == 56) { // Ctrl + '-'
+        zoomOut();
     }
 }
 
@@ -345,6 +350,22 @@ void Content::down() {
     updateCursor();
 }
 
+void Content::zoomIn() {
+    if (state < 6) state++;
+    text.setCharacterSize(zoomstates[state]);
+    numbers.setCharacterSize(zoomstates[state]);
+    cursor.setSize(sf::Vector2f((float)zoomstates[state] / 2, (float)zoomstates[state]));
+    updateResize();
+}
+
+void Content::zoomOut() {
+    if (state > 0) state--;
+    text.setCharacterSize(zoomstates[state]);
+    numbers.setCharacterSize(zoomstates[state]);
+    cursor.setSize(sf::Vector2f((float)zoomstates[state] / 2, (float)zoomstates[state]));
+    updateResize();
+}
+
 void Content::update() {
     if (std::time(0) > date) { // efectul de "blink" al cursorului
         date = std::time(0);
@@ -355,7 +376,7 @@ void Content::update() {
 
 void Content::updateResize() {
     int size1, size2;
-    sf::Text temp("Mp", font, 24);
+    sf::Text temp("Mp", font, zoomstates[state]);
     size1 = temp.getLocalBounds().height;
     temp.setString("Mp\nMp");
     size2 = temp.getLocalBounds().height;
@@ -382,12 +403,30 @@ void Content::updateCursor() {
     cursor.setPosition(sf::Vector2f(text.findCharacterPos(localpos).x + 2.f, text.findCharacterPos(localpos).y + 1.f));
 }
 
+int digitsCount(int x) {
+    int result = 0;
+    while (x) {
+        result++;
+        x /= 10;
+    }
+    return result;
+}
+
 void Content::updateNumbers() {
     std::string str;
     for (int i = (lines() - frameoffset - propcount + 1 > 0 ? lines() - frameoffset - propcount + 1 : 1); i <= lines() - frameoffset; ++i) {
         str += std::to_string(i) + '\n';
     }
     numbers.setString(str);
+    numbers.setPosition(0.0f, BAR::HEIGHT);
+
+    std::string tempString;
+    for (int i = 0; i < digitsCount(lines() - frameoffset); ++i) {
+        tempString += '4';
+    }
+    sf::Text temp(tempString, font, zoomstates[state]);
+    float leftsize = temp.getLocalBounds().width - temp.getLocalBounds().left + ((float) zoompercentages[state] / 100) * 15;
+    text.setPosition(sf::Vector2f(leftsize, BAR::HEIGHT));
 
 }
 

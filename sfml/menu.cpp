@@ -213,6 +213,12 @@ void onCloseFile() {
 void onNewFile() {
 	BAR::events.push(BAR::NEW_FILE);
 }
+void onZoomIn() {
+	CONTENT::content->zoomIn();
+}
+void onZoomOut() {
+	CONTENT::content->zoomOut();
+}
 
 Menu::Menu() :
 	buttons(std::vector<Button>({ // if modify order see the PopUp spaceAround() functions
@@ -225,17 +231,17 @@ Menu::Menu() :
 		Button("Open", onOpenFile),
 		Button("Save", onSaveFile),
 		Button("Close", onCloseFile)
-	}),
+		}),
 	editPopUp({
 		Button("Find", onPressFind),
 		Button("Cut", nullptr),
 		Button("Copy", nullptr),
 		Button("Paste", nullptr),
 		Button("Select All", nullptr)
-	}),
+		}),
 	viewPopUp({
-		Button("Zoom in", nullptr),
-		Button("Zoom out", nullptr),
+		Button("Zoom in", onZoomIn),
+		Button("Zoom out", onZoomOut),
 		Button("Show lines", nullptr),
 		Button("Word wrap", nullptr),
 	})
