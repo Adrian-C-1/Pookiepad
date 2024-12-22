@@ -22,6 +22,7 @@ public:
 
     Content();
     Content(std::string str);
+    inline void destroyTree() { destroyNode(root); }
     
     void onKeyPress(sf::Uint32 code);
     void onKeyPress(sf::Keyboard::Key key);
@@ -39,12 +40,12 @@ public:
     
     std::string getString();
 
-    inline void destroyTree() { destroyNode(root); }
     // cu l mic ca deja se numeste showLines si nu ma pot gandi la nume originale
-    inline void showlines() { showLines = 1 - showLines; updateNumbers(); }
+    inline void showlines() { showLines = 1 - showLines; updateNumbers(); } // AM MURIT =)))))
 private: // private
-    bool showLines;
-    /*Old content*/
+
+    nod* root;
+    const int leaf_size = 6;
 
     sf::Text text;
     sf::Text numbers;
@@ -64,32 +65,36 @@ private: // private
     std::vector<int> zoomstates;
     std::vector<int> zoompercentages;
     int state;
+    bool showLines;
 
-    // now
-	void destroyNode(nod* c);
+    void init();
 
-    /*Old private*/
+    void left(bool isCtrlPressed);
+    void right(bool isCtrlPressed);
+    void up();
+    void down();
+    void copy(bool cut);
+    void paste();
 
-    nod* root;
-    const int leaf_size = 6;
+    void updateCursor();
+    void updateNumbers();
+    void updateSizes();
+    std::string composeStrings();
+
+    void out();
+    char at(int pos);
+    void insert(int pos, char val);
+    void insert(int pos, std::string text);
+    void erase(int pos);
+    int lines();
+    int getPhrasePosition(int phrase_index);
+
+    void destroyNode(nod* c);
 
     void recalculate_node_value(nod* c);
     void recalculate_node_values_up_from(nod* c);
     nod* get_node_at_pos(int pos, nod* c, int& pos_in_string);
     void split_node(nod* c);
-
-    /// @brief
-    /// One of c's sons was removed.
-    /// Makes the node good and recalculates values.
-    /// @param c
-    /// Returns the new node that's instead of c.
-    nod* resolve_removal(nod* c);
-
-    nod* get_leftmost_leaf_of_subtree(nod* r);
-    nod* get_rightmost_leaf_of_subtree(nod* r);
-
-    void createRope(std::string& str, int l, int r, nod* c, nod* p);
-    void out(nod* c, int h);
 
     /// @brief
     /// Tries to rebalance the ammount of leaf nodes in the left and right subtree
@@ -113,34 +118,24 @@ private: // private
 
     nod* get_next_node(nod* c, nod* fiu);
     nod* get_prev_node(nod* c, nod* fiu);
-    
+
     int getLength(nod* c);
     int getLineLength(int line);
     void get_string(nod* c, std::string& str);
     int get_phrase_position(nod* c, int phrase_index, int left_positions);
+    void out(nod* c, int h);
 
-    std::string composeStrings();
+    /// @brief
+    /// One of c's sons was removed.
+    /// Makes the node good and recalculates values.
+    /// @param c
+    /// Returns the new node that's instead of c.
+    nod* resolve_removal(nod* c);
 
-    void init();
+    nod* get_leftmost_leaf_of_subtree(nod* r);
+    nod* get_rightmost_leaf_of_subtree(nod* r);
 
-    /*Old public*/
-
-    void out();
-    void insert(int pos, char val);
-    void insert(int pos, std::string text);
-    void erase(int pos);
-    char at(int pos);
-    int lines();
-    int getPhrasePosition(int phrase_index);
-
-    void left(bool isCtrlPressed);
-    void right(bool isCtrlPressed);
-    void up();
-    void down();
-
-    void updateCursor();
-    void updateNumbers();
-    void updateSizes();
+    void createRope(std::string& str, int l, int r, nod* c, nod* p);
 
     /// Will return The n-th phrase that ends with newline.
     std::string getPhrase(int index);

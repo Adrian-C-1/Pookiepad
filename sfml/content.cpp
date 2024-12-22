@@ -33,7 +33,7 @@ void Content::init() {
     numbers.setCharacterSize(zoomstates[state]);
     numbers.setFillColor(CONTENT::LINE_NR_COLOR);
     cursor.setSize(sf::Vector2f((float)zoomstates[state] / 2, (float)zoomstates[state]));
-    cursor.setFillColor(sf::Color::Black);
+    cursor.setFillColor(CONTENT::BG_COLOR);
     cursorState = false;
     date = std::time(0);
     offset = 0;
@@ -49,7 +49,7 @@ void Content::init() {
 
 void Content::onKeyPress(sf::Uint32 code) {
     if (code == 'z') { // debug purposes
-        ;
+        //return;
     }
     if (code >= ' ' && code <= '~') { // Character
         insert(getPhrasePosition(lines() - lineoffset - 1) + offset, code);        
@@ -172,6 +172,15 @@ void Content::onKeyPress(sf::Keyboard::Key key) {
     }
     else if (key == 56) { // Ctrl + '-'
         zoomOut();
+    }
+    else if (key == 23) { // Ctrl + 'x'
+        copy(true);
+    }
+    else if (key == 2) { // Ctrl + 'c'
+        copy(false);
+    }
+    else if (key == 21) { // Ctrl + 'v'
+        paste();
     }
 }
 void Content::onMousePress() {
@@ -407,6 +416,25 @@ void Content::zoomOut() {
     numbers.setCharacterSize(zoomstates[state]);
     cursor.setSize(sf::Vector2f((float)zoomstates[state] / 2, (float)zoomstates[state]));
     updateResize();
+}
+void Content::copy(bool cut) {
+    ;
+}
+void Content::paste() {
+    //std::string clipboardText = BAR::getClipboardText();
+    std::string clipboardText = "12345\n678";
+    insert(getPhrasePosition(lines() - lineoffset - 1) + offset, clipboardText);
+    if (clipboardText.find('\n') == -1) {
+        offset += clipboardText.size();
+    }
+    else {
+        int newLineCounter = std::count(clipboardText.begin(), clipboardText.end(), '\n');
+        offset = clipboardText.size() - clipboardText.find_last_of('\n') - 1;
+    }
+    text.setString(composeStrings());
+    updateSizes();
+    updateNumbers();
+    updateCursor();
 }
 
 
