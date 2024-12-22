@@ -421,8 +421,14 @@ void Content::copy(bool cut) {
     ;
 }
 void Content::paste() {
+    std::string clipboardText = BAR::getClipboardText();
+    for (int i = 0; i < clipboardText.size(); i++)
+    {
+        onKeyPress(clipboardText[i]);
+    }
+
     //std::string clipboardText = BAR::getClipboardText();
-    std::string clipboardText = "12345\n678";
+    /*std::string clipboardText = "12345\n678";
     insert(getPhrasePosition(lines() - lineoffset - 1) + offset, clipboardText);
     if (clipboardText.find('\n') == -1) {
         offset += clipboardText.size();
@@ -434,7 +440,7 @@ void Content::paste() {
     text.setString(composeStrings());
     updateSizes();
     updateNumbers();
-    updateCursor();
+    updateCursor();*/
 }
 
 
