@@ -29,6 +29,7 @@ public:
     void onMousePress();
 
     void loadText(std::string str);
+    void paste();
     void updateBlinker();
     void updateResize();
     void draw_content(); // asta va ramane mereu cu case-ul asta xDDD
@@ -74,7 +75,6 @@ private: // private
     void up();
     void down();
     void copy(bool cut);
-    void paste();
 
     void updateCursor();
     void updateNumbers();
