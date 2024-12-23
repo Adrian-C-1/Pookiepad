@@ -49,10 +49,18 @@ void Content::init() {
 
 void Content::onKeyPress(sf::Uint32 code) {
     if (code == 'z') { // debug purposes
-        std::cout << offset << '\n';
+        std::cout << "\n\n";
+        std::cout << "Lines: " << lines() << '\n';
+        std::cout << "Offset: " << offset << '\n';
+        std::cout << "Lineoffset: " << lineoffset << '\n';
+        std::cout << "Frameoffset: " << frameoffset << '\n';
+        std::cout << "Localoffset: " << localoffset << '\n';
+        std::cout << "Diffoffset: " << diffoffset << '\n';
+        std::cout << "\n\n";
         return;
     }
     if (code >= ' ' && code <= '~') { // Character
+        if (diffpos) diffoffset = frameoffset;
         diffpos = false;
         insert(getPhrasePosition(lines() - lineoffset - 1) + offset, code);        
         offset++;
@@ -65,6 +73,7 @@ void Content::onKeyPress(sf::Uint32 code) {
         switch (code) {
         case (13): // 13 = Enter
         {
+            if (diffpos) diffoffset = frameoffset;
             diffpos = false;
             insert(getPhrasePosition(lines() - lineoffset - 1) + offset, '\n');
             offset = 0;
@@ -77,6 +86,7 @@ void Content::onKeyPress(sf::Uint32 code) {
         }
         case (9): // 9 = Tab
         {
+            if (diffpos) diffoffset = frameoffset;
             diffpos = false;
             for (int i = 0; i < 6; ++i) {
                 insert(getPhrasePosition(lines() - lineoffset - 1) + offset, ' ');
@@ -88,6 +98,7 @@ void Content::onKeyPress(sf::Uint32 code) {
         }
         case (8): // 8 = Backspace
         {
+            if (diffpos) diffoffset = frameoffset;
             diffpos = false;
             if (offset == 0 && lines() - lineoffset - 1 <= 0) return;
             int pos = getPhrasePosition(lines() - lineoffset - 1) + offset - 1;
@@ -111,6 +122,7 @@ void Content::onKeyPress(sf::Uint32 code) {
         }
         case (127): // 127 = Ctrl - Backspace
         {
+            if (diffpos) diffoffset = frameoffset;
             diffpos = false;
             if (offset == 0 && lines() - lineoffset - 1 <= 0) return;
             int pos = getPhrasePosition(lines() - lineoffset - 1) + offset - 1;
