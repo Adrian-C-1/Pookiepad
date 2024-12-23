@@ -49,13 +49,15 @@ void Content::init() {
 
 void Content::onKeyPress(sf::Uint32 code) {
     if (code == 'z') { // debug purposes
-        //return;
+        std::cout << offset << '\n';
+        return;
     }
     if (code >= ' ' && code <= '~') { // Character
         diffpos = false;
         insert(getPhrasePosition(lines() - lineoffset - 1) + offset, code);        
         offset++;
         text.setString(composeStrings());
+        updateSizes();
         updateNumbers();
         updateCursor();
     }
