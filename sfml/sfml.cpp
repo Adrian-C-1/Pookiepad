@@ -86,13 +86,13 @@ int main()
                     if (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl)) {
                         CONTENT::content->zoomIn();
                     }
-                    else CONTENT::content->onKeyPress(sf::Keyboard::Up);
+                    else CONTENT::content->scroll(true);
                 }
                 else {
                     if (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl)) {
                         CONTENT::content->zoomOut();
                     }
-                    CONTENT::content->onKeyPress(sf::Keyboard::Down);
+                    else CONTENT::content->scroll(false);
                 }
                 break;
             }

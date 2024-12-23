@@ -24,6 +24,7 @@ public:
     Content(std::string str);
     inline void destroyTree() { destroyNode(root); }
     
+    void scroll(bool direction);
     void onKeyPress(sf::Uint32 code);
     void onKeyPress(sf::Keyboard::Key key);
     void onMousePress();
@@ -42,7 +43,7 @@ public:
     std::string getString();
 
     // cu l mic ca deja se numeste showLines si nu ma pot gandi la nume originale
-    inline void showlines() { showLines = 1 - showLines; updateNumbers(); } // AM MURIT =)))))
+    inline void showlines() { showLines = 1 - showLines; updateResize(); } // AM MURIT =)))))
 private: // private
 
     nod* root;
@@ -63,6 +64,13 @@ private: // private
     std::vector<int> linesizes; // lungimea tuturor liniilor vizibile pe ecran (cam in orice moment)
     time_t date;
 
+    bool diffpos;
+    int diffoffset;
+
+    bool selected;
+    int selectXleft, selectYleft;
+    int selectXright, selectYright;
+
     std::vector<int> zoomstates;
     std::vector<int> zoompercentages;
     int state;
@@ -75,6 +83,7 @@ private: // private
     void up();
     void down();
     void copy(bool cut);
+    void select(int control);
 
     void updateCursor();
     void updateNumbers();

@@ -52,15 +52,18 @@ void Content::onKeyPress(sf::Uint32 code) {
         //return;
     }
     if (code >= ' ' && code <= '~') { // Character
+        diffpos = false;
         insert(getPhrasePosition(lines() - lineoffset - 1) + offset, code);        
         offset++;
         text.setString(composeStrings());
+        updateNumbers();
         updateCursor();
     }
     else {
         switch (code) {
         case (13): // 13 = Enter
         {
+            diffpos = false;
             insert(getPhrasePosition(lines() - lineoffset - 1) + offset, '\n');
             offset = 0;
             if (localoffset < propcount - 1 && lines() <= propcount) localoffset++;
@@ -72,6 +75,7 @@ void Content::onKeyPress(sf::Uint32 code) {
         }
         case (9): // 9 = Tab
         {
+            diffpos = false;
             for (int i = 0; i < 6; ++i) {
                 insert(getPhrasePosition(lines() - lineoffset - 1) + offset, ' ');
             }
@@ -82,6 +86,7 @@ void Content::onKeyPress(sf::Uint32 code) {
         }
         case (8): // 8 = Backspace
         {
+            diffpos = false;
             if (offset == 0 && lines() - lineoffset - 1 <= 0) return;
             int pos = getPhrasePosition(lines() - lineoffset - 1) + offset - 1;
             if (at(pos) == '\n') {
@@ -104,6 +109,7 @@ void Content::onKeyPress(sf::Uint32 code) {
         }
         case (127): // 127 = Ctrl - Backspace
         {
+            diffpos = false;
             if (offset == 0 && lines() - lineoffset - 1 <= 0) return;
             int pos = getPhrasePosition(lines() - lineoffset - 1) + offset - 1;
             char ch = at(pos);
@@ -148,6 +154,9 @@ void Content::onKeyPress(sf::Keyboard::Key key) {
         if ((sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl))) {
             left(true);
         }
+        else if ((sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)) || (sf::Keyboard::isKeyPressed(sf::Keyboard::RShift))) {
+            select(0);
+        }
         else {
             left(false);
         }
@@ -156,16 +165,29 @@ void Content::onKeyPress(sf::Keyboard::Key key) {
         if ((sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl))) {
             right(true);
         }
+        else if ((sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)) || (sf::Keyboard::isKeyPressed(sf::Keyboard::RShift))) {
+            select(1);
+        }
         else {
             right(false);
 
         }
     }
     else if (key == sf::Keyboard::Up) {
-        up();
+        if ((sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)) || (sf::Keyboard::isKeyPressed(sf::Keyboard::RShift))) {
+            select(2);
+        }
+        else {
+            up();
+        }
     }
     else if (key == sf::Keyboard::Down) {
-        down();
+        if ((sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)) || (sf::Keyboard::isKeyPressed(sf::Keyboard::RShift))) {
+            select(3);
+        }
+        else {
+            down();
+        }
     }
     else if (key == 55) { // Ctrl + '+'
         zoomIn();
@@ -185,7 +207,15 @@ void Content::onKeyPress(sf::Keyboard::Key key) {
 }
 void Content::onMousePress() {
     sf::Vector2f mpos = sf::Vector2f(sf::Mouse::getPosition(window));
-    if (mpos.x <= text.getLocalBounds().left || mpos.y <= text.getLocalBounds().top) return;
+    if (mpos.x <= text.getGlobalBounds().left || mpos.y <= text.getGlobalBounds().top) return;
+    if (diffpos) {
+        diffpos = false;
+        if (frameoffset < diffoffset) {
+            lineoffset += (diffoffset - frameoffset);
+        }
+        else lineoffset -= (frameoffset - diffoffset);
+        frameoffset = diffoffset;
+    }
     updateSizes();
     int pos = 0;
     for (int i = 0; i < linesizes.size(); ++i) {
@@ -205,13 +235,12 @@ void Content::onMousePress() {
         }
     }
     else {
-        int oldlocal = localoffset;
         while (localoffset < propcount - 1 && lineoffset > 0) {
             lineoffset--;
             localoffset++;
         }
         std::string str = text.getString();
-        if (frameoffset <= 0) str += '\n';
+        if (frameoffset <= 0) str += '\n'; // (sau == 0)
 
         int cnt = 0;
         while (mpos.y <= text.findCharacterPos(pos).y) {
@@ -238,7 +267,25 @@ void Content::onMousePress() {
 }
 
 
+void Content::scroll(bool direction) {
+    if (direction) { // Up
+        if (lines() - propcount - diffoffset > 0) {
+            diffpos = true;
+            diffoffset++;
+        }
+    }
+    else {
+        if (diffoffset > 0) {
+            diffpos = true;
+            diffoffset--;
+        }
+    }
+    text.setString(composeStrings());
+    updateSizes();
+    updateNumbers();
+}
 void Content::left(bool isCtrlPressed) {
+    diffpos = false;
     if (offset >= 1 || lines() - lineoffset - 1 > 0) {
         if (!isCtrlPressed) {
             int pos = getPhrasePosition(lines() - lineoffset - 1) + offset - 1;
@@ -247,6 +294,7 @@ void Content::left(bool isCtrlPressed) {
                 lineoffset++;
                 if (localoffset > 0) localoffset--;
                 else if (localoffset == 0) frameoffset++;
+                diffoffset = frameoffset;
                 updateSizes();
                 updateNumbers();
             }
@@ -263,6 +311,7 @@ void Content::left(bool isCtrlPressed) {
                 lineoffset++;
                 if (localoffset > 0) localoffset--;
                 else if (localoffset == 0) frameoffset++;
+                diffoffset = frameoffset;
                 updateSizes();
                 updateNumbers();
             }
@@ -281,6 +330,7 @@ void Content::left(bool isCtrlPressed) {
     updateCursor();
 }
 void Content::right(bool isCtrlPressed) {
+    diffpos = false;
     if (getPhrasePosition(lines() - lineoffset - 1) + offset < getLength(root)) {
         if (!isCtrlPressed) {
             int pos = getPhrasePosition(lines() - lineoffset - 1) + offset;
@@ -291,6 +341,7 @@ void Content::right(bool isCtrlPressed) {
                 else if (localoffset >= propcount - 1 && frameoffset > 0) {
                     frameoffset--;
                 }
+                diffoffset = frameoffset;
                 updateSizes();
                 updateNumbers();
             }
@@ -309,6 +360,7 @@ void Content::right(bool isCtrlPressed) {
                 else if (localoffset >= propcount - 1 && frameoffset > 0) {
                     frameoffset--;
                 }
+                diffoffset = frameoffset;
                 updateSizes();
                 updateNumbers();
             }
@@ -329,12 +381,14 @@ void Content::right(bool isCtrlPressed) {
     updateCursor();
 }
 void Content::up() {
+    diffpos = false;
     if (lines() - lineoffset > 1) {
         lineoffset++;
         if (localoffset > 0) localoffset--;
         else if (localoffset == 0) {
             frameoffset++;
         }
+        diffoffset = frameoffset;
         text.setString(composeStrings());
         updateSizes();
         updateNumbers();
@@ -366,12 +420,14 @@ void Content::up() {
     updateCursor();
 }
 void Content::down() {
+    diffpos = false;
     if (lineoffset > 0) {
         lineoffset--;
         if (localoffset < propcount - 1) localoffset++;
         else if (localoffset >= propcount - 1) {
             frameoffset--;
         }
+        diffoffset = frameoffset;
         text.setString(composeStrings());
         updateSizes();
         updateNumbers();
@@ -418,29 +474,42 @@ void Content::zoomOut() {
     updateResize();
 }
 void Content::copy(bool cut) {
-    ;
+    
 }
 void Content::paste() {
+    diffpos = false;
     std::string clipboardText = BAR::getClipboardText();
-    for (int i = 0; i < clipboardText.size(); i++)
-    {
+    for (int i = 0; i < clipboardText.size(); i++) {
         onKeyPress(clipboardText[i]);
     }
-
-    //std::string clipboardText = BAR::getClipboardText();
-    /*std::string clipboardText = "12345\n678";
-    insert(getPhrasePosition(lines() - lineoffset - 1) + offset, clipboardText);
-    if (clipboardText.find('\n') == -1) {
-        offset += clipboardText.size();
+}
+void Content::select(int control) {
+    if (control == 0) { // Left         
+        if (selected == false) selectXright = offset, selectYright = lineoffset;
+        left(false);
+        selectXleft = offset, selectYleft = lineoffset;
+        selected = true;
     }
-    else {
-        int newLineCounter = std::count(clipboardText.begin(), clipboardText.end(), '\n');
-        offset = clipboardText.size() - clipboardText.find_last_of('\n') - 1;
+    if (control == 1) { // Right        
+        if (selected == false) selectXleft = offset, selectYleft = lineoffset;
+        right(false);
+        selectXright = offset, selectYright = lineoffset;
+        selected = true;
     }
-    text.setString(composeStrings());
-    updateSizes();
-    updateNumbers();
-    updateCursor();*/
+    if (control == 2) { // Up         
+        if (selected == false) selectXright = offset, selectYright = lineoffset;
+        up();
+        selectXleft = offset, selectYleft = lineoffset;
+        selected = true;
+    }
+    if (control == 3) { // Right        
+        if (selected == false) selectXleft = offset, selectYleft = lineoffset;
+        down();
+        selectXright = offset, selectYright = lineoffset;
+        selected = true;
+    }
+    updateCursor();
+    //std::cout << selectXleft << " " << selectYleft << '\n' << selectXright << " " << selectYright << '\n';
 }
 
 
@@ -454,6 +523,10 @@ int digitsCount(int x) {
 }
 
 void Content::updateBlinker() {
+    if (diffpos) {
+        cursor.setFillColor(sf::Color::Transparent);
+        return;
+    }
     if (std::time(0) > date) { // efectul de "blink" al cursorului
         date = std::time(0);
         cursorState = !cursorState;
@@ -486,18 +559,51 @@ void Content::updateCursor() {
     localpos += offset;
     
     cursor.setPosition(sf::Vector2f(text.findCharacterPos(localpos).x + 2.f, text.findCharacterPos(localpos).y + 1.f));
+
+    /*
+    if (selected) {
+        if (lines() - selectXleft - 1 >= (lines() - frameoffset - propcount + 1 > 0 ? lines() - frameoffset - propcount : 0) && lines() - selectXright - 1 <= lines() - frameoffset) {
+            ; // in field of vision
+        }
+        else if (lines() - selectXleft - 1 < (lines() - frameoffset - propcount + 1 > 0 ? lines() - frameoffset - propcount : 0) && lines() - selectXright - 1 > lines() - frameoffset) {
+            ; // selectare totala vizibila
+        }
+        else {
+            if (lines() - selectXleft - 1 < (lines() - frameoffset - propcount + 1 > 0 ? lines() - frameoffset - propcount : 0)) {
+                ; // selectare totala stanga, pana la dreapta offset
+            }
+            else {
+                ; // selectare totala dreapta, pana la stanga offset
+            }
+        }
+    }
+    */
 }
 void Content::updateNumbers() {
     std::string str;
-    for (int i = (lines() - frameoffset - propcount + 1 > 0 ? lines() - frameoffset - propcount + 1 : 1); i <= lines() - frameoffset; ++i) {
-        str += std::to_string(i) + '\n';
+    if (diffpos) {
+        for (int i = (lines() - diffoffset - propcount + 1 > 0 ? lines() - diffoffset - propcount + 1 : 1); i <= lines() - diffoffset; ++i) {
+            str += std::to_string(i) + '\n';
+        }
+    }
+    else {
+        for (int i = (lines() - frameoffset - propcount + 1 > 0 ? lines() - frameoffset - propcount + 1 : 1); i <= lines() - frameoffset; ++i) {
+            str += std::to_string(i) + '\n';
+        }
     }
     numbers.setString(str);
     numbers.setPosition(0.0f, BAR::HEIGHT);
 
     std::string tempString;
-    for (int i = 0; i < digitsCount(lines() - frameoffset); ++i) {
-        tempString += '4';
+    if (diffpos) {
+        for (int i = 0; i < digitsCount(lines() - diffoffset); ++i) {
+            tempString += '4';
+        }
+    }
+    else {
+        for (int i = 0; i < digitsCount(lines() - frameoffset); ++i) {
+            tempString += '4';
+        }
     }
     sf::Text temp(tempString, font, zoomstates[state]);
 
@@ -507,16 +613,31 @@ void Content::updateNumbers() {
 }
 void Content::updateSizes() {
     linesizes.clear();
-    for (int i = (lines() - frameoffset - propcount + 1 > 0 ? lines() - frameoffset - propcount + 1 : 1); i <= lines() - frameoffset; ++i) {
-        linesizes.push_back(getLineLength(i - 1));
+    if (diffpos) {
+        for (int i = (lines() - diffoffset - propcount + 1 > 0 ? lines() - diffoffset - propcount + 1 : 1); i <= lines() - diffoffset; ++i) {
+            linesizes.push_back(getLineLength(i - 1));
+        }
     }
+    else {
+        for (int i = (lines() - frameoffset - propcount + 1 > 0 ? lines() - frameoffset - propcount + 1 : 1); i <= lines() - frameoffset; ++i) {
+            linesizes.push_back(getLineLength(i - 1));
+        }
+    }
+    
 }
 std::string Content::composeStrings() {
     // Effective y size: window.getSize().y - BAR::HEIGHT - 10
 
     std::string str;
-    for (int i = (lines() - frameoffset - propcount + 1 > 0 ? lines() - frameoffset - propcount + 1 : 1); i <= lines() - frameoffset; ++i) {
-        str += getPhrase(i - 1);
+    if (diffpos) {
+        for (int i = (lines() - diffoffset - propcount + 1 > 0 ? lines() - diffoffset - propcount + 1 : 1); i <= lines() - diffoffset; ++i) {
+            str += getPhrase(i - 1);
+        }
+    }
+    else {
+        for (int i = (lines() - frameoffset - propcount + 1 > 0 ? lines() - frameoffset - propcount + 1 : 1); i <= lines() - frameoffset; ++i) {
+            str += getPhrase(i - 1);
+        }
     }
     return str;
 }
