@@ -24,6 +24,7 @@ void initiate() {
 
 int main()
 {
+    bool debug = true;
     initiate();
 
     //CONTENT::content = new Content();
@@ -50,8 +51,16 @@ int main()
         while (window.pollEvent(event)) { // todo wait ev ADRIAN NU UITA (don't waste CPU !! )
             switch (event.type) {
             case sf::Event::Closed:
-                BAR::events.push(BAR::CLOSE_ALL);
-                break;
+            {
+                if (debug) {
+                    window.close();
+                    return 0;
+                }
+                else {
+                    BAR::events.push(BAR::CLOSE_ALL);
+                    break;
+                }
+            }
             case (sf::Event::Resized):
             {
                 sf::FloatRect* view = new sf::FloatRect(0, 0, event.size.width, event.size.height);

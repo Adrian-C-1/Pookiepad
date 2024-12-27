@@ -36,13 +36,12 @@ void Content::init() {
     cursor.setFillColor(CONTENT::BG_COLOR);
     cursorState = false;
     date = std::time(0);
-    offset = 0;
-    showLines = 1;
-    frameoffset = 0;
-    lineoffset = 0;
-    localoffset = 0;
+    
+    currChar = 0;
+    currLine = 0;
+    currFrame = 0;
 
-    linesizes.clear();
+    showLines = 1;
     updateResize();
 }
 
@@ -51,139 +50,151 @@ void Content::onKeyPress(sf::Uint32 code) {
     if (code == 'z') { // debug purposes
         std::cout << "\n\n";
         std::cout << "Lines: " << lines() << '\n';
-        std::cout << "Offset: " << offset << '\n';
-        std::cout << "Lineoffset: " << lineoffset << '\n';
-        std::cout << "Frameoffset: " << frameoffset << '\n';
-        std::cout << "Localoffset: " << localoffset << '\n';
-        std::cout << "Diffoffset: " << diffoffset << '\n';
+        std::cout << "Current line: " << currLine << '\n';
+        std::cout << "Current character: " << currChar << '\n';
+        std::cout << "Current frame: " << currFrame << '\n';
+        std::cout << "Number of sentences: " << propcount << '\n';
+        std::cout << "Lower frame bound: " << getLowerBoundFrame() << '\n';
+        std::cout << "Upper frame bound: " << getUpperBoundFrame() << '\n';
         std::cout << "\n\n";
         return;
     }
     if (code >= ' ' && code <= '~') { // Character
-        if (diffpos) diffoffset = frameoffset;
-        diffpos = false;
-        insert(getPhrasePosition(lines() - lineoffset - 1) + offset, code);        
-        offset++;
+        if (isFrameMoved) {
+            diffFrame = currFrame;
+            isFrameMoved = false;
+        }
+        if (selected) removeSelection();
+        insert(getPhrasePosition(currLine) + currChar, code);       
+        currChar++;
         text.setString(composeStrings());
-        updateSizes();
-        updateNumbers();
         updateCursor();
     }
     else {
         switch (code) {
-        case (13): // 13 = Enter
-        {
-            if (diffpos) diffoffset = frameoffset;
-            diffpos = false;
-            insert(getPhrasePosition(lines() - lineoffset - 1) + offset, '\n');
-            offset = 0;
-            if (localoffset < propcount - 1 && lines() <= propcount) localoffset++;
-            text.setString(composeStrings());
-            updateSizes();
-            updateNumbers();
-            updateCursor();
-            break;
-        }
-        case (9): // 9 = Tab
-        {
-            if (diffpos) diffoffset = frameoffset;
-            diffpos = false;
-            for (int i = 0; i < 6; ++i) {
-                insert(getPhrasePosition(lines() - lineoffset - 1) + offset, ' ');
-            }
-            offset += 6;
-            text.setString(composeStrings());
-            updateCursor();
-            break;
-        }
-        case (8): // 8 = Backspace
-        {
-            if (diffpos) diffoffset = frameoffset;
-            diffpos = false;
-            if (offset == 0 && lines() - lineoffset - 1 <= 0) return;
-            int pos = getPhrasePosition(lines() - lineoffset - 1) + offset - 1;
-            if (at(pos) == '\n') {
-                if (localoffset > 0 && lines() <= propcount) {
-                    localoffset--;
-                    offset = linesizes[localoffset] - 1;
+            case (13): // 13 = Enter
+            {
+                if (isFrameMoved) {
+                    diffFrame = currFrame;
+                    isFrameMoved = false;
                 }
-                else {
-                    offset = linesizes[localoffset - 1] - 1;
+                if (selected) removeSelection();
+                insert(getPhrasePosition(currLine) + currChar, '\n');
+                currChar = 0;
+                currLine++;
+                if (currLine > getUpperBoundFrame()) {
+                    currFrame++;
+                    diffFrame = currFrame;
                 }
-                
+                text.setString(composeStrings());
+                updateNumbers();
+                updateCursor();
+                break;
             }
-            else offset--;
-            erase(pos);
-            text.setString(composeStrings());
-            updateSizes();
-            updateNumbers();
-            updateCursor();
-            break;
-        }
-        case (127): // 127 = Ctrl - Backspace
-        {
-            if (diffpos) diffoffset = frameoffset;
-            diffpos = false;
-            if (offset == 0 && lines() - lineoffset - 1 <= 0) return;
-            int pos = getPhrasePosition(lines() - lineoffset - 1) + offset - 1;
-            char ch = at(pos);
-            if (ch == ' ') {
-                offset--;
+            case (9): // 9 = Tab
+            {
+                if (isFrameMoved) {
+                    diffFrame = currFrame;
+                    isFrameMoved = false;
+                }
+                if (selected) removeSelection();
+                insert(getPhrasePosition(currLine) + currChar, "      ");
+                currChar += 6;
+                text.setString(composeStrings());
+                updateCursor();
+                break;
+            }
+            case (8): // 8 = Backspace
+            {
+                if (isFrameMoved) {
+                    diffFrame = currFrame;
+                    isFrameMoved = false;
+                }
+                if (selected) removeSelection();
+                if (currChar <= 0 && currLine <= 0) return; // <= similar cu ==, doar de siguranta
+                int pos = getPhrasePosition(currLine) + currChar - 1;
+                if (at(pos) == '\n') {
+                    currChar = getLineLength(currLine - 1) - 1;
+                    currLine--;
+                    if (currLine < getLowerBoundFrame() && currFrame > 0) {
+                        currFrame--;
+                        diffFrame = currFrame;
+                    }
+                    //updateNumbers();
+                }
+                else currChar--;
                 erase(pos);
+                text.setString(composeStrings());
+                updateNumbers();
+                updateCursor();
+                break;
             }
-            else if (ch == '\n') {
-                if (localoffset > 0 && lines() <= propcount) {
-                    localoffset--;
-                    offset = linesizes[localoffset] - 1;
+            case (127): // 127 = Ctrl - Backspace
+            {
+                if (isFrameMoved) {
+                    diffFrame = currFrame;
+                    isFrameMoved = false;
                 }
-                else {
-                    offset = linesizes[localoffset - 1] - 1;
-                }
-                erase(pos);
-            }
-            else {
-                while (offset > 1 && (ch != ' ' && ch != '\n')) {
-                    offset--;
-                    erase(pos);
-                    pos--;
-                    ch = at(pos);
-                }
-                if (ch != ' ' && ch != '\n') {
-                    offset--;
+                if (selected) removeSelection();
+                if (currChar <= 0 && currLine <= 0) return; // <= similar cu ==, doar de siguranta
+                int pos = getPhrasePosition(currLine) + currChar - 1;
+                char ch = at(pos);
+                if (ch == ' ') {
+                    currChar--;
                     erase(pos);
                 }
+                else if (ch == '\n') {
+                    currChar = getLineLength(currLine - 1) - 1;
+                    currLine--;
+                    if (currLine < getLowerBoundFrame() && currFrame > 0) {
+                        currFrame--;
+                        diffFrame = currFrame;
+                    }
+                    erase(pos);
+                }
+                else {
+                    while (currChar > 1 && (ch != ' ' && ch != '\n')) {
+                        currChar--;
+                        erase(pos);
+                        pos--;
+                        ch = at(pos);
+                    }
+                    if (ch != ' ' && ch != '\n') {
+                        currChar--;
+                        erase(pos);
+                    }
+                }
+                text.setString(composeStrings());
+                updateNumbers();
+                updateCursor();
+                break;
             }
-            text.setString(composeStrings());
-            updateSizes();
-            updateNumbers();
-            updateCursor();
-            break;
-        }
         }
     }
     cursorState = false;
 }
 void Content::onKeyPress(sf::Keyboard::Key key) {
+    //std::cout << key << '\n';
     if (key == sf::Keyboard::Left) {
         if ((sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl))) {
-            left(true);
+            left(true, true);
         }
         else if ((sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)) || (sf::Keyboard::isKeyPressed(sf::Keyboard::RShift))) {
             select(0);
         }
         else {
-            left(false);
+            left(false, true);
         }
     }
     else if (key == sf::Keyboard::Right) {
         if ((sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl))) {
-            right(true);
+            right(true, true);
         }
         else if ((sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)) || (sf::Keyboard::isKeyPressed(sf::Keyboard::RShift))) {
             select(1);
         }
         else {
-            right(false);
+            right(false, true);
 
         }
     }
@@ -192,7 +203,7 @@ void Content::onKeyPress(sf::Keyboard::Key key) {
             select(2);
         }
         else {
-            up();
+            up(true);
         }
     }
     else if (key == sf::Keyboard::Down) {
@@ -200,142 +211,140 @@ void Content::onKeyPress(sf::Keyboard::Key key) {
             select(3);
         }
         else {
-            down();
+            down(true);
         }
     }
-    else if (key == 55) { // Ctrl + '+'
+    else if (key == sf::Keyboard::Equal && sf::Keyboard::isKeyPressed(sf::Keyboard::LControl)) { // Ctrl + '+'
         zoomIn();
     }
-    else if (key == 56) { // Ctrl + '-'
+    else if (key == sf::Keyboard::Dash && sf::Keyboard::isKeyPressed(sf::Keyboard::LControl)) { // Ctrl + '-'
         zoomOut();
     }
-    else if (key == 23) { // Ctrl + 'x'
+    else if (key == sf::Keyboard::X && sf::Keyboard::isKeyPressed(sf::Keyboard::LControl)) { // Ctrl + 'x'
         copy(true);
     }
-    else if (key == 2) { // Ctrl + 'c'
+    else if (key == sf::Keyboard::C && sf::Keyboard::isKeyPressed(sf::Keyboard::LControl)) { // Ctrl + 'c'
         copy(false);
     }
-    else if (key == 21) { // Ctrl + 'v'
+    else if (key == sf::Keyboard::V && sf::Keyboard::isKeyPressed(sf::Keyboard::LControl)) { // Ctrl + 'v'
         paste();
+    }
+    else if (key == sf::Keyboard::A && sf::Keyboard::isKeyPressed(sf::Keyboard::LControl)) { // Ctrl + 'a'
+        select(4);
     }
 }
 void Content::onMousePress() {
+    if (root == nullptr) return;
     sf::Vector2f mpos = sf::Vector2f(sf::Mouse::getPosition(window));
     if (mpos.x <= text.getGlobalBounds().left || mpos.y <= text.getGlobalBounds().top) return;
-    if (diffpos) {
-        diffpos = false;
-        if (frameoffset < diffoffset) {
-            lineoffset += (diffoffset - frameoffset);
-        }
-        else lineoffset -= (frameoffset - diffoffset);
-        frameoffset = diffoffset;
-    }
-    updateSizes();
-    int pos = 0;
-    for (int i = 0; i < linesizes.size(); ++i) {
-        pos += linesizes[i];
-    }
 
+    if (selected) removeSelection();
     if (mpos.y > text.getLocalBounds().height + text.getLocalBounds().top) {
-        offset = linesizes[linesizes.size() - 1];
-        while (localoffset <= propcount - 1 && lineoffset > 0) { // daca nu da bine ceva, incearca sa scoti egalul, ca in while-ul de mai jos
-            lineoffset--;
-            localoffset++;
+        currFrame = diffFrame;
+        if (lines() < getUpperBoundFrame()) currLine = lines();
+        else currLine = getUpperBoundFrame();
+        currChar = getLineLength(currLine) - 1;
+        int pos = getPhrasePosition(currLine) - getPhrasePosition(getLowerBoundFrame()) + getLineLength(currLine) - 1;
+        if (currLine == lines()) {
+            pos++;
+            currChar++;
         }
 
-        while (mpos.x <= text.findCharacterPos(pos).x && text.findCharacterPos(pos).x > text.getLocalBounds().left) {
-            offset--;
+        while (mpos.x < text.findCharacterPos(pos).x && text.findCharacterPos(pos).x > text.getGlobalBounds().left) {
             pos--;
+            currChar--;
         }
+
     }
     else {
-        while (localoffset < propcount - 1 && lineoffset > 0) {
-            lineoffset--;
-            localoffset++;
+        currFrame = diffFrame;
+        if (lines() < getUpperBoundFrame()) currLine = lines();
+        else currLine = getUpperBoundFrame();
+        int pos = getPhrasePosition(currLine) - getPhrasePosition(getLowerBoundFrame());
+        while (text.findCharacterPos(pos).y > mpos.y && currLine > 0) {
+            currLine--;
+            pos = getPhrasePosition(currLine) - getPhrasePosition(getLowerBoundFrame());
         }
-        std::string str = text.getString();
-        if (frameoffset <= 0) str += '\n'; // (sau == 0)
+        pos = getPhrasePosition(currLine) - getPhrasePosition(getLowerBoundFrame()) + getLineLength(currLine) - 1;
+        currChar = getLineLength(currLine) - 1;
+        if (currLine == lines()) {
+            pos++;
+            currChar++;
+        }
 
-        int cnt = 0;
-        while (mpos.y <= text.findCharacterPos(pos).y) {
-            if (str[pos] == '\n') {
-                localoffset--;
-                lineoffset++;
-                cnt++;
-            }
+        while (mpos.x < text.findCharacterPos(pos).x && text.findCharacterPos(pos).x > text.getGlobalBounds().left) {
             pos--;
-        }
-
-        offset = linesizes[linesizes.size() - cnt - 1] - 1;
-        if (lineoffset <= 0) {
-            offset++;
-        }
-
-        while (mpos.x <= text.findCharacterPos(pos).x && text.findCharacterPos(pos).x > text.getLocalBounds().left) {
-            offset--;
-            pos--;
+            currChar--;
         }
     }
     cursorState = false;
+    text.setString(composeStrings());
+    updateNumbers();
     updateCursor();
 }
 
 
 void Content::scroll(bool direction) {
     if (direction) { // Up
-        if (lines() - propcount - diffoffset > 0) {
-            diffpos = true;
-            diffoffset++;
-        }
+        if (diffFrame > 0) {
+            diffFrame--;
+            isFrameMoved = true;
+       }
     }
     else {
-        if (diffoffset > 0) {
-            diffpos = true;
-            diffoffset--;
+        if (diffFrame <= lines() - propcount) {
+            diffFrame++;
+            isFrameMoved = true;
         }
     }
     text.setString(composeStrings());
-    updateSizes();
     updateNumbers();
+    updateCursor();
 }
-void Content::left(bool isCtrlPressed) {
-    diffpos = false;
-    if (offset >= 1 || lines() - lineoffset - 1 > 0) {
+void Content::left(bool isCtrlPressed, bool selectionDeletion) {
+    if (isFrameMoved) {
+        diffFrame = currFrame;
+        isFrameMoved = false;
+    }
+    if (selected && selectionDeletion) removeSelection();
+    if (currChar >= 1 || currLine > 0) {
         if (!isCtrlPressed) {
-            int pos = getPhrasePosition(lines() - lineoffset - 1) + offset - 1;
+            int pos = getPhrasePosition(currLine) + currChar - 1;
             if (at(pos) == '\n') {
-                offset = getPhrasePosition(lines() - lineoffset - 1) - getPhrasePosition(lines() - lineoffset - 2);
-                lineoffset++;
-                if (localoffset > 0) localoffset--;
-                else if (localoffset == 0) frameoffset++;
-                diffoffset = frameoffset;
-                updateSizes();
+                currChar = getLineLength(currLine - 1) - 1;
+                currLine--;
+                if (currLine < getLowerBoundFrame() && currFrame > 0) {
+                    currFrame--;
+                    diffFrame = currFrame;
+                }
                 updateNumbers();
             }
-            offset--;
+            else currChar--;
         }
         else {
-            int pos = getPhrasePosition(lines() - lineoffset - 1) + offset - 1;
+            int pos = getPhrasePosition(currLine) + currChar - 1;
             char ch = at(pos);
             if (ch == ' ') {
-                offset--;
+                currChar--;
             }
             else if (ch == '\n') {
-                offset = getPhrasePosition(lines() - lineoffset - 1) - getPhrasePosition(lines() - lineoffset - 2) - 1;
-                lineoffset++;
-                if (localoffset > 0) localoffset--;
-                else if (localoffset == 0) frameoffset++;
-                diffoffset = frameoffset;
-                updateSizes();
+                currChar = getLineLength(currLine - 1) - 1;
+                currLine--;
+                if (currLine < getLowerBoundFrame() && currFrame > 0) {
+                    currFrame--;
+                    diffFrame = currFrame;
+                }
                 updateNumbers();
             }
             else {
-                while (offset > 1 && (ch != ' ' && ch != '\n')) {
-                    offset--;
+                while (currChar > 1 && (ch != ' ' && ch != '\n')) {
+                    currChar--;
                     pos--;
                     ch = at(pos);
                 }
-                if (ch != ' ' && ch != '\n') offset--;
+                if (ch != ' ' && ch != '\n') {
+                    currChar--;
+                }
             }
         }
     }
@@ -343,50 +352,51 @@ void Content::left(bool isCtrlPressed) {
     text.setString(composeStrings());
     updateCursor();
 }
-void Content::right(bool isCtrlPressed) {
-    diffpos = false;
-    if (getPhrasePosition(lines() - lineoffset - 1) + offset < getLength(root)) {
+void Content::right(bool isCtrlPressed, bool selectionDeletion) {
+    if (isFrameMoved) {
+        diffFrame = currFrame;
+        isFrameMoved = false;
+    }
+    if (selected && selectionDeletion) removeSelection();
+    if (currLine < lines() || currChar < getLineLength(currLine)) {
         if (!isCtrlPressed) {
-            int pos = getPhrasePosition(lines() - lineoffset - 1) + offset;
+            int pos = getPhrasePosition(currLine) + currChar;
             if (at(pos) == '\n') {
-                lineoffset--;
-                offset = -1;
-                if (localoffset < propcount - 1) localoffset++;
-                else if (localoffset >= propcount - 1 && frameoffset > 0) {
-                    frameoffset--;
+                currChar = 0;
+                currLine++;
+                if (currLine > getUpperBoundFrame()) {
+                    currFrame++;
+                    diffFrame = currFrame;
                 }
-                diffoffset = frameoffset;
-                updateSizes();
                 updateNumbers();
             }
-            offset++;
+            else currChar++;
         }
         else {
-            int pos = getPhrasePosition(lines() - lineoffset - 1) + offset;
+            int pos = getPhrasePosition(currLine) + currChar;
             char ch = at(pos);
             if (ch == ' ') {
-                offset++;
+                currChar++;
             }
             else if (ch == '\n') {
-                lineoffset--;
-                offset = 0;
-                if (localoffset < propcount - 1) localoffset++;
-                else if (localoffset >= propcount - 1 && frameoffset > 0) {
-                    frameoffset--;
+                currChar = 0;
+                currLine++;
+                if (currLine > getUpperBoundFrame()) {
+                    currFrame++;
+                    diffFrame = currFrame;
                 }
-                diffoffset = frameoffset;
-                updateSizes();
                 updateNumbers();
             }
             else {
-                int maxim = getPhrasePosition(lines() - lineoffset) - getPhrasePosition(lines() - lineoffset - 1);
-                std::cout << maxim << '\n';
-                while (offset < maxim && (ch != ' ' && ch != '\n')) {
-                    offset++;
+                int maxim = getPhrasePosition(currLine) - getPhrasePosition(getLowerBoundFrame()) + getLineLength(currLine) - 1;
+                if (currLine == lines()) {
+                    maxim++;
+                }
+                while (currChar < maxim && (ch != ' ' && ch != '\n')) {
+                    currChar++;
                     pos++;
                     ch = at(pos);
                 }
-                //if (ch != ' ' && ch != '\n') offset--;
             }
         }
     }
@@ -394,83 +404,68 @@ void Content::right(bool isCtrlPressed) {
     text.setString(composeStrings());
     updateCursor();
 }
-void Content::up() {
-    diffpos = false;
-    if (lines() - lineoffset > 1) {
-        lineoffset++;
-        if (localoffset > 0) localoffset--;
-        else if (localoffset == 0) {
-            frameoffset++;
+void Content::up(bool selectionDeletion) {
+    if (isFrameMoved) {
+        diffFrame = currFrame;
+        isFrameMoved = false;
+    }
+    if (selected && selectionDeletion) removeSelection();
+    if (currLine > 0) {
+        currLine--;
+        if (currLine < getLowerBoundFrame() && currFrame > 0) {
+            currFrame--;
+            diffFrame = currFrame;
         }
-        diffoffset = frameoffset;
         text.setString(composeStrings());
-        updateSizes();
-        updateNumbers();
-        if (offset > 0) {
-            int pos = 0;
-            for (int i = 0; i <= localoffset; ++i) {
-                pos += linesizes[i];
-            }
-            pos += offset;
-            sf::Vector2f oldPos = text.findCharacterPos(pos); // pozitia pe care se afla cuvantul de pe care am plecat
-            pos = pos - offset - 1; // revenirea la randul anterior
-            offset = linesizes[localoffset];
-            if (text.findCharacterPos(pos).x < oldPos.x) { // de pe un rand mai mare pe un rand mai mic
-                offset--;
-            }
-            else { // invers
-                while (oldPos.x <= text.findCharacterPos(pos).x && text.findCharacterPos(pos).x > text.getGlobalBounds().left) {
-                    pos--;
-                    offset--;
-                }
-            }
+        int pos = getPhrasePosition(currLine + 1) + currChar - getPhrasePosition(getLowerBoundFrame());
+        int oldX = text.findCharacterPos(pos).x;
+        pos = pos - currChar - 1;
+        currChar = getLineLength(currLine) - 1;
+        while (oldX < text.findCharacterPos(pos).x && text.findCharacterPos(pos).x > text.getGlobalBounds().left) {
+            pos--;
+            currChar--;
         }
     }
     else {
-        if (lines() - lineoffset == 1) offset = 0;
-        text.setString(composeStrings());
+        if (currLine == 0 && currChar > 0) currChar = 0;
     }
     cursorState = false;
+    updateNumbers();
     updateCursor();
 }
-void Content::down() {
-    diffpos = false;
-    if (lineoffset > 0) {
-        lineoffset--;
-        if (localoffset < propcount - 1) localoffset++;
-        else if (localoffset >= propcount - 1) {
-            frameoffset--;
+void Content::down(bool selectionDeletion) {
+    if (isFrameMoved) {
+        diffFrame = currFrame;
+        isFrameMoved = false;
+    }
+    if (selected && selectionDeletion) removeSelection();
+    if (currLine < lines()) {
+        currLine++;
+        if (currLine > getUpperBoundFrame()) {
+            currFrame++;
+            diffFrame = currFrame;
         }
-        diffoffset = frameoffset;
         text.setString(composeStrings());
-        updateSizes();
-        updateNumbers();
-        if (offset > 0) {
-            int pos = 0;
-            for (int i = 0; i < localoffset - 1; ++i) {
-                pos += linesizes[i];
-            }
-            pos += offset;
-            sf::Vector2f oldPos = text.findCharacterPos(pos); // pozitia caracterului de pe care plec
-            pos = pos - offset + linesizes[localoffset - 1] + linesizes[localoffset]; // pozitia caracterului de pe propozitia pe care ma duc
-            offset = linesizes[localoffset];
-            if (lineoffset > 0) { // caz in care ma aflu pe ultima propozitie din sir si nu e \n la final (lineoffset se modifica mai sus)
-                offset--;
-                pos--;
-            }
-            while (oldPos.x < text.findCharacterPos(pos).x && text.findCharacterPos(pos).x > text.getGlobalBounds().left) {
-                pos--;
-                offset--;
-            }
+        int pos = getPhrasePosition(currLine - 1) + currChar - getPhrasePosition(getLowerBoundFrame());
+        int oldX = text.findCharacterPos(pos).x;
+        pos = getPhrasePosition(currLine) - getPhrasePosition(getLowerBoundFrame()) + getLineLength(currLine) - 1;
+        currChar = getLineLength(currLine) - 1;
+        if (currLine == lines()) {
+            pos++;
+            currChar++;
+        }
+        while (oldX < text.findCharacterPos(pos).x && text.findCharacterPos(pos).x > text.getGlobalBounds().left) {
+            pos--;
+            currChar--;
         }
     }
-    else if (lineoffset == 0) {
-        text.setString(composeStrings());
-        updateSizes();
-        updateNumbers();
-        offset = linesizes[linesizes.size() - 1];
+    else {
+        if (currLine == lines() && currChar < getLineLength(currLine)) {
+            currChar = getLineLength(currLine);
+        }
     }
     cursorState = false;
+    updateNumbers();
     updateCursor();
 }
 void Content::zoomIn() {
@@ -488,42 +483,140 @@ void Content::zoomOut() {
     updateResize();
 }
 void Content::copy(bool cut) {
-    
+    if (selected) BAR::setClipBoardText(composeSelectedStrings());
+    if (cut) {
+        int charsToBeRemoved = 0;
+        if (selectYright - selectYleft == 0) {
+            charsToBeRemoved = selectXright - selectXleft;
+        }
+        else {
+            charsToBeRemoved = getLineLength(selectYleft) - selectXleft;
+            for (int i = selectYleft + 1; i < selectYright; ++i) {
+                charsToBeRemoved += getLineLength(i);
+            }
+            charsToBeRemoved += (getLineLength(selectYright) - selectXright);
+        }
+        currChar = selectXright;
+        currLine = selectYright;
+        for (int i = 0; i < charsToBeRemoved; ++i) onKeyPress(8);
+        text.setString(composeStrings());
+        updateNumbers();
+        updateCursor();
+    }
 }
 void Content::paste() {
-    diffpos = false;
+    if (isFrameMoved) {
+        diffFrame = currFrame;
+        isFrameMoved = false;
+    }
+    if (selected) removeSelection();
     std::string clipboardText = BAR::getClipboardText();
     for (int i = 0; i < clipboardText.size(); i++) {
         onKeyPress(clipboardText[i]);
     }
 }
 void Content::select(int control) {
-    if (control == 0) { // Left         
-        if (selected == false) selectXright = offset, selectYright = lineoffset;
-        left(false);
-        selectXleft = offset, selectYleft = lineoffset;
-        selected = true;
+    if (control == 0) {
+        if (!selected) {
+            selectXright = currChar, selectYright = currLine;
+            left(false, false);
+            selectXleft = currChar, selectYleft = currLine;
+            selected = true;
+            lastMoved = 0;
+        }
+        else {
+            if (lastMoved == 0) {
+                left(false, false);
+                selectXleft = currChar, selectYleft = currLine;
+            }
+            else {
+                currChar = selectXright, currLine = selectYright;
+                left(false, false);
+                selectXright = currChar, selectYright = currLine;
+            }
+        }
     }
-    if (control == 1) { // Right        
-        if (selected == false) selectXleft = offset, selectYleft = lineoffset;
-        right(false);
-        selectXright = offset, selectYright = lineoffset;
-        selected = true;
+    else if (control == 1) {
+        if (!selected) {
+            selectXleft = currChar, selectYleft = currLine;
+            right(false, false);
+            selectXright = currChar, selectYright = currLine;
+            selected = true;
+            lastMoved = 1;
+        }
+        else {
+            if (lastMoved == 0) {
+                right(false, false);
+                selectXleft = currChar, selectYleft = currLine;
+            }
+            else {
+                currChar = selectXright, currLine = selectYright;
+                right(false, false);
+                selectXright = currChar, selectYright = currLine;
+            }
+        }
     }
-    if (control == 2) { // Up         
-        if (selected == false) selectXright = offset, selectYright = lineoffset;
-        up();
-        selectXleft = offset, selectYleft = lineoffset;
-        selected = true;
+    else if (control == 2) {
+        if (!selected) {
+            selectXright = currChar, selectYright = currLine;
+            up(false);
+            selectXleft = currChar, selectYleft = currLine;
+            selected = true;
+            lastMoved = 0;
+        }
+        else {
+            if (lastMoved == 0) {
+                up(false);
+                selectXleft = currChar, selectYleft = currLine;
+            }
+            else {
+                currChar = selectXright, currLine = selectYright;
+                up(false);
+                selectXright = currChar, selectYright = currLine;
+            }
+        }
     }
-    if (control == 3) { // Right        
-        if (selected == false) selectXleft = offset, selectYleft = lineoffset;
-        down();
-        selectXright = offset, selectYright = lineoffset;
-        selected = true;
+    else if (control == 3) {
+        if (!selected) {
+            selectXleft = currChar, selectYleft = currLine;
+            down(false);
+            selectXright = currChar, selectYright = currLine;
+            selected = true;
+            lastMoved = 1;
+        }
+        else {
+            if (lastMoved == 0) {
+                down(false);
+                selectXleft = currChar, selectYleft = currLine;
+            }
+            else {
+                currChar = selectXright, currLine = selectYright;
+                down(false);
+                selectXright = currChar, selectYright = currLine;
+            }
+        }
     }
+    else if (control == 4) {
+        selected = true;
+        selectXleft = 0, selectXright = 0;
+        selectXright = getLineLength(lines()), selectYright = lines();
+        currLine = lines();
+        currFrame = lines() - propcount + 1;
+        diffFrame = currFrame;
+        currChar = getLineLength(lines());
+        lastMoved = 1;
+    }
+    if (selectXleft == selectXright && selectYleft == selectYright) selected = false;
+    std::cout << selectXleft << " " << selectYleft << '\n' << selectXright << " " << selectYright << '\n';
+    text.setString(composeStrings());
+    updateNumbers();
     updateCursor();
-    //std::cout << selectXleft << " " << selectYleft << '\n' << selectXright << " " << selectYright << '\n';
+}
+void Content::removeSelection() {
+    selected = false;
+    selectXleft = 0, selectXright = 0;
+    selectYleft = 0, selectYright = 0;
+    lastMoved = 0;
 }
 
 
@@ -537,10 +630,6 @@ int digitsCount(int x) {
 }
 
 void Content::updateBlinker() {
-    if (diffpos) {
-        cursor.setFillColor(sf::Color::Transparent);
-        return;
-    }
     if (std::time(0) > date) { // efectul de "blink" al cursorului
         date = std::time(0);
         cursorState = !cursorState;
@@ -555,105 +644,85 @@ void Content::updateResize() {
     size2 = temp.getLocalBounds().height;
     propsize = size2 - size1;
     propcount = (window.getSize().y - BAR::HEIGHT) / propsize;
-    frameoffset = 0;
-    if (lines() > propcount) localoffset = propcount - 1;
-    else localoffset = lines() - 1;
-    lineoffset = 0;
+    if (lines() < propcount) {
+        currFrame = 0;
+        diffFrame = currFrame;
+    }
+    else if (currLine > getUpperBoundFrame()) {
+        currFrame = currLine - propcount + 1;
+        diffFrame = currFrame;
+    }
     text.setString(composeStrings());
-    updateSizes();
-    offset = linesizes[linesizes.size() - 1];
     updateNumbers();
     updateCursor();
 }
 void Content::updateCursor() {
-    int localpos = 0;
-    for (int i = 0; i < localoffset; ++i) {
-        localpos += linesizes[i];
+    if (currLine > getUpperBoundFrame()) {
+        cursor.setPosition(sf::Vector2f(-1, -1));
+        return;
     }
-    localpos += offset;
+    else if (currLine < getLowerBoundFrame()) {
+        cursor.setPosition(sf::Vector2f(-1, -1));
+        return;
+    }
+    int cursorPos = getPhrasePosition(currLine) + currChar - getPhrasePosition(getLowerBoundFrame());
+    cursor.setPosition(sf::Vector2f(text.findCharacterPos(cursorPos).x + 2.f, text.findCharacterPos(cursorPos).y + 1.f));
     
-    cursor.setPosition(sf::Vector2f(text.findCharacterPos(localpos).x + 2.f, text.findCharacterPos(localpos).y + 1.f));
-
-    /*
     if (selected) {
-        if (lines() - selectXleft - 1 >= (lines() - frameoffset - propcount + 1 > 0 ? lines() - frameoffset - propcount : 0) && lines() - selectXright - 1 <= lines() - frameoffset) {
-            ; // in field of vision
-        }
-        else if (lines() - selectXleft - 1 < (lines() - frameoffset - propcount + 1 > 0 ? lines() - frameoffset - propcount : 0) && lines() - selectXright - 1 > lines() - frameoffset) {
-            ; // selectare totala vizibila
-        }
-        else {
-            if (lines() - selectXleft - 1 < (lines() - frameoffset - propcount + 1 > 0 ? lines() - frameoffset - propcount : 0)) {
-                ; // selectare totala stanga, pana la dreapta offset
-            }
-            else {
-                ; // selectare totala dreapta, pana la stanga offset
-            }
-        }
+        ;
     }
-    */
 }
 void Content::updateNumbers() {
-    std::string str;
-    if (diffpos) {
-        for (int i = (lines() - diffoffset - propcount + 1 > 0 ? lines() - diffoffset - propcount + 1 : 1); i <= lines() - diffoffset; ++i) {
-            str += std::to_string(i) + '\n';
-        }
+    std::string str, tempString;
+    if (lines() == -1) {
+        str += "1\n";
+        tempString = '4';
     }
     else {
-        for (int i = (lines() - frameoffset - propcount + 1 > 0 ? lines() - frameoffset - propcount + 1 : 1); i <= lines() - frameoffset; ++i) {
-            str += std::to_string(i) + '\n';
+        for (int i = getLowerBoundFrame(); i <= std::min(getUpperBoundFrame(), lines()); ++i) {
+            str += std::to_string(i + 1) + '\n';
+        }
+        for (int i = 0; i < digitsCount(std::min(getUpperBoundFrame(), lines()) + 1); ++i) {
+            tempString += '4';
         }
     }
     numbers.setString(str);
     numbers.setPosition(0.0f, BAR::HEIGHT);
 
-    std::string tempString;
-    if (diffpos) {
-        for (int i = 0; i < digitsCount(lines() - diffoffset); ++i) {
-            tempString += '4';
-        }
-    }
-    else {
-        for (int i = 0; i < digitsCount(lines() - frameoffset); ++i) {
-            tempString += '4';
-        }
-    }
+    
+    
     sf::Text temp(tempString, font, zoomstates[state]);
 
-    float leftsize = showLines * (temp.getLocalBounds().width - temp.getLocalBounds().left) + ((float)zoompercentages[state] / 100) * 15;    text.setPosition(sf::Vector2f(leftsize, BAR::HEIGHT));
+    float leftsize = showLines * (temp.getLocalBounds().width - temp.getLocalBounds().left) + ((float)zoompercentages[state] / 100) * 15;
     text.setPosition(sf::Vector2f(leftsize, BAR::HEIGHT));
 
-}
-void Content::updateSizes() {
-    linesizes.clear();
-    if (diffpos) {
-        for (int i = (lines() - diffoffset - propcount + 1 > 0 ? lines() - diffoffset - propcount + 1 : 1); i <= lines() - diffoffset; ++i) {
-            linesizes.push_back(getLineLength(i - 1));
-        }
-    }
-    else {
-        for (int i = (lines() - frameoffset - propcount + 1 > 0 ? lines() - frameoffset - propcount + 1 : 1); i <= lines() - frameoffset; ++i) {
-            linesizes.push_back(getLineLength(i - 1));
-        }
-    }
-    
 }
 std::string Content::composeStrings() {
     // Effective y size: window.getSize().y - BAR::HEIGHT - 10
 
     std::string str;
-    if (diffpos) {
-        for (int i = (lines() - diffoffset - propcount + 1 > 0 ? lines() - diffoffset - propcount + 1 : 1); i <= lines() - diffoffset; ++i) {
-            str += getPhrase(i - 1);
-        }
-    }
-    else {
-        for (int i = (lines() - frameoffset - propcount + 1 > 0 ? lines() - frameoffset - propcount + 1 : 1); i <= lines() - frameoffset; ++i) {
-            str += getPhrase(i - 1);
-        }
+    for (int i = getLowerBoundFrame(); i <= std::min(getUpperBoundFrame(), lines()); ++i) {
+        str += getPhrase(i);
     }
     return str;
+}
+std::string Content::composeSelectedStrings() {
+    if (selectYright - selectYleft == 0) {
+        std::string phrase = getPhrase(selectYleft);
+        phrase = phrase.substr(selectXleft, selectXright - selectXleft);
+        return phrase;
+    }
+    else {
+        std::string phrases = getPhrase(selectYleft);
+        phrases = phrases.substr(selectXleft, getLineLength(selectYleft));
+        for (int i = selectYleft + 1; i < selectYright; ++i) {
+            phrases += getPhrase(i);
+        }
+        std::string tempPhrase = getPhrase(selectYright);
+        tempPhrase = tempPhrase.substr(0, selectXright);
+        phrases += tempPhrase;
+        return phrases;
+    }
 }
 void Content::draw_content() {
     window.draw(text);
@@ -676,21 +745,15 @@ void Content::loadText(std::string str) {
         createRope(str, 0, str.size() - 1, root, nullptr);
     }
     init();
-    frameoffset = 0;
-    if (lines() > propcount) localoffset = propcount - 1;
-    else localoffset = lines() - 1;
-    lineoffset = 0;
     text.setString(composeStrings());
-    updateSizes();
-    offset = linesizes[linesizes.size() - 1];
     updateNumbers();
     updateCursor();
 }
 
 
-int Content::lines() { // indexare de la 1, adica daca e o linie, se va returna 1
-    if (root == nullptr) return 1;
-    else return 1 + root->newline_characters;
+int Content::lines() { // indexare de la 0, daca nu exista text se va afisa -1
+    if (root == nullptr) return -1;
+    else return root->newline_characters;
 }
 void Content::out()
 {
@@ -701,7 +764,7 @@ void Content::out()
 int Content::getLineLength(int line) {
     if (root == nullptr)
         return 0;
-    if (line == lines() - 1)
+    if (line == lines())
         return root->subtree_size - getPhrasePosition(line);
     return getPhrasePosition(line + 1) - getPhrasePosition(line);
 }
@@ -809,6 +872,12 @@ void Content::erase(int pos)
         nod* new_nod = resolve_removal(p);
         rebalance_nodes_up_from(new_nod->p);
     }
+}
+int Content::getLowerBoundFrame() {
+    return diffFrame;
+}
+int Content::getUpperBoundFrame() {
+    return propcount + diffFrame - 1;
 }
 
 
