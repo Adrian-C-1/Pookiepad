@@ -858,6 +858,8 @@ void Content::insert(int pos, char val)
 }
 void Content::insert(int pos, std::string& str)
 {
+    if (str.size() == 0) return;
+
     if (root == nullptr)
     {
         Content doi(str);
@@ -920,6 +922,22 @@ int Content::getUpperBoundFrame() {
 
 int Content::get_phrase_position(nod* c, int phrase_index, int left_positions)
 {
+    while (c->l != nullptr && c->r != nullptr) {
+        int l = c->l->newline_characters;
+        int r = c->r->newline_characters;
+        if (l >= phrase_index)
+        { // primul caracter e in partea din stanga (positibl cazu dubios)
+            //return get_phrase_position(c->l, phrase_index, left_positions);
+            c = c->l;
+        }
+        else
+        { // primul caracter e in drepata
+            //return get_phrase_position(c->r, phrase_index - l, left_positions + c->l->subtree_size);
+            phrase_index -= l;
+            left_positions += c->l->subtree_size;
+            c = c->r;
+        }
+    }
     if (c->l == nullptr && c->r == nullptr)
     {
         // frunza
@@ -933,7 +951,7 @@ int Content::get_phrase_position(nod* c, int phrase_index, int left_positions)
         }
         return left_positions + i;
     }
-    else
+    /*else
     {
         int l = c->l->newline_characters;
         int r = c->r->newline_characters;
@@ -945,7 +963,7 @@ int Content::get_phrase_position(nod* c, int phrase_index, int left_positions)
         { // primul caracter e in drepata
             return get_phrase_position(c->r, phrase_index - l, left_positions + c->l->subtree_size);
         }
-    }
+    }*/
 }
 void Content::insert_string_pos(nod* c, const std::string& str, int pos)
 {
@@ -965,6 +983,7 @@ void Content::insert_string_pos(nod* c, const std::string& str, int pos)
         {
             // inserez in stanga nodului curent
             Content t(str);
+            if (t.getRoot() == nullptr) return;
             nod* nou = new nod;
             nou->p = c->p;
             if (c->p->l == c)
@@ -982,6 +1001,7 @@ void Content::insert_string_pos(nod* c, const std::string& str, int pos)
         {
             // isnerez in dreapta nodului curent
             Content t(str);
+            if (t.getRoot() == nullptr) return;
             nod* nou = new nod;
             nou->p = c->p;
             if (c->p->l == c)
@@ -1424,10 +1444,32 @@ void Content::rebalance_nodes_up_from(nod* c)
     rebalance_nodes_up_from(c->p);
 }
 // todo cred ca nu trb sa balancez mai sus decat daca acum chiar s-a intamplat balansarea, altfel nare rost ? poate
-
 void Content::get_phrase(nod* c, int index, std::string& str)
 {
-    // cout << c->subtree_size << ' ' << index << '\n';
+    //std::cout << "New function\n";
+    while (c->l != nullptr && c->r != nullptr) {
+        //std::cout << "Here " << c->subtree_size << '\n';
+        int l = c->l->newline_characters;
+        int r = c->r->newline_characters;
+        if (l > index)
+        { // prop e in partea din stanga complet
+            //get_phrase(c->l, index, str);
+            c = c->l;
+        }
+        else if (l == index)
+        { // prop e atat in stanga, cat si in dreapta
+            get_phrase(c->l, index, str);
+            get_phrase(c->r, 0, str);
+            return;
+        }
+        else
+        { // prop e in drepata
+            //get_phrase(c->r, index - l, str);
+            c = c->r;
+            index -= l;
+        }
+    }
+    // aici oricum ?
     if (c->l == nullptr && c->r == nullptr)
     {
         // frunza
@@ -1447,7 +1489,7 @@ void Content::get_phrase(nod* c, int index, std::string& str)
             i++;
         }
     }
-    else
+    /*else
     {
         int l = c->l->newline_characters;
         int r = c->r->newline_characters;
@@ -1464,7 +1506,7 @@ void Content::get_phrase(nod* c, int index, std::string& str)
         { // prop e in drepata
             get_phrase(c->r, index - l, str);
         }
-    }
+    }*/
 }
 
 nod* Content::get_next_node(nod* c, nod* fiu)
