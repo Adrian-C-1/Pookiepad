@@ -32,11 +32,14 @@ void Content::init() {
     numbers.setFont(font);
     numbers.setCharacterSize(zoomstates[state]);
     numbers.setFillColor(CONTENT::LINE_NR_COLOR);
-    cursor.setSize(sf::Vector2f((float)zoomstates[state] / 2, (float)zoomstates[state]));
+    numberRectangle.setFillColor(CONTENT::BG_COLOR);
+    cursor.setSize(sf::Vector2f(1, (float)zoomstates[state]));
     cursor.setFillColor(CONTENT::BG_COLOR);
     cursorState = false;
     date = std::time(0);
     
+    offset = 0;
+
     currChar = 0;
     currLine = 0;
     currFrame = 0;
@@ -112,7 +115,10 @@ void Content::onKeyPress(sf::Uint32 code) {
                     diffFrame = currFrame;
                     isFrameMoved = false;
                 }
-                if (selected) removeSelection();
+                if (selected) {
+                    removeSelection();
+                    break;
+                }
                 if (currChar <= 0 && currLine <= 0) return; // <= similar cu ==, doar de siguranta
                 int pos = getPhrasePosition(currLine) + currChar - 1;
                 if (at(pos) == '\n') {
@@ -137,7 +143,10 @@ void Content::onKeyPress(sf::Uint32 code) {
                     diffFrame = currFrame;
                     isFrameMoved = false;
                 }
-                if (selected) removeSelection();
+                if (selected) {
+                    removeSelection();
+                    break;
+                }
                 if (currChar <= 0 && currLine <= 0) return; // <= similar cu ==, doar de siguranta
                 int pos = getPhrasePosition(currLine) + currChar - 1;
                 char ch = at(pos);
@@ -239,6 +248,14 @@ void Content::onKeyPress(sf::Keyboard::Key key) {
     }
     else if (key == sf::Keyboard::A && (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl))) { // Ctrl + 'a'
         select(4, false);
+    }
+    else if (key == sf::Keyboard::Delete) {
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl)) {
+            deleteBtn(true);
+        }
+        else {
+            deleteBtn(false);
+        }
     }
 }
 void Content::onMousePress() {
@@ -476,40 +493,36 @@ void Content::down(bool selectionDeletion) {
     updateNumbers();
     updateCursor();
 }
+void Content::deleteBtn(bool isCtrlPressed) {
+    if (isFrameMoved) {
+        diffFrame = currFrame;
+        isFrameMoved = false;
+    }
+    if (selected) removeSelection();
+    int bakLine = currLine, bakChar = currChar;
+    if (isCtrlPressed) right(true, true);
+    else right(false, true);
+    if (bakLine == currLine && bakChar == currChar) return;
+    onKeyPress(8);
+}
 void Content::zoomIn() {
     if (state < 6) state++;
     text.setCharacterSize(zoomstates[state]);
     numbers.setCharacterSize(zoomstates[state]);
-    cursor.setSize(sf::Vector2f((float)zoomstates[state] / 2, (float)zoomstates[state]));
+    cursor.setSize(sf::Vector2f(1, (float)zoomstates[state]));
     updateResize();
 }
 void Content::zoomOut() {
     if (state > 0) state--;
     text.setCharacterSize(zoomstates[state]);
     numbers.setCharacterSize(zoomstates[state]);
-    cursor.setSize(sf::Vector2f((float)zoomstates[state] / 2, (float)zoomstates[state]));
+    cursor.setSize(sf::Vector2f(1, (float)zoomstates[state]));
     updateResize();
 }
 void Content::copy(bool cut) {
     if (selected) BAR::setClipBoardText(composeSelectedStrings());
     if (cut) {
-        int charsToBeRemoved = 0;
-        if (selectYright - selectYleft == 0) {
-            charsToBeRemoved = selectXright - selectXleft;
-        }
-        else {
-            charsToBeRemoved = getLineLength(selectYleft) - selectXleft;
-            for (int i = selectYleft + 1; i < selectYright; ++i) {
-                charsToBeRemoved += getLineLength(i);
-            }
-            charsToBeRemoved += (getLineLength(selectYright) - (getLineLength(selectYright) - selectXright));
-        }
-        currChar = selectXright;
-        currLine = selectYright;
-        for (int i = 0; i < charsToBeRemoved; ++i) onKeyPress(8);
-        text.setString(composeStrings());
-        updateNumbers();
-        updateCursor();
+        BIGERASE();
     }
 }
 void Content::paste() {
@@ -644,6 +657,7 @@ void Content::select(int control, bool isCtrlShiftPressed) {
 }
 void Content::removeSelection() {
     selected = false;
+    BIGERASE();
     selectXleft = 0, selectXright = 0;
     selectYleft = 0, selectYright = 0;
     lastMoved = 0;
@@ -699,12 +713,22 @@ void Content::updateCursor() {
         cursor.setPosition(sf::Vector2f(-1, -1));
         return;
     }
+
     int cursorPos = getPhrasePosition(currLine) + currChar - getPhrasePosition(getLowerBoundFrame());
+    if (text.findCharacterPos(cursorPos).x + 2.f + (200.f * offset) < window.getSize().x) {
+        offset = 0;
+        text.setPosition(sf::Vector2f(leftsize, BAR::HEIGHT));
+    }
+    else {
+        while (text.findCharacterPos(cursorPos).x + 2.f > window.getSize().x) {
+            offset++;
+            text.setPosition(sf::Vector2f(leftsize + (-200.f * offset), BAR::HEIGHT));
+        }
+    }
+
     cursor.setPosition(sf::Vector2f(text.findCharacterPos(cursorPos).x + 2.f, text.findCharacterPos(cursorPos).y + 1.f));
     
-    if (selected) {
-        ;
-    }
+    
 }
 void Content::updateNumbers() {
     std::string str, tempString;
@@ -723,13 +747,11 @@ void Content::updateNumbers() {
     numbers.setString(str);
     numbers.setPosition(0.0f, BAR::HEIGHT);
 
-    
-    
     sf::Text temp(tempString, font, zoomstates[state]);
 
-    float leftsize = showLines * (temp.getLocalBounds().width - temp.getLocalBounds().left) + ((float)zoompercentages[state] / 100) * 15;
-    text.setPosition(sf::Vector2f(leftsize, BAR::HEIGHT));
-
+    leftsize = showLines * (temp.getLocalBounds().width - temp.getLocalBounds().left) + ((float)zoompercentages[state] / 100) * 15;
+    
+    numberRectangle.setSize(sf::Vector2f(leftsize, window.getSize().y));
 }
 std::string Content::composeStrings() {
     // Effective y size: window.getSize().y - BAR::HEIGHT - 10
@@ -761,8 +783,9 @@ std::string Content::composeSelectedStrings() {
 void Content::draw_content() {
     window.draw(text);
     window.draw(cursor);
+    window.draw(numberRectangle);
     if (showLines)
-        window.draw(numbers);
+        window.draw(numbers); // numerele deasupra textului pentru partea cu "prea in dreapta"
 }
 
 
@@ -911,6 +934,25 @@ void Content::erase(int pos)
         nod* new_nod = resolve_removal(p);
         rebalance_nodes_up_from(new_nod->p);
     }
+}
+void Content::BIGERASE() {
+    int charsToBeRemoved = 0;
+    if (selectYright - selectYleft == 0) {
+        charsToBeRemoved = selectXright - selectXleft;
+    }
+    else {
+        charsToBeRemoved = getLineLength(selectYleft) - selectXleft;
+        for (int i = selectYleft + 1; i < selectYright; ++i) {
+            charsToBeRemoved += getLineLength(i);
+        }
+        charsToBeRemoved += (getLineLength(selectYright) - (getLineLength(selectYright) - selectXright));
+    }
+    currChar = selectXright;
+    currLine = selectYright;
+    for (int i = 0; i < charsToBeRemoved; ++i) onKeyPress(8);
+    text.setString(composeStrings());
+    updateNumbers();
+    updateCursor();
 }
 int Content::getLowerBoundFrame() {
     return diffFrame;
@@ -1216,6 +1258,67 @@ void Content::split_node(nod* c)
     recalculate_node_values_up_from(newc);
     delete c;
 }
+void Content::deleteSubtree(nod* c)
+{
+    if (c->l != nullptr)
+    {
+        deleteSubtree(c->l);
+        delete c->l;
+        c->l = 0;
+    }
+    if (c->r != nullptr)
+    {
+        deleteSubtree(c->r);
+        delete c->r;
+        c->r = 0;
+    }
+}
+
+void Content::_erase(nod* c, int pos, int count)
+{
+    nod* p = c->p;
+    if (c->subtree_size <= count && pos == 0)
+    {
+        deleteSubtree(c);
+        if (p->l == c)
+            p->l = 0;
+        else
+            p->r = 0;
+        delete c;
+        p = resolve_removal(p);
+        // std::cout << "Tree out after removing whole node:\n";
+        // out(root, 0);
+        return;
+    }
+
+    // std::cout << c->subtree_size << ' ' << pos << ' ' << count << '\n';
+    if (c->l == nullptr && c->r == nullptr)
+    {
+        // std::cout << "Leaf\n";
+        int fin = std::min(pos + count, int(c->data.size()));
+        for (int i = pos; i < fin; i++)
+        {
+            c->data.erase(c->data.begin() + pos);
+        }
+        // std::cout << "Here " << c->data << ' ' << pos << ' ' << count << '\n';
+    }
+    else
+    {
+        nod* nl = c->l, * nr = c->r;
+        int l = c->l->subtree_size;
+
+        if (pos < l) // stanga
+            _erase(nl, pos, count);
+
+        if (pos + count > l) // dreapta
+        {
+            if (pos < l) // a existat cv pe stanga
+                _erase(nr, 0, count - (l - pos));
+            else // sterg doar in dreapta
+                _erase(nr, pos - l, count);
+        }
+    }
+}
 
 /// @brief
 /// One of c's sons was removed.
@@ -1245,7 +1348,7 @@ nod* Content::resolve_removal(nod* c)
         fiu->p = c->p;
     }
     delete c;
-    recalculate_node_values_up_from(fiu);
+    recalculate_node_values_up_from(fiu->p);
     return fiu;
 }
 

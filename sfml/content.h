@@ -43,6 +43,10 @@ public:
     std::string getString();
 
     nod* getRoot() { return root; }
+    int getCurrentLine() { return currLine; }
+    int getLineCount() { return lines(); }
+    void onScrollBar(int line);
+
 
     // cu l mic ca deja se numeste showLines si nu ma pot gandi la nume originale
     inline void showlines() { showLines = 1 - showLines; updateResize(); } // AM MURIT =)))))
@@ -56,6 +60,7 @@ private: // private
 
     sf::RectangleShape cursor;
     sf::RectangleShape selection;
+    sf::RectangleShape numberRectangle;
     bool cursorState;
 
     int currChar; // distanta de la inceputul liniei si pana la cursor | [0, m] (m = numarul de caractere din propzitia curenta, incluzand ultimul \n, daca exista)
@@ -76,6 +81,8 @@ private: // private
 
     std::vector<int> zoomstates;
     std::vector<int> zoompercentages;
+    int offset;
+    float leftsize;
     int state;
     bool showLines;
 
@@ -85,6 +92,7 @@ private: // private
     void right(bool isCtrlPressed, bool selectionDeletion);
     void up(bool selectionDeletion);
     void down(bool selectionDeletion);
+    void deleteBtn(bool isCtrlPressed);
     void copy(bool cut);
     void select(int control, bool isCtrlShiftPressed);
     void removeSelection();
@@ -99,6 +107,8 @@ private: // private
     void insert(int pos, char val);
     void insert(int pos, std::string& str);
     void erase(int pos);
+    void erase(int start_pos, int count) { _erase(root, start_pos, count); }
+    void BIGERASE();
     int lines();
     int getPhrasePosition(int phrase_index);
     int getLowerBoundFrame();
@@ -110,6 +120,8 @@ private: // private
     void recalculate_node_values_up_from(nod* c);
     nod* get_node_at_pos(int pos, nod* c, int& pos_in_string);
     void split_node(nod* c);
+    void deleteSubtree(nod* c);
+    void _erase(nod* c, int pos, int count);
 
     /// @brief
     /// Tries to rebalance the ammount of leaf nodes in the left and right subtree
