@@ -178,22 +178,28 @@ void Content::onKeyPress(sf::Uint32 code) {
 void Content::onKeyPress(sf::Keyboard::Key key) {
     //std::cout << key << '\n';
     if (key == sf::Keyboard::Left) {
-        if ((sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl))) {
+        if ((sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl)) && (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)) || (sf::Keyboard::isKeyPressed(sf::Keyboard::RShift))) {
+            select(0, true);
+        }
+        else if ((sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl))) {
             left(true, true);
         }
         else if ((sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)) || (sf::Keyboard::isKeyPressed(sf::Keyboard::RShift))) {
-            select(0);
+            select(0, false);
         }
         else {
             left(false, true);
         }
     }
     else if (key == sf::Keyboard::Right) {
-        if ((sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl))) {
+        if ((sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl)) && (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)) || (sf::Keyboard::isKeyPressed(sf::Keyboard::RShift))) {
+            select(1, true);
+        }
+        else if ((sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl))) {
             right(true, true);
         }
         else if ((sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)) || (sf::Keyboard::isKeyPressed(sf::Keyboard::RShift))) {
-            select(1);
+            select(1, false);
         }
         else {
             right(false, true);
@@ -202,7 +208,7 @@ void Content::onKeyPress(sf::Keyboard::Key key) {
     }
     else if (key == sf::Keyboard::Up) {
         if ((sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)) || (sf::Keyboard::isKeyPressed(sf::Keyboard::RShift))) {
-            select(2);
+            select(2, false);
         }
         else {
             up(true);
@@ -210,29 +216,29 @@ void Content::onKeyPress(sf::Keyboard::Key key) {
     }
     else if (key == sf::Keyboard::Down) {
         if ((sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)) || (sf::Keyboard::isKeyPressed(sf::Keyboard::RShift))) {
-            select(3);
+            select(3, false);
         }
         else {
             down(true);
         }
     }
-    else if (key == sf::Keyboard::Equal && sf::Keyboard::isKeyPressed(sf::Keyboard::LControl)) { // Ctrl + '+'
+    else if (key == sf::Keyboard::Equal && (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl))) { // Ctrl + '+'
         zoomIn();
     }
-    else if (key == sf::Keyboard::Dash && sf::Keyboard::isKeyPressed(sf::Keyboard::LControl)) { // Ctrl + '-'
+    else if (key == sf::Keyboard::Dash && (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl))) { // Ctrl + '-'
         zoomOut();
     }
-    else if (key == sf::Keyboard::X && sf::Keyboard::isKeyPressed(sf::Keyboard::LControl)) { // Ctrl + 'x'
+    else if (key == sf::Keyboard::X && (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl))) { // Ctrl + 'x'
         copy(true);
     }
-    else if (key == sf::Keyboard::C && sf::Keyboard::isKeyPressed(sf::Keyboard::LControl)) { // Ctrl + 'c'
+    else if (key == sf::Keyboard::C && (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl))) { // Ctrl + 'c'
         copy(false);
     }
-    else if (key == sf::Keyboard::V && sf::Keyboard::isKeyPressed(sf::Keyboard::LControl)) { // Ctrl + 'v'
+    else if (key == sf::Keyboard::V && (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl))) { // Ctrl + 'v'
         paste();
     }
-    else if (key == sf::Keyboard::A && sf::Keyboard::isKeyPressed(sf::Keyboard::LControl)) { // Ctrl + 'a'
-        select(4);
+    else if (key == sf::Keyboard::A && (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl))) { // Ctrl + 'a'
+        select(4, false);
     }
 }
 void Content::onMousePress() {
@@ -496,7 +502,7 @@ void Content::copy(bool cut) {
             for (int i = selectYleft + 1; i < selectYright; ++i) {
                 charsToBeRemoved += getLineLength(i);
             }
-            charsToBeRemoved += (getLineLength(selectYright) - selectXright);
+            charsToBeRemoved += (getLineLength(selectYright) - (getLineLength(selectYright) - selectXright));
         }
         currChar = selectXright;
         currLine = selectYright;
@@ -527,23 +533,26 @@ void Content::paste() {
     updateNumbers();
     updateCursor();
 }
-void Content::select(int control) {
+void Content::select(int control, bool isCtrlShiftPressed) {
     if (control == 0) {
         if (!selected) {
             selectXright = currChar, selectYright = currLine;
-            left(false, false);
+            if (isCtrlShiftPressed) left(true, false);
+            else left(false, false);
             selectXleft = currChar, selectYleft = currLine;
             selected = true;
             lastMoved = 0;
         }
         else {
             if (lastMoved == 0) {
-                left(false, false);
+                if (isCtrlShiftPressed) left(true, false);
+                else left(false, false);
                 selectXleft = currChar, selectYleft = currLine;
             }
             else {
                 currChar = selectXright, currLine = selectYright;
-                left(false, false);
+                if (isCtrlShiftPressed) left(true, false);
+                else left(false, false);
                 selectXright = currChar, selectYright = currLine;
             }
         }
@@ -551,19 +560,22 @@ void Content::select(int control) {
     else if (control == 1) {
         if (!selected) {
             selectXleft = currChar, selectYleft = currLine;
-            right(false, false);
+            if (isCtrlShiftPressed) right(true, false);
+            else right(false, false);
             selectXright = currChar, selectYright = currLine;
             selected = true;
             lastMoved = 1;
         }
         else {
             if (lastMoved == 0) {
-                right(false, false);
+                if (isCtrlShiftPressed) right(true, false);
+                else right(false, false);
                 selectXleft = currChar, selectYleft = currLine;
             }
             else {
                 currChar = selectXright, currLine = selectYright;
-                right(false, false);
+                if (isCtrlShiftPressed) right(true, false);
+                else right(false, false);
                 selectXright = currChar, selectYright = currLine;
             }
         }
@@ -613,8 +625,14 @@ void Content::select(int control) {
         selectXleft = 0, selectXright = 0;
         selectXright = getLineLength(lines()), selectYright = lines();
         currLine = lines();
-        currFrame = lines() - propcount + 1;
-        diffFrame = currFrame;
+        if (lines() < propcount) {
+            currFrame = 0;
+            diffFrame = currFrame;
+        }
+        else {
+            currFrame = lines() - propcount + 1;
+            diffFrame = currFrame;
+        }
         currChar = getLineLength(lines());
         lastMoved = 1;
     }
@@ -662,6 +680,10 @@ void Content::updateResize() {
     }
     else if (currLine > getUpperBoundFrame()) {
         currFrame = currLine - propcount + 1;
+        diffFrame = currFrame;
+    }
+    else if (currLine < getLowerBoundFrame()) {
+        currFrame = currLine;
         diffFrame = currFrame;
     }
     text.setString(composeStrings());

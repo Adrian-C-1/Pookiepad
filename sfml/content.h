@@ -86,7 +86,7 @@ private: // private
     void up(bool selectionDeletion);
     void down(bool selectionDeletion);
     void copy(bool cut);
-    void select(int control);
+    void select(int control, bool isCtrlShiftPressed);
     void removeSelection();
 
     void updateCursor();
