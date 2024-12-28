@@ -68,6 +68,7 @@ void Content::onKeyPress(sf::Uint32 code) {
         insert(getPhrasePosition(currLine) + currChar, code);       
         currChar++;
         text.setString(composeStrings());
+        updateNumbers();
         updateCursor();
     }
     else {
@@ -98,7 +99,8 @@ void Content::onKeyPress(sf::Uint32 code) {
                     isFrameMoved = false;
                 }
                 if (selected) removeSelection();
-                insert(getPhrasePosition(currLine) + currChar, "      ");
+                std::string spaces = "      ";
+                insert(getPhrasePosition(currLine) + currChar, spaces);
                 currChar += 6;
                 text.setString(composeStrings());
                 updateCursor();
@@ -511,9 +513,19 @@ void Content::paste() {
     }
     if (selected) removeSelection();
     std::string clipboardText = BAR::getClipboardText();
-    for (int i = 0; i < clipboardText.size(); i++) {
-        onKeyPress(clipboardText[i]);
+    insert(getPhrasePosition(currLine) + currChar, clipboardText);
+    int newLineCnt = std::count(clipboardText.begin(), clipboardText.end(), '\n');
+    int newLineFirstCharPos = clipboardText.find_last_of('\n');
+    int lastChars = (newLineCnt == 0) ? clipboardText.length() : clipboardText.length() - (newLineFirstCharPos + 1);
+    currLine += newLineCnt;
+    currChar = (newLineCnt == 0) ? currChar + lastChars : lastChars;
+    if (currLine > getUpperBoundFrame()) {
+        currFrame = currLine - propcount + 1;
+        diffFrame = currFrame;
     }
+    text.setString(composeStrings());
+    updateNumbers();
+    updateCursor();
 }
 void Content::select(int control) {
     if (control == 0) {
@@ -822,12 +834,15 @@ void Content::insert(int pos, char val)
         }
     }
 }
-void Content::insert(int pos, std::string text)
+void Content::insert(int pos, std::string& str)
 {
-    for (int i = 0; i < text.size(); i++)
+    if (root == nullptr)
     {
-        insert(pos + i, text[i]);
+        Content doi(str);
+        root = doi.getRoot();
+        return;
     }
+    insert_string_pos(root, str, pos);
 }
 void Content::erase(int pos)
 {
@@ -908,6 +923,81 @@ int Content::get_phrase_position(nod* c, int phrase_index, int left_positions)
         { // primul caracter e in drepata
             return get_phrase_position(c->r, phrase_index - l, left_positions + c->l->subtree_size);
         }
+    }
+}
+void Content::insert_string_pos(nod* c, const std::string& str, int pos)
+{
+    if (c->l == nullptr && c->r == nullptr)
+    {
+        // At a leaf
+        // std::cout << "At leaf: " << c->data << '\n';
+        // std::cout << "Pos: " << pos << '\n';
+        if (pos == 0)
+        {
+            // inserez in stanga nodului curent
+            Content t(str);
+            nod* nou = new nod;
+            nou->p = c->p;
+            if (c->p->l == c)
+                c->p->l = nou;
+            else
+                c->p->r = nou;
+            nou->l = t.getRoot();
+            nou->l->p = nou;
+            nou->r = c;
+            c->p = nou;
+            recalculate_node_values_up_from(nou);
+            return;
+        }
+        else if (pos == c->data.size())
+        {
+            // isnerez in dreapta nodului curent
+            Content t(str);
+            nod* nou = new nod;
+            nou->p = c->p;
+            if (c->p->l == c)
+                c->p->l = nou;
+            else
+                c->p->r = nou;
+            nou->r = t.getRoot();
+            nou->r->p = nou;
+            nou->l = c;
+            c->p = nou;
+            recalculate_node_values_up_from(nou);
+            return;
+        }
+        else
+        {
+            // trebuie sa dau split la nod si sa pun intre bucati noul text
+            std::string left_data = c->data.substr(0, pos);
+            std::string right_data = c->data.substr(pos, c->data.size() - pos);
+            // std::cout << "Left data: " << left_data << '\n';
+            // std::cout << "Right data: " << right_data << '\n';
+            Content rl(left_data), rd(right_data), rt(str);
+            nod* nou_1 = new nod;
+            nou_1->p = c->p;
+            if (c->p->l == c)
+                c->p->l = nou_1;
+            else
+                c->p->r = nou_1;
+            nou_1->l = rl.getRoot();
+            nou_1->l->p = nou_1;
+            nod* nou_2 = new nod;
+            nou_2->p = nou_1;
+            nou_1->r = nou_2;
+            nou_2->l = rt.getRoot();
+            nou_2->r = rd.getRoot();
+            nou_2->r->p = nou_2;
+            nou_2->l->p = nou_2;
+            recalculate_node_values_up_from(nou_2);
+        }
+    }
+    else
+    {
+        if (c->l->subtree_size <= pos)
+            insert_string_pos(c->r, str, pos - c->l->subtree_size);
+        else
+            insert_string_pos(c->l, str, pos);
     }
 }
 

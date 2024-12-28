@@ -42,6 +42,8 @@ public:
     
     std::string getString();
 
+    nod* getRoot() { return root; }
+
     // cu l mic ca deja se numeste showLines si nu ma pot gandi la nume originale
     inline void showlines() { showLines = 1 - showLines; updateResize(); } // AM MURIT =)))))
 private: // private
@@ -95,7 +97,7 @@ private: // private
     void out();
     char at(int pos);
     void insert(int pos, char val);
-    void insert(int pos, std::string text);
+    void insert(int pos, std::string& str);
     void erase(int pos);
     int lines();
     int getPhrasePosition(int phrase_index);
@@ -136,6 +138,7 @@ private: // private
     int getLineLength(int line);
     void get_string(nod* c, std::string& str);
     int get_phrase_position(nod* c, int phrase_index, int left_positions);
+    void insert_string_pos(nod* c, const std::string& str, int pos);
     void out(nod* c, int h);
 
     /// @brief
