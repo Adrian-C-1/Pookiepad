@@ -927,7 +927,14 @@ int Content::get_phrase_position(nod* c, int phrase_index, int left_positions)
 }
 void Content::insert_string_pos(nod* c, const std::string& str, int pos)
 {
-    if (c->l == nullptr && c->r == nullptr)
+    while (c->l != nullptr && c->r != nullptr) {
+        if (c->l->subtree_size <= pos)
+            pos -= c->l->subtree_size, c = c->r;
+        else
+            c = c->l;
+    }
+    // acum sunt in cazul asta indiferent ? cred ?
+    //if (c->l == nullptr && c->r == nullptr) 
     {
         // At a leaf
         // std::cout << "At leaf: " << c->data << '\n';
@@ -992,13 +999,14 @@ void Content::insert_string_pos(nod* c, const std::string& str, int pos)
             recalculate_node_values_up_from(nou_2);
         }
     }
+    /* }
     else
     {
         if (c->l->subtree_size <= pos)
             insert_string_pos(c->r, str, pos - c->l->subtree_size);
         else
             insert_string_pos(c->l, str, pos);
-    }
+    }*/
 }
 
 /// Will return The n-th phrase that ends with newline.
