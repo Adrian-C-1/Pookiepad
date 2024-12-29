@@ -1028,10 +1028,12 @@ void Content::insert_string_pos(nod* c, const std::string& str, int pos)
             if (t.getRoot() == nullptr) return;
             nod* nou = new nod;
             nou->p = c->p;
-            if (c->p->l == c)
-                c->p->l = nou;
-            else
-                c->p->r = nou;
+            if (c->p != nullptr) {
+                if (c->p->l == c)
+                    c->p->l = nou;
+                else
+                    c->p->r = nou;
+            }
             nou->l = t.getRoot();
             nou->l->p = nou;
             nou->r = c;
@@ -1189,7 +1191,7 @@ void Content::recalculate_node_value(nod* c)
         if (c->l != nullptr)
             height = std::max(c->l->height, height), leaf_nodes += c->l->leaf_nodes, subtree_size += c->l->subtree_size, left_subtree_size += c->l->subtree_size;
         if (c->r != nullptr)
-            height = std::max(c->l->height, height), leaf_nodes += c->r->leaf_nodes, subtree_size += c->r->subtree_size;
+            height = std::max(c->r->height, height), leaf_nodes += c->r->leaf_nodes, subtree_size += c->r->subtree_size;
         c->left_subtree_size = left_subtree_size;
         c->subtree_size = subtree_size;
         c->leaf_nodes = leaf_nodes;
@@ -1208,14 +1210,19 @@ void Content::recalculate_node_values_up_from(nod* c)
 }
 nod* Content::get_node_at_pos(int pos, nod* c, int& pos_in_string)
 {
+    while (c->l != nullptr || c->r != nullptr) {
+        if (c->l->subtree_size > pos)
+            c = c->l;
+        else
+            pos -= c->l->subtree_size, c = c->r;
+    }
+
     if (c->l == nullptr && c->r == nullptr)
     {
         pos_in_string = pos;
         return c;
     }
-    if (c->l->subtree_size > pos)
-        return get_node_at_pos(pos, c->l, pos_in_string);
-    return get_node_at_pos(pos - c->l->subtree_size, c->r, pos_in_string);
+    return nullptr;
 }
 void Content::split_node(nod* c)
 {
@@ -1354,18 +1361,35 @@ nod* Content::resolve_removal(nod* c)
 
 nod* Content::get_leftmost_leaf_of_subtree(nod* r)
 {
+    while (r->l != nullptr || r->r != nullptr) {
+        if (r->l != nullptr)
+            r = r->l;
+        else if (r->r != nullptr)
+            r = r->r;
+    }
+    /*
     if (r->l != nullptr)
         return get_leftmost_leaf_of_subtree(r->l);
     if (r->r != nullptr)
         return get_leftmost_leaf_of_subtree(r->r);
+        */
     return r;
 }
 nod* Content::get_rightmost_leaf_of_subtree(nod* r)
 {
+    while (r->l != nullptr || r->r != nullptr) {
+        if (r->r != nullptr)
+            r = r->r;
+        else if (r->l != nullptr)
+            r = r->l;
+    }
+    /*
+    
     if (r->r != nullptr)
         return get_rightmost_leaf_of_subtree(r->r);
     if (r->l != nullptr)
         return get_rightmost_leaf_of_subtree(r->l);
+    */
     return r;
 }
 

@@ -81,14 +81,18 @@ int main()
                 BAR::menu->onMouseMove();
                 break;
             case sf::Event::TextEntered:
+                std::cout << "Text entered before\n";
                 BAR::menu->markChanged();
                 if (!BAR::menu->onTextEntered(event.text.unicode))
                     CONTENT::content->onKeyPress(event.text.unicode);
+                std::cout << "Text entered after\n";
                 break;
             case sf::Event::KeyPressed:
+                std::cout << "Key pressed before\n";
                 BAR::menu->markChanged();
                 if (!BAR::menu->onKeyPress())
                     CONTENT::content->onKeyPress(event.key.code);
+                std::cout << "Key pressed after\n";
                 break;
             case sf::Event::MouseWheelScrolled:
                 if (event.mouseWheelScroll.delta > 0) { 
