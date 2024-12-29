@@ -13,7 +13,9 @@ namespace BAR {
 	const sf::Color OUTLINE_COLOR = sf::Color(70, 56, 68, 255);
 	const float OUTLINE_THICKNESS = 1.0f;
 	const sf::Color HOVER_COLOR = sf::Color(58, 44, 57, 255);
+	const sf::Color SCROLLBAR_BG_COLOR = sf::Color(0, 0, 0, 44);
 	const sf::Color TEXT_COLOR = sf::Color::White;
+	const int SCROLLBAR_PROXIMITY = 15;
 	const float spacing = 4;
 
 	std::queue<EVENT> events;

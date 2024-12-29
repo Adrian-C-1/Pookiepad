@@ -75,6 +75,8 @@ public:
 	bool onKeyPress();
 	/// returneaza 1 daca am facut ceva cu cheia (am deschid find)
 	bool onTextEntered(sf::Uint32 code);
+	
+	void scrollbar_make_good();
 private:
 	void ordonPages();
 	float getPage0x();
@@ -102,4 +104,13 @@ private:
 	int current_page = 0;
 	float page_draw_offset = 0.0;
 	sf::Vector2f last_mouse_press_position = {-1, -1};
+
+	bool should_draw_scrollbar();
+	void scrollbar_move_to(sf::Vector2f mpos);
+	void scrollbar_was_moved();
+	sf::RectangleShape scrollbar_background;
+	sf::RectangleShape scrollbar_active;
+	bool scrollbar_holding;
+	int scrollbar_last_mouse_y;
+
 };

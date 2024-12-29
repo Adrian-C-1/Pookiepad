@@ -19,6 +19,8 @@ namespace BAR {
 	extern const sf::Color OUTLINE_COLOR;
 	extern const float OUTLINE_THICKNESS;
 	extern const sf::Color TEXT_COLOR;
+	extern const sf::Color SCROLLBAR_BG_COLOR;
+	extern const int SCROLLBAR_PROXIMITY;
 	extern const float spacing;
 
 	extern Menu *menu;

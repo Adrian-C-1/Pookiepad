@@ -279,6 +279,16 @@ Menu::Menu() :
 	ordonPages();
 	current_page = 0;
 	CONTENT::content = pages[0].content;
+
+	onResize();
+}
+void Menu::scrollbar_make_good() {
+	float count = CONTENT::content->getLineCount(), line = CONTENT::content->getCurrentLine();
+	float percentage = line / count;
+	float possible = scrollbar_background.getSize().y - scrollbar_active.getSize().y;
+	float off_y = possible * percentage;
+	scrollbar_active.setPosition(scrollbar_background.getPosition());
+	scrollbar_active.move(sf::Vector2f(0, off_y));
 }
 float Menu::getPage0x() {
 	return buttons[2].getPosition().x + buttons[2].getSize().x + BAR::spacing * 3;
@@ -302,6 +312,20 @@ void Menu::ordonPages() {
 }
 void Menu::onResize() {
 	background.setSize({ float(window.getSize().x), BAR::HEIGHT });
+
+
+	scrollbar_background.setSize(sf::Vector2f(BAR::spacing * 2, window.getSize().y - BAR::HEIGHT - 4 * BAR::spacing));
+	scrollbar_background.setPosition(sf::Vector2f(window.getSize().x - BAR::spacing * 5, BAR::HEIGHT + 2 * BAR::spacing));
+	scrollbar_background.setFillColor(BAR::SCROLLBAR_BG_COLOR);
+
+	scrollbar_holding = 0;
+
+	float height = std::max(scrollbar_background.getSize().y / 10, 10.0f);
+	height = std::min(scrollbar_background.getSize().y, height);
+	scrollbar_active.setSize(sf::Vector2f(scrollbar_background.getSize().x, height));
+	scrollbar_active.setPosition(scrollbar_background.getPosition());
+	scrollbar_active.setFillColor(sf::Color::White);
+	scrollbar_make_good();
 }
 void Menu::saveFile() {
 	if (pages[current_page].path.size() == 0) { // no path selected
@@ -473,6 +497,10 @@ void Menu::draw() {
 		currentPopUp->draw(hovering);
 	}
 	
+	if (scrollbar_holding || should_draw_scrollbar()) {
+		window.draw(scrollbar_background);
+		window.draw(scrollbar_active);
+	}
 }
 void Menu::markChanged() {
 	if (pages[current_page].saved == 1) {
@@ -531,6 +559,27 @@ bool Menu::onPress() {
 	}
 	else
 		last_mouse_press_position = { -1, -1 };
+
+	if (!pressed_inside) {
+		sf::FloatRect sbr = scrollbar_background.getGlobalBounds();
+		sbr.left -= BAR::SCROLLBAR_PROXIMITY;
+		sbr.width += 2 * BAR::SCROLLBAR_PROXIMITY;
+		if (sbr.contains(mpos)) {
+			pressed_inside = 1;
+			sf::FloatRect sba = scrollbar_active.getGlobalBounds();
+			sba.left -= BAR::SCROLLBAR_PROXIMITY;
+			sba.width += 2 * BAR::SCROLLBAR_PROXIMITY;
+			if (sba.contains(mpos)) {
+				scrollbar_holding = 1;
+				scrollbar_last_mouse_y = mpos.y;
+			}
+			else {
+				scrollbar_move_to(mpos);
+				scrollbar_make_good();
+			}
+		}
+	}
+
 	return pressed_inside;
 }
 void Menu::onMouseMove() {
@@ -571,19 +620,75 @@ void Menu::onMouseMove() {
 				page_draw_offset -= (getPage0x() - pages[0].button.getPosition().x + page_draw_offset);
 		}
 	}
+
+	if (scrollbar_holding == 1) {
+		if (!sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+			scrollbar_holding = 0;
+			return;
+		}
+		else {
+			sf::Vector2f old_scrollbar_pos = scrollbar_active.getPosition();
+			scrollbar_active.move(sf::Vector2f(0, mpos.y - scrollbar_last_mouse_y));
+			if (scrollbar_active.getPosition().y < scrollbar_background.getPosition().y)
+				scrollbar_active.setPosition(scrollbar_background.getPosition());
+			if (scrollbar_active.getPosition().y + scrollbar_active.getSize().y > scrollbar_background.getPosition().y + scrollbar_background.getSize().y)
+				scrollbar_active.move(-sf::Vector2f(0, scrollbar_active.getPosition().y + scrollbar_active.getSize().y - scrollbar_background.getPosition().y - scrollbar_background.getSize().y));
+			if (scrollbar_active.getPosition() != old_scrollbar_pos) {
+				scrollbar_was_moved();
+			}
+			scrollbar_last_mouse_y = mpos.y;
+		}
+	}
+
 }
 /// returneaza 1 daca am facut ceva cu cheia (am deschid find)
 bool Menu::onKeyPress() {
-	return (currentPopUp == &findPopUp);
+	return (currentPopUp == &findPopUp) || scrollbar_holding;
 }
 /// returneaza 1 daca am facut ceva cu cheia (am deschid find)
 bool Menu::onTextEntered(sf::Uint32 code) {
+	if (scrollbar_holding) 
+		return 1;
+
 	if (currentPopUp == &findPopUp) {
 		reinterpret_cast<FindPopUp*>(currentPopUp)->onKeyPress(code);
 		return 1;
 	}
 	return 0;
 }
+void Menu::scrollbar_was_moved() {
+	float percentage = 0.0;
+	float real_end = scrollbar_background.getPosition().y + scrollbar_background.getSize().y - scrollbar_active.getSize().y;
+	percentage = (scrollbar_active.getPosition().y - scrollbar_background.getPosition().y) * 100.0 / (real_end - scrollbar_background.getPosition().y);
+	//std::cout << percentage << '\n';
+
+	int c_count = CONTENT::content->getLineCount();
+	int l = int(c_count * percentage / 100) + 1;
+	//l = std::max(c_count, l);
+
+	CONTENT::content->onScrollBar(l);
+}
+void Menu::scrollbar_move_to(sf::Vector2f mpos) {
+	float y = mpos.y - scrollbar_background.getPosition().y;
+	float y_max = scrollbar_background.getSize().y - scrollbar_active.getSize().y;
+	if (y < 0) y = 0;
+	if (y > y_max) y = y_max;
+	float percentage = y / y_max;
+
+	float count = CONTENT::content->getLineCount(), line = CONTENT::content->getCurrentLine();
+	int page = count * percentage;
+
+	CONTENT::content->onScrollBar(page + 1);
+}
+bool Menu::should_draw_scrollbar() {
+	sf::Vector2f mpos = sf::Vector2f(sf::Mouse::getPosition(window));
+	sf::FloatRect sb_bg = scrollbar_background.getGlobalBounds();
+	sb_bg.left -= BAR::SCROLLBAR_PROXIMITY;
+	sb_bg.width += 2 * BAR::SCROLLBAR_PROXIMITY;
+	if (sb_bg.contains(mpos)) return 1;
+	return 0;
+}
+
 
 void onFindFind() {
 	std::cout << "Finding\n";

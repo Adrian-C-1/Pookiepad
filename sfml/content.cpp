@@ -1,5 +1,7 @@
 #include "content.h"
 
+#include "menu.h"
+
 Content::Content() {
     root = nullptr;
     init();
@@ -1634,6 +1636,23 @@ void Content::get_phrase(nod* c, int index, std::string& str)
             get_phrase(c->r, index - l, str);
         }
     }*/
+}
+
+void Content::onScrollBar(int line) {
+    /*
+        TODO vezi cum faci aici sa mearga
+    */
+    // Eu am scris-o da nush exact ce iti mai trb updateuri si alte chestii
+    line = std::max(std::min(line, lines()), 1);
+    if (lines() < propcount) line = 1;
+    diffFrame = line - 1;
+    isFrameMoved = 1;
+    text.setString(composeStrings());
+    updateNumbers();
+    int oldl = currLine;
+    currLine = diffFrame;
+    updateCursor();
+    currLine = oldl;
 }
 
 nod* Content::get_next_node(nod* c, nod* fiu)

@@ -42,9 +42,10 @@ public:
     
     std::string getString();
 
-    nod* getRoot() { return root; }
-    int getCurrentLine() { return currLine; }
-    int getLineCount() { return lines(); }
+    inline nod* getRoot() { return root; }
+    inline int getCurrentLine() { return diffFrame; }
+    inline int getLineCount() { return std::max(lines() - propcount + 1, 1); }
+    // line e cea mai de sus linie care trb sa apara (indexare de la 0 !)
     void onScrollBar(int line);
 
 
