@@ -63,7 +63,7 @@ public: // private
 
     sf::RectangleShape cursor;
     sf::RectangleShape numberRectangle;
-    std::vector<sf::RectangleShape> selections;
+    std::vector<sf::RectangleShape> test;
     bool cursorState;
 
     int currChar; // distanta de la inceputul liniei si pana la cursor | [0, m] (m = numarul de caractere din propzitia curenta, incluzand ultimul \n, daca exista)

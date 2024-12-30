@@ -67,6 +67,7 @@ void Content::onKeyPress(sf::Uint32 code) {
         std::cout << "Right pos: " << selectXright<< " " << selectYright<< '\n';
         std::cout << text.getCharacterSize() << " " << propsize << '\n';
         std::cout << "\n\n";
+        updateCursor();
         return;
     }
     if (code >= ' ' && code <= '~') { // Character
@@ -604,7 +605,6 @@ void Content::copy(bool cut) {
     if (!selected) BAR::menu->setNotice("No text selected");
     else {
         BAR::setClipBoardText(composeSelectedStrings());
-        //else BAR::menu->setNotice("Nothing selected");
         if (cut) {
             if (!selected) return;
             BIGERASE();
@@ -750,7 +750,6 @@ void Content::selectAll() {
     updateCursor();
 }
 void Content::removeSelection() {
-    std::cout << "intra aici";
     selected = false;
     selectXleft = 0, selectXright = 0;
     selectYleft = 0, selectYright = 0;
@@ -823,9 +822,22 @@ void Content::updateCursor() {
     }
     
     if (selected) {
-        if (selectYleft == selectYright && (getLowerBoundFrame() <= selectXleft && selectXright <= getUpperBoundFrame())) {
-            sf::Text line(getPhrase(selectYleft).substr(selectXleft, selectXright - selectXleft), font, zoomstates[state]);
-            sf::RectangleShape blue(sf::Vector2f(line.getGlobalBounds().width, propsize));
+        if (selectYleft == selectYright && (getLowerBoundFrame() <= selectYleft && selectYright <= getUpperBoundFrame())) {
+            std::string selLine = getPhrase(selectYleft);
+            sf::Text preline(selLine.substr(0, selectXleft), font, zoomstates[state]);
+            sf::Text line(selLine.substr(selectXleft, selectXright - selectXleft), font, zoomstates[state]);
+            //std::cout << preline.getString().toAnsiString() << " " << line.getString().toAnsiString() << '\n';
+            int sizetoadd = 0;
+            if (selectXleft > 0) {
+                sf::Text ambele(selLine.substr(selectXleft - 1, 2), font, zoomstates[state]), stanga(selLine.substr(selectXleft - 1, 1), font, zoomstates[state]), dreapta(selLine.substr(selectXleft, 1), font, zoomstates[state]);
+                sizetoadd = ambele.getGlobalBounds().width - stanga.getGlobalBounds().width - dreapta.getGlobalBounds().width;
+            }
+            sf::RectangleShape blue;
+            blue.setSize(sf::Vector2f(line.getGlobalBounds().width, propsize));
+            blue.setPosition(leftsize + preline.getLocalBounds().width + sizetoadd + (-200.f * offset), BAR::HEIGHT);
+            blue.setFillColor(sf::Color::Blue);
+            test.clear();
+            test.push_back(blue);
         }
     }
 
@@ -885,11 +897,17 @@ std::string Content::composeSelectedStrings() {
     }
 }
 void Content::draw_content() {
+    if (selected) {
+        for (int i = 0; i < test.size(); ++i) {
+            window.draw(test[i]);
+        }
+    }
     window.draw(text);
     window.draw(cursor);
     window.draw(numberRectangle);
     if (showLines)
         window.draw(numbers); // numerele deasupra textului pentru partea cu "prea in dreapta"
+    
 }
 
 
