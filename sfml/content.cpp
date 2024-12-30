@@ -48,6 +48,7 @@ void Content::init() {
 
     showLines = 1;
     updateResize();
+    text.setPosition(sf::Vector2f(leftsize, BAR::HEIGHT));
 }
 
 
@@ -69,7 +70,10 @@ void Content::onKeyPress(sf::Uint32 code) {
             diffFrame = currFrame;
             isFrameMoved = false;
         }
-        if (selected) removeSelection();
+        if (selected) {
+            BIGERASE();
+            removeSelection();
+        }
         insert(getPhrasePosition(currLine) + currChar, code);       
         currChar++;
         text.setString(composeStrings());
@@ -84,7 +88,10 @@ void Content::onKeyPress(sf::Uint32 code) {
                     diffFrame = currFrame;
                     isFrameMoved = false;
                 }
-                if (selected) removeSelection();
+                if (selected) {
+                    BIGERASE();
+                    removeSelection();
+                }
                 insert(getPhrasePosition(currLine) + currChar, '\n');
                 currChar = 0;
                 currLine++;
@@ -103,7 +110,10 @@ void Content::onKeyPress(sf::Uint32 code) {
                     diffFrame = currFrame;
                     isFrameMoved = false;
                 }
-                if (selected) removeSelection();
+                if (selected) {
+                    BIGERASE();
+                    removeSelection();
+                }
                 std::string spaces = "      ";
                 insert(getPhrasePosition(currLine) + currChar, spaces);
                 currChar += 6;
@@ -118,6 +128,7 @@ void Content::onKeyPress(sf::Uint32 code) {
                     isFrameMoved = false;
                 }
                 if (selected) {
+                    BIGERASE();
                     removeSelection();
                     break;
                 }
@@ -146,6 +157,7 @@ void Content::onKeyPress(sf::Uint32 code) {
                     isFrameMoved = false;
                 }
                 if (selected) {
+                    BIGERASE();
                     removeSelection();
                     break;
                 }
@@ -189,7 +201,7 @@ void Content::onKeyPress(sf::Uint32 code) {
 void Content::onKeyPress(sf::Keyboard::Key key) {
     //std::cout << key << '\n';
     if (key == sf::Keyboard::Left) {
-        if ((sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl)) && (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)) || (sf::Keyboard::isKeyPressed(sf::Keyboard::RShift))) {
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) && sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)) {
             select(0, true);
         }
         else if ((sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl))) {
@@ -203,7 +215,7 @@ void Content::onKeyPress(sf::Keyboard::Key key) {
         }
     }
     else if (key == sf::Keyboard::Right) {
-        if ((sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl)) && (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)) || (sf::Keyboard::isKeyPressed(sf::Keyboard::RShift))) {
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) && sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)) {
             select(1, true);
         }
         else if ((sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl))) {
@@ -265,7 +277,54 @@ void Content::onMousePress() {
     sf::Vector2f mpos = sf::Vector2f(sf::Mouse::getPosition(window));
     if (mpos.x <= text.getGlobalBounds().left || mpos.y <= text.getGlobalBounds().top) return;
 
-    if (selected) removeSelection();
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)) {
+        int oldLine = currLine, oldChar = currChar;
+        moveCursor(mpos);
+        if (selected) {
+            if (currLine == oldLine && currChar == oldChar) return;
+            if (currLine < selectYleft || currLine == selectYleft && currChar < selectXleft) {
+                selectXleft = currChar, selectYleft = currLine;
+                lastMoved = 0;
+            }
+            else if (currLine > selectYright || currLine == selectYright && currChar > selectXright) {
+                selectXright = currChar, selectYright = currLine;
+                lastMoved = 1;
+            }
+            else {
+                if (lastMoved == 0) {
+                    selectXleft = currChar, selectYleft = currLine;
+                }
+                else {
+                    selectXright = currChar, selectYright = currLine;
+                }
+            }
+        }
+        else {
+            if (currLine == oldLine && currChar == oldChar) return;
+            if (currLine < oldLine || currLine == oldLine && currChar < oldChar) {
+                selected = true;
+                selectXleft = currChar, selectYleft = currLine;
+                selectXright = oldChar, selectYright = oldLine;
+                lastMoved = 0;
+            }
+            else {
+                selected = true;
+                selectXleft = oldChar, selectYleft = oldLine;
+                selectXright = currChar, selectYright = currLine;
+                lastMoved = 1;
+            }
+        }
+        std::cout << selectXleft << " " << selectYleft << '\n' << selectXright << " " << selectYright << '\n';
+    }
+    else {
+        if (selected) removeSelection();
+        moveCursor(mpos);
+    }
+}
+
+
+
+void Content::moveCursor(sf::Vector2f mpos) {
     if (mpos.y > text.getLocalBounds().height + text.getLocalBounds().top) {
         currFrame = diffFrame;
         if (lines() < getUpperBoundFrame()) currLine = lines();
@@ -309,18 +368,18 @@ void Content::onMousePress() {
     updateNumbers();
     updateCursor();
 }
-
-
 void Content::scroll(bool direction) {
     if (direction) { // Up
         if (diffFrame > 0) {
             diffFrame--;
+            if (currLine >= getLowerBoundFrame() && currLine <= getUpperBoundFrame()) currFrame--;
             isFrameMoved = true;
        }
     }
     else {
         if (diffFrame <= lines() - propcount) {
             diffFrame++;
+            if (currLine >= getLowerBoundFrame() && currLine <= getUpperBoundFrame()) currFrame++;
             isFrameMoved = true;
         }
     }
@@ -415,15 +474,14 @@ void Content::right(bool isCtrlPressed, bool selectionDeletion) {
                 updateNumbers();
             }
             else {
-                int maxim = getPhrasePosition(currLine) - getPhrasePosition(getLowerBoundFrame()) + getLineLength(currLine) - 1;
-                if (currLine == lines()) {
-                    maxim++;
-                }
+                int maxim = getLineLength(currLine) - 1;
+                if (currLine == lines()) maxim++;
                 while (currChar < maxim && (ch != ' ' && ch != '\n')) {
                     currChar++;
                     pos++;
                     ch = at(pos);
                 }
+                
             }
         }
     }
@@ -524,6 +582,7 @@ void Content::zoomOut() {
 void Content::copy(bool cut) {
     if (selected) BAR::setClipBoardText(composeSelectedStrings());
     if (cut) {
+        if (!selected) return;
         BIGERASE();
     }
 }
@@ -659,7 +718,6 @@ void Content::select(int control, bool isCtrlShiftPressed) {
 }
 void Content::removeSelection() {
     selected = false;
-    BIGERASE();
     selectXleft = 0, selectXright = 0;
     selectYleft = 0, selectYright = 0;
     lastMoved = 0;
@@ -717,9 +775,11 @@ void Content::updateCursor() {
     }
 
     int cursorPos = getPhrasePosition(currLine) + currChar - getPhrasePosition(getLowerBoundFrame());
-    if (text.findCharacterPos(cursorPos).x + 2.f + (200.f * offset) < window.getSize().x) {
-        offset = 0;
-        text.setPosition(sf::Vector2f(leftsize, BAR::HEIGHT));
+    if (text.findCharacterPos(cursorPos).x + 2.f < leftsize) {
+        while (offset > 0 && text.findCharacterPos(cursorPos).x + 2.f < leftsize) {
+            offset--;
+            text.setPosition(sf::Vector2f(leftsize + (-200.f * offset), BAR::HEIGHT));
+        }
     }
     else {
         while (text.findCharacterPos(cursorPos).x + 2.f > window.getSize().x) {
@@ -944,14 +1004,17 @@ void Content::BIGERASE() {
     }
     else {
         charsToBeRemoved = getLineLength(selectYleft) - selectXleft;
+        std::cout << charsToBeRemoved << '\n';
         for (int i = selectYleft + 1; i < selectYright; ++i) {
             charsToBeRemoved += getLineLength(i);
         }
+        std::cout << charsToBeRemoved << '\n';
         charsToBeRemoved += (getLineLength(selectYright) - (getLineLength(selectYright) - selectXright));
     }
-    currChar = selectXright;
-    currLine = selectYright;
-    for (int i = 0; i < charsToBeRemoved; ++i) onKeyPress(8);
+    std::cout << charsToBeRemoved << '\n';
+    //erase(getPhrasePosition(selectYleft) + selectXleft, charsToBeRemoved);
+    currChar = selectXleft;
+    currLine = selectYleft;
     text.setString(composeStrings());
     updateNumbers();
     updateCursor();

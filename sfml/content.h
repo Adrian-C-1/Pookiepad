@@ -89,6 +89,7 @@ private: // private
 
     void init();
 
+    void moveCursor(sf::Vector2f mpos);
     void left(bool isCtrlPressed, bool selectionDeletion);
     void right(bool isCtrlPressed, bool selectionDeletion);
     void up(bool selectionDeletion);
