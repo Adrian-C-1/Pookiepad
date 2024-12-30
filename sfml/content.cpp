@@ -1379,12 +1379,14 @@ void Content::_erase(nod* c, int pos, int count)
     if (c->subtree_size <= count && pos == 0)
     {
         deleteSubtree(c);
-        if (p->l == c)
-            p->l = 0;
-        else
-            p->r = 0;
-        delete c;
-        p = resolve_removal(p);
+        if (p != nullptr) {
+            if (p->l == c)
+                p->l = 0;
+            else
+                p->r = 0;
+            delete c;
+            p = resolve_removal(p);
+        }
         // std::cout << "Tree out after removing whole node:\n";
         // out(root, 0);
         return;

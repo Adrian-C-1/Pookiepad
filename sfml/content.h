@@ -53,7 +53,7 @@ public:
 
     // cu l mic ca deja se numeste showLines si nu ma pot gandi la nume originale
     inline void showlines() { showLines = 1 - showLines; updateResize(); } // AM MURIT =)))))
-private: // private
+public: // private
 
     nod* root;
     const int leaf_size = 6;
