@@ -601,12 +601,15 @@ void Content::zoomOut() {
     updateResize();
 }
 void Content::copy(bool cut) {
-    if (selected) BAR::setClipBoardText(composeSelectedStrings());
-    //else BAR::menu->setNotice("Nothing selected");
-    if (cut) {
-        if (!selected) return;
-        BIGERASE();
-        removeSelection();
+    if (!selected) BAR::menu->setNotice("No text selected");
+    else {
+        BAR::setClipBoardText(composeSelectedStrings());
+        //else BAR::menu->setNotice("Nothing selected");
+        if (cut) {
+            if (!selected) return;
+            BIGERASE();
+            removeSelection();
+        }
     }
 }
 void Content::paste() {
