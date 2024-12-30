@@ -30,7 +30,9 @@ public:
     void onMousePress();
 
     void loadText(std::string str);
+    void copy(bool cut);
     void paste();
+    void selectAll();
     void updateBlinker();
     void updateResize();
     void draw_content(); // asta va ramane mereu cu case-ul asta xDDD
@@ -60,7 +62,6 @@ private: // private
     sf::Text numbers;
 
     sf::RectangleShape cursor;
-    sf::RectangleShape selection;
     sf::RectangleShape numberRectangle;
     bool cursorState;
 
@@ -95,7 +96,6 @@ private: // private
     void up(bool selectionDeletion);
     void down(bool selectionDeletion);
     void deleteBtn(bool isCtrlPressed);
-    void copy(bool cut);
     void select(int control, bool isCtrlShiftPressed);
     void removeSelection();
 

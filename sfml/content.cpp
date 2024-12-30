@@ -321,6 +321,22 @@ void Content::onMousePress() {
         moveCursor(mpos);
     }
 }
+void Content::onScrollBar(int line) {
+    /*
+        TODO vezi cum faci aici sa mearga
+    */
+    // Eu am scris-o da nush exact ce iti mai trb updateuri si alte chestii
+    line = std::max(std::min(line, lines()), 1);
+    if (lines() < propcount) line = 1;
+    diffFrame = line - 1;
+    isFrameMoved = 1;
+    text.setString(composeStrings());
+    updateNumbers();
+    int oldl = currLine;
+    currLine = diffFrame;
+    updateCursor();
+    currLine = oldl;
+}
 
 
 
@@ -695,24 +711,31 @@ void Content::select(int control, bool isCtrlShiftPressed) {
         }
     }
     else if (control == 4) {
-        selected = true;
-        selectXleft = 0, selectXright = 0;
-        selectXright = getLineLength(lines()), selectYright = lines();
-        currLine = lines();
-        if (lines() < propcount) {
-            currFrame = 0;
-            diffFrame = currFrame;
-        }
-        else {
-            currFrame = lines() - propcount + 1;
-            diffFrame = currFrame;
-        }
-        currChar = getLineLength(lines());
-        lastMoved = 1;
+        selectAll();
+        return;
     }
     if (selectXleft == selectXright && selectYleft == selectYright) selected = false;
     std::cout << selectXleft << " " << selectYleft << '\n' << selectXright << " " << selectYright << '\n';
     text.setString(composeStrings());
+    updateNumbers();
+    updateCursor();
+}
+void Content::selectAll() {
+    if (root == nullptr) return;
+    selected = true;
+    selectXleft = 0, selectXright = 0;
+    selectXright = getLineLength(lines()), selectYright = lines();
+    currLine = lines();
+    if (lines() < propcount) {
+        currFrame = 0;
+        diffFrame = currFrame;
+    }
+    else {
+        currFrame = lines() - propcount + 1;
+        diffFrame = currFrame;
+    }
+    currChar = getLineLength(lines());
+    lastMoved = 1;
     updateNumbers();
     updateCursor();
 }
@@ -781,12 +804,13 @@ void Content::updateCursor() {
             text.setPosition(sf::Vector2f(leftsize + (-200.f * offset), BAR::HEIGHT));
         }
     }
-    else {
+    else if (text.findCharacterPos(cursorPos).x + 2.f > window.getSize().x) {
         while (text.findCharacterPos(cursorPos).x + 2.f > window.getSize().x) {
             offset++;
             text.setPosition(sf::Vector2f(leftsize + (-200.f * offset), BAR::HEIGHT));
         }
     }
+    
 
     cursor.setPosition(sf::Vector2f(text.findCharacterPos(cursorPos).x + 2.f, text.findCharacterPos(cursorPos).y + 1.f));
     
@@ -811,9 +835,10 @@ void Content::updateNumbers() {
 
     sf::Text temp(tempString, font, zoomstates[state]);
 
-    leftsize = showLines * (temp.getLocalBounds().width - temp.getLocalBounds().left) + ((float)zoompercentages[state] / 100) * 15;
+    leftsize = showLines * (temp.getGlobalBounds().width - temp.getGlobalBounds().left) + ((float)zoompercentages[state] / 100) * 15;
     
     numberRectangle.setSize(sf::Vector2f(leftsize, window.getSize().y));
+    text.setPosition(sf::Vector2f(leftsize + (-200.f * offset), BAR::HEIGHT));
 }
 std::string Content::composeStrings() {
     // Effective y size: window.getSize().y - BAR::HEIGHT - 10
@@ -1699,23 +1724,6 @@ void Content::get_phrase(nod* c, int index, std::string& str)
             get_phrase(c->r, index - l, str);
         }
     }*/
-}
-
-void Content::onScrollBar(int line) {
-    /*
-        TODO vezi cum faci aici sa mearga
-    */
-    // Eu am scris-o da nush exact ce iti mai trb updateuri si alte chestii
-    line = std::max(std::min(line, lines()), 1);
-    if (lines() < propcount) line = 1;
-    diffFrame = line - 1;
-    isFrameMoved = 1;
-    text.setString(composeStrings());
-    updateNumbers();
-    int oldl = currLine;
-    currLine = diffFrame;
-    updateCursor();
-    currLine = oldl;
 }
 
 nod* Content::get_next_node(nod* c, nod* fiu)
