@@ -225,7 +225,15 @@ void onEditpaste() {
 void onShowLines() {
 	CONTENT::content->showlines();
 }
-
+void onEditCut() {
+	CONTENT::content->copy(true);
+}
+void onEditCopy() {
+	CONTENT::content->copy(false);
+}
+void onEditSelectAll() {
+	CONTENT::content->selectAll();
+}
 Menu::Menu() :
 	buttons(std::vector<Button>({ // if modify order see the PopUp spaceAround() functions
 			Button("File", onPressFile),
@@ -240,16 +248,15 @@ Menu::Menu() :
 		}),
 	editPopUp({
 		Button("Find", onPressFind), // todo
-		Button("Cut", nullptr),
-		Button("Copy", nullptr),
+		Button("Cut", onEditCut),
+		Button("Copy", onEditCopy),
 		Button("Paste", onEditpaste),
-		Button("Select All", nullptr)
+		Button("Select All", onEditSelectAll)
 		}),
 	viewPopUp({
 		Button("Zoom in", onZoomIn),
 		Button("Zoom out", onZoomOut),
-		Button("Show lines", onShowLines),
-		Button("Word wrap", nullptr),
+		Button("Show lines", onShowLines)
 	})
 {
 
