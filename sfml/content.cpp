@@ -62,6 +62,9 @@ void Content::onKeyPress(sf::Uint32 code) {
         std::cout << "Number of sentences: " << propcount << '\n';
         std::cout << "Lower frame bound: " << getLowerBoundFrame() << '\n';
         std::cout << "Upper frame bound: " << getUpperBoundFrame() << '\n';
+        std::cout << "Selected: " << selected << '\n';
+        std::cout << "Left pos: " << selectXleft << " " << selectYleft << '\n';
+        std::cout << "Right pos: " << selectXright<< " " << selectYright<< '\n';
         std::cout << "\n\n";
         return;
     }
@@ -740,6 +743,7 @@ void Content::selectAll() {
     updateCursor();
 }
 void Content::removeSelection() {
+    std::cout << "intra aici";
     selected = false;
     selectXleft = 0, selectXright = 0;
     selectYleft = 0, selectYright = 0;
@@ -1023,22 +1027,7 @@ void Content::erase(int pos)
     }
 }
 void Content::BIGERASE() {
-    /*int charsToBeRemoved = 0;
-    if (selectYright - selectYleft == 0) {
-        charsToBeRemoved = selectXright - selectXleft;
-    }
-    else {
-        
-        charsToBeRemoved = getLineLength(selectYleft) - selectXleft;
-        std::cout << charsToBeRemoved << '\n';
-        for (int i = selectYleft + 1; i < selectYright; ++i) {
-            charsToBeRemoved += getLineLength(i);
-        }
-        std::cout << charsToBeRemoved << '\n';
-        charsToBeRemoved += (getLineLength(selectYright) - (getLineLength(selectYright) - selectXright));
-    }*/
     int x = getPhrasePosition(selectYleft) + selectXleft, y = getPhrasePosition(selectYright) + selectXright;
-
     erase(x, y - x);
     currChar = selectXleft;
     currLine = selectYleft;
