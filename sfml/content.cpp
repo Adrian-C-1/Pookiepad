@@ -1,6 +1,6 @@
 #include "content.h"
-
 #include "menu.h"
+#include "globals.h"
 
 Content::Content() {
     root = nullptr;
@@ -602,6 +602,7 @@ void Content::zoomOut() {
 }
 void Content::copy(bool cut) {
     if (selected) BAR::setClipBoardText(composeSelectedStrings());
+    //else BAR::menu->setNotice("Nothing selected");
     if (cut) {
         if (!selected) return;
         BIGERASE();
@@ -1062,8 +1063,6 @@ int Content::getLowerBoundFrame() {
 int Content::getUpperBoundFrame() {
     return propcount + diffFrame - 1;
 }
-
-
 int Content::get_phrase_position(nod* c, int phrase_index, int left_positions)
 {
     while (c->l != nullptr && c->r != nullptr) {
@@ -1109,6 +1108,15 @@ int Content::get_phrase_position(nod* c, int phrase_index, int left_positions)
         }
     }*/
 }
+void Content::recalculate_node_values_up_from(nod* c)
+{
+    while (c != nullptr)
+    {
+        // cout << "here " << c << '\n';
+        recalculate_node_value(c);
+        c = c->p;
+    }
+}
 void Content::insert_string_pos(nod* c, const std::string& str, int pos)
 {
     while (c->l != nullptr && c->r != nullptr) {
@@ -1128,6 +1136,19 @@ void Content::insert_string_pos(nod* c, const std::string& str, int pos)
             // inserez in stanga nodului curent
             Content t(str);
             if (t.getRoot() == nullptr) return;
+
+            if (c == root) { // 1 singur nod in copac
+                nod* newr = new nod;
+                newr->p = 0;
+                newr->r = root;
+                newr->l = t.getRoot();
+                root->p = newr;
+                newr->l->p = newr;
+                root = newr;
+                recalculate_node_values_up_from(root);
+                return;
+            }
+
             nod* nou = new nod;
             nou->p = c->p;
             if (c->p != nullptr) {
@@ -1148,13 +1169,27 @@ void Content::insert_string_pos(nod* c, const std::string& str, int pos)
             // isnerez in dreapta nodului curent
             Content t(str);
             if (t.getRoot() == nullptr) return;
+
+            if (c == root) { // 1 singur nod in copac
+                nod* newr = new nod;
+                newr->p = 0;
+                newr->l = root;
+                newr->r = t.getRoot();
+                root->p = newr;
+                newr->r->p = newr;
+                root = newr;
+                recalculate_node_values_up_from(root);
+                return;
+            }
+
             nod* nou = new nod;
             
                 nou->p = c->p;
-                if (c->p->l == c)
-                    c->p->l = nou;
-                else
-                    c->p->r = nou;
+                    if (c->p->l == c)
+                        c->p->l = nou;
+                    else
+                        c->p->r = nou;
+                
             
             nou->r = t.getRoot();
             nou->r->p = nou;
@@ -1303,15 +1338,7 @@ void Content::recalculate_node_value(nod* c)
         c->newline_characters = (c->l == nullptr ? 0 : c->l->newline_characters) + (c->r == nullptr ? 0 : c->r->newline_characters);
     }
 }
-void Content::recalculate_node_values_up_from(nod* c)
-{
-    while (c != nullptr)
-    {
-        // cout << "here " << c << '\n';
-        recalculate_node_value(c);
-        c = c->p;
-    }
-}
+
 nod* Content::get_node_at_pos(int pos, nod* c, int& pos_in_string)
 {
     while (c->l != nullptr || c->r != nullptr) {
@@ -1554,14 +1581,16 @@ void Content::out(nod* c, int h)
     {
         if (c->l->p != c)
         {
-            std::cout << "Problem at LEFT node with parent value " << c->subtree_size << '\n';
+            std::cout << "Problem at LEFT node with parent value " << c->subtree_size
+                << "[this node's left child parent is not himself] \n";
         }
     }
     if (c->r != nullptr)
     {
         if (c->r->p != c)
         {
-            std::cout << "Problem at LEFT node with parent value " << c->subtree_size << '\n';
+            std::cout << "Problem at RIGHT node with parent value " 
+                << "[this node's right child parent is not himself] \n";
         }
     }
     out(c->l, h + 1);

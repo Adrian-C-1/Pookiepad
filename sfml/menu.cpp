@@ -287,6 +287,9 @@ Menu::Menu() :
 	current_page = 0;
 	CONTENT::content = pages[0].content;
 
+	notice.setFont(font);
+	notice.setCharacterSize(24);
+
 	onResize();
 }
 void Menu::scrollbar_make_good() {
@@ -508,6 +511,20 @@ void Menu::draw() {
 		window.draw(scrollbar_background);
 		window.draw(scrollbar_active);
 	}
+
+	sf::Color col = notice.getFillColor();
+	int a = col.a;
+	a -= 1;
+	a = std::max(a, 0);
+	col.a = a;
+	notice.setFillColor(col);
+	window.draw(notice);
+}
+void Menu::setNotice(std::string text) {
+	notice.setString(text);
+	sf::Vector2f size = sf::Vector2f(notice.getGlobalBounds().width, notice.getGlobalBounds().height);
+	notice.setPosition(sf::Vector2f(window.getSize().x / 2 - size.x / 2, window.getSize().y - size.y * 1.2));
+	notice.setFillColor(BAR::TEXT_COLOR);
 }
 void Menu::markChanged() {
 	if (pages[current_page].saved == 1) {

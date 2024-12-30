@@ -35,6 +35,7 @@ int main()
         return 0;
     }
 
+    window.setFramerateLimit(100);
     while (window.isOpen()) {
 
         CONTENT::content->updateBlinker();
@@ -96,8 +97,6 @@ int main()
                     CONTENT::content->onKeyPress(event.key.code);
                 //std::cout << "Key pressed after\n";
                 BAR::menu->scrollbar_make_good();
-
-
                 break;
             case sf::Event::MouseWheelScrolled:
                 if (event.mouseWheelScroll.delta > 0) { 
