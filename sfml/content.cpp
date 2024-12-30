@@ -1388,6 +1388,10 @@ void Content::_erase(nod* c, int pos, int count)
             delete c;
             p = resolve_removal(p);
         }
+        else {
+            delete root;
+            root = 0;
+        }
         // std::cout << "Tree out after removing whole node:\n";
         // out(root, 0);
         return;
