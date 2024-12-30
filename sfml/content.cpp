@@ -1023,11 +1023,12 @@ void Content::erase(int pos)
     }
 }
 void Content::BIGERASE() {
-    int charsToBeRemoved = 0;
+    /*int charsToBeRemoved = 0;
     if (selectYright - selectYleft == 0) {
         charsToBeRemoved = selectXright - selectXleft;
     }
     else {
+        
         charsToBeRemoved = getLineLength(selectYleft) - selectXleft;
         std::cout << charsToBeRemoved << '\n';
         for (int i = selectYleft + 1; i < selectYright; ++i) {
@@ -1035,9 +1036,10 @@ void Content::BIGERASE() {
         }
         std::cout << charsToBeRemoved << '\n';
         charsToBeRemoved += (getLineLength(selectYright) - (getLineLength(selectYright) - selectXright));
-    }
-    std::cout << charsToBeRemoved << '\n';
-    //erase(getPhrasePosition(selectYleft) + selectXleft, charsToBeRemoved);
+    }*/
+    int x = getPhrasePosition(selectYleft) + selectXleft, y = getPhrasePosition(selectYright) + selectXright;
+
+    erase(x, y - x);
     currChar = selectXleft;
     currLine = selectYleft;
     text.setString(composeStrings());
