@@ -523,7 +523,7 @@ void Menu::draw() {
 void Menu::setNotice(std::string text) {
 	notice.setString(text);
 	sf::Vector2f size = sf::Vector2f(notice.getGlobalBounds().width, notice.getGlobalBounds().height);
-	notice.setPosition(sf::Vector2f(window.getSize().x / 2 - size.x / 2, window.getSize().y - size.y * 1.2));
+	notice.setPosition(sf::Vector2f(window.getSize().x / 2 - size.x / 2, window.getSize().y - 40));
 	notice.setFillColor(BAR::TEXT_COLOR);
 }
 void Menu::markChanged() {
