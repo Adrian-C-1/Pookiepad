@@ -1140,11 +1140,13 @@ void Content::insert_string_pos(nod* c, const std::string& str, int pos)
             Content t(str);
             if (t.getRoot() == nullptr) return;
             nod* nou = new nod;
-            nou->p = c->p;
-            if (c->p->l == c)
-                c->p->l = nou;
-            else
-                c->p->r = nou;
+            
+                nou->p = c->p;
+                if (c->p->l == c)
+                    c->p->l = nou;
+                else
+                    c->p->r = nou;
+            
             nou->r = t.getRoot();
             nou->r->p = nou;
             nou->l = c;
@@ -1387,6 +1389,7 @@ void Content::_erase(nod* c, int pos, int count)
                 p->r = 0;
             delete c;
             p = resolve_removal(p);
+            recalculate_node_values_up_from(p);
         }
         else {
             delete root;
@@ -1406,6 +1409,7 @@ void Content::_erase(nod* c, int pos, int count)
         {
             c->data.erase(c->data.begin() + pos);
         }
+        recalculate_node_values_up_from(c);
         // std::cout << "Here " << c->data << ' ' << pos << ' ' << count << '\n';
     }
     else
@@ -1531,7 +1535,7 @@ void Content::out(nod* c, int h)
         std::cout << ' ';
     if (c->l != nullptr || c->r != nullptr)
     {
-        std::cout << c->subtree_size << ' ' << c->height << ' ' << c->newline_characters << '\n';
+        std::cout << c->subtree_size << " newl: " << c->newline_characters << '\n';
     }
     else
     {

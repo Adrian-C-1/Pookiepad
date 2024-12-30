@@ -87,8 +87,6 @@ int main()
                     CONTENT::content->onKeyPress(event.text.unicode);
                 //std::cout << "Text entered after\n";
                 BAR::menu->scrollbar_make_good();
-                
-                //CONTENT::content->out();
 
                 break;
             case sf::Event::KeyPressed:
