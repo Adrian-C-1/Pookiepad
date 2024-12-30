@@ -77,6 +77,8 @@ public:
 	bool onTextEntered(sf::Uint32 code);
 	
 	void scrollbar_make_good();
+	
+	void setNotice(std::string text);
 private:
 	void ordonPages();
 	float getPage0x();
@@ -93,6 +95,7 @@ private:
 
 	Button* hovering;
 
+	sf::Text notice;
 
 	struct page {
 		Content *content;

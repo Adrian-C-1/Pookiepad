@@ -1,4 +1,5 @@
 #include "globals.h"
+#include "menu.h"
 #include <iostream>
 
 sf::Font font;
@@ -26,9 +27,15 @@ namespace BAR {
 	std::string getClipboardText() {
 		OpenClipboard(nullptr);
 		HANDLE handle = GetClipboardData(CF_TEXT);
-		if (handle == NULL) return "";
+		if (handle == NULL) {
+			menu->setNotice("Could not acces win32 API");
+			return "";
+		}
 		char* text = static_cast<char*>(GlobalLock(handle)); // NU E OBIECTUL MEU ! NU STERGE !
-		if (text == 0 || strlen(text) == 0) return "";
+		if (text == 0 || strlen(text) == 0) {
+			menu->setNotice("Nothing in the clipboard");
+			return "";
+		}
 		GlobalUnlock(handle);
 		CloseClipboard();
 		std::string str(text);
@@ -41,6 +48,7 @@ namespace BAR {
 		HGLOBAL handle = GlobalAlloc(GMEM_MOVEABLE, size);
 		if (handle == 0) {
 			CloseClipboard();
+			menu->setNotice("Could not acces win32 API");
 			return 0;
 		}
 		char* p = static_cast<char*>(GlobalLock(handle));
@@ -50,8 +58,10 @@ namespace BAR {
 		if (r == 0) {
 			GlobalFree(handle); // failed for whatever reason
 			CloseClipboard();
+			menu->setNotice("Text setting failed");
 			return 0;
 		}
+		menu->setNotice("Text copied to clipboard");
 		CloseClipboard();
 		return 1;
 	}
