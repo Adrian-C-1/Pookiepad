@@ -325,6 +325,10 @@ void Content::onMousePress() {
         if (selected) removeSelection();
         moveCursor(mpos);
     }
+    cursorState = false;
+    text.setString(composeStrings());
+    updateNumbers();
+    updateCursor();
 }
 void Content::onScrollBar(int line) {
     /*
@@ -385,10 +389,6 @@ void Content::moveCursor(sf::Vector2f mpos) {
             currChar--;
         }
     }
-    cursorState = false;
-    text.setString(composeStrings());
-    updateNumbers();
-    updateCursor();
 }
 void Content::scroll(bool direction) {
     if (direction) { // Up
@@ -585,7 +585,8 @@ void Content::deleteBtn(bool isCtrlPressed) {
     if (isCtrlPressed) right(true, true);
     else right(false, true);
     if (bakLine == currLine && bakChar == currChar) return;
-    onKeyPress(8);
+    if (isCtrlPressed) onKeyPress(127);
+    else onKeyPress(8);
 }
 void Content::zoomIn() {
     if (state < 6) state++;
@@ -725,7 +726,7 @@ void Content::select(int control, bool isCtrlShiftPressed) {
         return;
     }
     if (selectXleft == selectXright && selectYleft == selectYright) selected = false;
-    std::cout << selectXleft << " " << selectYleft << '\n' << selectXright << " " << selectYright << '\n';
+    //std::cout << selectXleft << " " << selectYleft << '\n' << selectXright << " " << selectYright << '\n';
     text.setString(composeStrings());
     updateNumbers();
     updateCursor();
@@ -746,6 +747,7 @@ void Content::selectAll() {
     }
     currChar = getLineLength(lines());
     lastMoved = 1;
+    text.setString(composeStrings());
     updateNumbers();
     updateCursor();
 }
@@ -821,27 +823,72 @@ void Content::updateCursor() {
         }
     }
     
+    cursor.setPosition(sf::Vector2f(text.findCharacterPos(cursorPos).x + 2.f, text.findCharacterPos(cursorPos).y + 1.f));
+
     if (selected) {
         if (selectYleft == selectYright && (getLowerBoundFrame() <= selectYleft && selectYright <= getUpperBoundFrame())) {
             std::string selLine = getPhrase(selectYleft);
-            sf::Text preline(selLine.substr(0, selectXleft), font, zoomstates[state]);
-            sf::Text line(selLine.substr(selectXleft, selectXright - selectXleft), font, zoomstates[state]);
-            //std::cout << preline.getString().toAnsiString() << " " << line.getString().toAnsiString() << '\n';
+            sf::Text pretext(selLine.substr(0, selectXleft), font, zoomstates[state]);
+            sf::Text text(selLine.substr(selectXleft, selectXright - selectXleft), font, zoomstates[state]);
             int sizetoadd = 0;
             if (selectXleft > 0) {
                 sf::Text ambele(selLine.substr(selectXleft - 1, 2), font, zoomstates[state]), stanga(selLine.substr(selectXleft - 1, 1), font, zoomstates[state]), dreapta(selLine.substr(selectXleft, 1), font, zoomstates[state]);
                 sizetoadd = ambele.getGlobalBounds().width - stanga.getGlobalBounds().width - dreapta.getGlobalBounds().width;
             }
             sf::RectangleShape blue;
-            blue.setSize(sf::Vector2f(line.getGlobalBounds().width, propsize));
-            blue.setPosition(leftsize + preline.getLocalBounds().width + sizetoadd + (-200.f * offset), BAR::HEIGHT);
+            blue.setSize(sf::Vector2f(text.getGlobalBounds().width, propsize));
+            int currVisibleLine = 0;
+            if (lines() < propcount) currVisibleLine = selectYleft;
+            else {
+                currVisibleLine = selectYleft - getLowerBoundFrame();
+            }
+            blue.setPosition(leftsize + pretext.getLocalBounds().width + sizetoadd /*+ (-200.f * offset)*/, BAR::HEIGHT + propsize * currVisibleLine);
             blue.setFillColor(sf::Color::Blue);
-            test.clear();
-            test.push_back(blue);
+            selectionBoxes.clear();
+            selectionBoxes.push_back(blue);
+        }
+        else {
+            int cnt = 0;
+            selectionBoxes.clear();
+            for (int i = getLowerBoundFrame(); i <= std::min(getUpperBoundFrame(), lines()); ++i) {
+                if (i == selectYleft) {
+                    std::string selLine = getPhrase(i);
+                    sf::Text pretext(selLine.substr(0, selectXleft), font, zoomstates[state]);
+                    sf::Text text(selLine.substr(selectXleft, selLine.size() - selectXleft), font, zoomstates[state]);
+                    int sizetoadd = 0;
+                    if (selectXleft > 0) {
+                        sf::Text ambele(selLine.substr(selectXleft - 1, 2), font, zoomstates[state]), stanga(selLine.substr(selectXleft - 1, 1), font, zoomstates[state]), dreapta(selLine.substr(selectXleft, 1), font, zoomstates[state]);
+                        sizetoadd = ambele.getGlobalBounds().width - stanga.getGlobalBounds().width - dreapta.getGlobalBounds().width;
+                    }
+                    sf::RectangleShape blue;
+                    blue.setSize(sf::Vector2f(text.getGlobalBounds().width, propsize));
+                    blue.setPosition(leftsize + pretext.getLocalBounds().width + sizetoadd/* + (-200.f * offset)*/, BAR::HEIGHT + cnt * propsize);
+                    blue.setFillColor(sf::Color::Blue);
+                    selectionBoxes.push_back(blue);
+                }
+                else if (i == selectYright) {
+                    std::string selLine = getPhrase(i);
+                    sf::Text text(selLine.substr(0, selectXright), font, zoomstates[state]);
+                    sf::RectangleShape blue;
+                    blue.setSize(sf::Vector2f(text.getGlobalBounds().width, propsize));
+                    blue.setPosition(leftsize/* + (-200.f * offset)*/, BAR::HEIGHT + cnt * propsize);
+                    blue.setFillColor(sf::Color::Blue);
+                    selectionBoxes.push_back(blue);
+                }
+                else if (i > selectYleft && i < selectYright) {
+                    std::string selLine = getPhrase(i);
+                    sf::Text text(selLine, font, zoomstates[state]);
+                    sf::RectangleShape blue;
+                    blue.setSize(sf::Vector2f(text.getGlobalBounds().width, propsize));
+                    blue.setPosition(leftsize/* + (-200.f * offset)*/, BAR::HEIGHT + cnt * propsize);
+                    blue.setFillColor(sf::Color::Blue);
+                    selectionBoxes.push_back(blue);
+                }
+                cnt++;
+            }
         }
     }
 
-    cursor.setPosition(sf::Vector2f(text.findCharacterPos(cursorPos).x + 2.f, text.findCharacterPos(cursorPos).y + 1.f));
     
     
 }
@@ -898,8 +945,8 @@ std::string Content::composeSelectedStrings() {
 }
 void Content::draw_content() {
     if (selected) {
-        for (int i = 0; i < test.size(); ++i) {
-            window.draw(test[i]);
+        for (int i = 0; i < selectionBoxes.size(); ++i) {
+            window.draw(selectionBoxes[i]);
         }
     }
     window.draw(text);
