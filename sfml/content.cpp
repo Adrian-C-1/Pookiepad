@@ -65,6 +65,7 @@ void Content::onKeyPress(sf::Uint32 code) {
         std::cout << "Selected: " << selected << '\n';
         std::cout << "Left pos: " << selectXleft << " " << selectYleft << '\n';
         std::cout << "Right pos: " << selectXright<< " " << selectYright<< '\n';
+        std::cout << text.getCharacterSize() << " " << propsize << '\n';
         std::cout << "\n\n";
         return;
     }
@@ -331,7 +332,8 @@ void Content::onScrollBar(int line) {
     // Eu am scris-o da nush exact ce iti mai trb updateuri si alte chestii
     line = std::max(std::min(line, lines()), 1);
     if (lines() < propcount) line = 1;
-    diffFrame = line - 1;
+    line = line - 1;
+    diffFrame = line;
     isFrameMoved = 1;
     text.setString(composeStrings());
     updateNumbers();
@@ -392,14 +394,14 @@ void Content::scroll(bool direction) {
         if (diffFrame > 0) {
             diffFrame--;
             if (currLine >= getLowerBoundFrame() && currLine <= getUpperBoundFrame()) currFrame--;
-            isFrameMoved = true;
+            else isFrameMoved = true;
        }
     }
     else {
         if (diffFrame <= lines() - propcount) {
             diffFrame++;
             if (currLine >= getLowerBoundFrame() && currLine <= getUpperBoundFrame()) currFrame++;
-            isFrameMoved = true;
+            else isFrameMoved = true;
         }
     }
     text.setString(composeStrings());
@@ -603,6 +605,7 @@ void Content::copy(bool cut) {
     if (cut) {
         if (!selected) return;
         BIGERASE();
+        removeSelection();
     }
 }
 void Content::paste() {
@@ -815,6 +818,12 @@ void Content::updateCursor() {
         }
     }
     
+    if (selected) {
+        if (selectYleft == selectYright && (getLowerBoundFrame() <= selectXleft && selectXright <= getUpperBoundFrame())) {
+            sf::Text line(getPhrase(selectYleft).substr(selectXleft, selectXright - selectXleft), font, zoomstates[state]);
+            sf::RectangleShape blue(sf::Vector2f(line.getGlobalBounds().width, propsize));
+        }
+    }
 
     cursor.setPosition(sf::Vector2f(text.findCharacterPos(cursorPos).x + 2.f, text.findCharacterPos(cursorPos).y + 1.f));
     
