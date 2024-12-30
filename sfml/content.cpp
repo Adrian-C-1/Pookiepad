@@ -1031,6 +1031,18 @@ void Content::BIGERASE() {
     erase(x, y - x);
     currChar = selectXleft;
     currLine = selectYleft;
+    if (lines() < propcount) {
+        currFrame = 0;
+        diffFrame = currFrame;
+    }
+    else if (currLine > getUpperBoundFrame()) {
+        currFrame = currLine - propcount + 1;
+        diffFrame = currFrame;
+    }
+    else if (currLine < getLowerBoundFrame()) {
+        currFrame = currLine;
+        diffFrame = currFrame;
+    }
     text.setString(composeStrings());
     updateNumbers();
     updateCursor();
