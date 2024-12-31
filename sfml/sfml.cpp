@@ -80,6 +80,7 @@ int main()
             }
             case sf::Event::MouseMoved:
                 BAR::menu->onMouseMove();
+                CONTENT::content->onMouseMove();
                 break;
             case sf::Event::TextEntered:
                 //std::cout << "Text entered before\n";

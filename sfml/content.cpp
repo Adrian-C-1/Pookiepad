@@ -277,58 +277,79 @@ void Content::onKeyPress(sf::Keyboard::Key key) {
         }
     }
 }
+
+void Content::onSelectText(sf::Vector2f mpos) {
+    int oldLine = currLine, oldChar = currChar;
+    moveCursor(mpos);
+    if (selected) {
+        if (currLine == oldLine && currChar == oldChar) return;
+        if (currLine < selectYleft || currLine == selectYleft && currChar < selectXleft) {
+            selectXleft = currChar, selectYleft = currLine;
+            lastMoved = 0;
+        }
+        else if (currLine > selectYright || currLine == selectYright && currChar > selectXright) {
+            selectXright = currChar, selectYright = currLine;
+            lastMoved = 1;
+        }
+        else {
+            if (lastMoved == 0) {
+                selectXleft = currChar, selectYleft = currLine;
+            }
+            else {
+                selectXright = currChar, selectYright = currLine;
+            }
+        }
+    }
+    else {
+        if (currLine == oldLine && currChar == oldChar) return;
+        if (currLine < oldLine || currLine == oldLine && currChar < oldChar) {
+            selected = true;
+            selectXleft = currChar, selectYleft = currLine;
+            selectXright = oldChar, selectYright = oldLine;
+            lastMoved = 0;
+        }
+        else {
+            selected = true;
+            selectXleft = oldChar, selectYleft = oldLine;
+            selectXright = currChar, selectYright = currLine;
+            lastMoved = 1;
+        }
+    }
+    //std::cout << selectXleft << " " << selectYleft << '\n' << selectXright << " " << selectYright << '\n';
+}
+bool holding = 0;
 void Content::onMousePress() {
     if (root == nullptr) return;
     sf::Vector2f mpos = sf::Vector2f(sf::Mouse::getPosition(window));
     if (mpos.x <= text.getGlobalBounds().left || mpos.y <= text.getGlobalBounds().top) return;
 
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)) {
-        int oldLine = currLine, oldChar = currChar;
-        moveCursor(mpos);
-        if (selected) {
-            if (currLine == oldLine && currChar == oldChar) return;
-            if (currLine < selectYleft || currLine == selectYleft && currChar < selectXleft) {
-                selectXleft = currChar, selectYleft = currLine;
-                lastMoved = 0;
-            }
-            else if (currLine > selectYright || currLine == selectYright && currChar > selectXright) {
-                selectXright = currChar, selectYright = currLine;
-                lastMoved = 1;
-            }
-            else {
-                if (lastMoved == 0) {
-                    selectXleft = currChar, selectYleft = currLine;
-                }
-                else {
-                    selectXright = currChar, selectYright = currLine;
-                }
-            }
-        }
-        else {
-            if (currLine == oldLine && currChar == oldChar) return;
-            if (currLine < oldLine || currLine == oldLine && currChar < oldChar) {
-                selected = true;
-                selectXleft = currChar, selectYleft = currLine;
-                selectXright = oldChar, selectYright = oldLine;
-                lastMoved = 0;
-            }
-            else {
-                selected = true;
-                selectXleft = oldChar, selectYleft = oldLine;
-                selectXright = currChar, selectYright = currLine;
-                lastMoved = 1;
-            }
-        }
-        std::cout << selectXleft << " " << selectYleft << '\n' << selectXright << " " << selectYright << '\n';
+        onSelectText(mpos);
     }
     else {
         if (selected) removeSelection();
         moveCursor(mpos);
+        holding = 1;
     }
     cursorState = false;
     text.setString(composeStrings());
     updateNumbers();
     updateCursor();
+}
+void Content::onMouseMove() {
+    if (holding == 1) {
+        if (!sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+            holding = 0;
+            return;
+        }
+        sf::Vector2f mpos = sf::Vector2f(sf::Mouse::getPosition(window));
+        onSelectText(mpos);
+
+        cursorState = false;
+        text.setString(composeStrings());
+        updateNumbers();
+        updateCursor();
+    }
 }
 void Content::onScrollBar(int line) {
     /*

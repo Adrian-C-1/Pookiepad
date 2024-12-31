@@ -27,7 +27,10 @@ public:
     void scroll(bool direction);
     void onKeyPress(sf::Uint32 code);
     void onKeyPress(sf::Keyboard::Key key);
+
+    void onSelectText(sf::Vector2f mpos);
     void onMousePress();
+    void onMouseMove();
 
     void loadText(std::string str);
     void copy(bool cut);
