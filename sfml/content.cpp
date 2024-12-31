@@ -379,14 +379,19 @@ void Content::onScrollBar(int line) {
     line = std::max(std::min(line, lines()), 1);
     if (lines() < propcount) line = 1;
     line = line - 1;
-    diffFrame = line;
-    isFrameMoved = 1;
+    if (line < diffFrame && diffFrame > 0) {
+        diffFrame--;
+        if (currLine >= getLowerBoundFrame() && currLine <= getUpperBoundFrame()) currFrame--;
+        else isFrameMoved = true;
+    }
+    else if (line > diffFrame && diffFrame <= lines() - propcount) {
+        diffFrame++;
+        if (currLine >= getLowerBoundFrame() && currLine <= getUpperBoundFrame()) currFrame++;
+        else isFrameMoved = true;
+    }
     text.setString(composeStrings());
     updateNumbers();
-    int oldl = currLine;
-    currLine = diffFrame;
     updateCursor();
-    currLine = oldl;
 }
 
 
