@@ -656,7 +656,7 @@ void Content::paste() {
     updateCursor();
 }
 void Content::select(int control, bool isCtrlShiftPressed) {
-    if (control == 0) {
+    if (control == 0) { // Left
         if (!selected) {
             selectXright = currChar, selectYright = currLine;
             if (isCtrlShiftPressed) left(true, false);
@@ -679,7 +679,7 @@ void Content::select(int control, bool isCtrlShiftPressed) {
             }
         }
     }
-    else if (control == 1) {
+    else if (control == 1) { // Right
         if (!selected) {
             selectXleft = currChar, selectYleft = currLine;
             if (isCtrlShiftPressed) right(true, false);
@@ -702,7 +702,7 @@ void Content::select(int control, bool isCtrlShiftPressed) {
             }
         }
     }
-    else if (control == 2) {
+    else if (control == 2) { // Up
         if (!selected) {
             selectXright = currChar, selectYright = currLine;
             up(false);
@@ -716,13 +716,14 @@ void Content::select(int control, bool isCtrlShiftPressed) {
                 selectXleft = currChar, selectYleft = currLine;
             }
             else {
-                currChar = selectXright, currLine = selectYright;
                 up(false);
-                selectXright = currChar, selectYright = currLine;
+                selectXright = selectXleft, selectYright = selectYleft;
+                selectXleft = currChar, selectYleft = currLine;
+                lastMoved = 0;
             }
         }
     }
-    else if (control == 3) {
+    else if (control == 3) { // Down
         if (!selected) {
             selectXleft = currChar, selectYleft = currLine;
             down(false);
@@ -732,8 +733,10 @@ void Content::select(int control, bool isCtrlShiftPressed) {
         }
         else {
             if (lastMoved == 0) {
+                selectXleft = selectXright, selectYleft = selectYright;
                 down(false);
-                selectXleft = currChar, selectYleft = currLine;
+                selectXright = currChar, selectYright = currLine;
+                lastMoved = 1;
             }
             else {
                 currChar = selectXright, currLine = selectYright;
@@ -823,10 +826,12 @@ void Content::updateResize() {
 void Content::updateCursor() {
     if (currLine > getUpperBoundFrame()) {
         cursor.setPosition(sf::Vector2f(-1, -1));
+        if (selected) updateSelections();
         return;
     }
     else if (currLine < getLowerBoundFrame()) {
         cursor.setPosition(sf::Vector2f(-1, -1));
+        if (selected) updateSelections();
         return;
     }
 
@@ -847,71 +852,71 @@ void Content::updateCursor() {
     cursor.setPosition(sf::Vector2f(text.findCharacterPos(cursorPos).x + 2.f, text.findCharacterPos(cursorPos).y + 1.f));
 
     if (selected) {
-        if (selectYleft == selectYright && (getLowerBoundFrame() <= selectYleft && selectYright <= getUpperBoundFrame())) {
-            std::string selLine = getPhrase(selectYleft);
-            sf::Text pretext(selLine.substr(0, selectXleft), font, zoomstates[state]);
-            sf::Text text(selLine.substr(selectXleft, selectXright - selectXleft), font, zoomstates[state]);
-            int sizetoadd = 0;
-            if (selectXleft > 0) {
-                sf::Text ambele(selLine.substr(selectXleft - 1, 2), font, zoomstates[state]), stanga(selLine.substr(selectXleft - 1, 1), font, zoomstates[state]), dreapta(selLine.substr(selectXleft, 1), font, zoomstates[state]);
-                sizetoadd = ambele.getGlobalBounds().width - stanga.getGlobalBounds().width - dreapta.getGlobalBounds().width;
-            }
-            sf::RectangleShape blue;
-            blue.setSize(sf::Vector2f(text.getGlobalBounds().width, propsize));
-            int currVisibleLine = 0;
-            if (lines() < propcount) currVisibleLine = selectYleft;
-            else {
-                currVisibleLine = selectYleft - getLowerBoundFrame();
-            }
-            blue.setPosition(leftsize + pretext.getLocalBounds().width + sizetoadd /*+ (-200.f * offset)*/, BAR::HEIGHT + propsize * currVisibleLine);
-            blue.setFillColor(sf::Color::Blue);
-            selectionBoxes.clear();
-            selectionBoxes.push_back(blue);
+        updateSelections();
+    }
+}
+void Content::updateSelections() {
+    if (selectYleft == selectYright && (getLowerBoundFrame() <= selectYleft && selectYright <= getUpperBoundFrame())) {
+        std::string selLine = getPhrase(selectYleft);
+        sf::Text pretext(selLine.substr(0, selectXleft), font, zoomstates[state]);
+        sf::Text text(selLine.substr(selectXleft, selectXright - selectXleft), font, zoomstates[state]);
+        int sizetoadd = 0;
+        if (selectXleft > 0) {
+            sf::Text ambele(selLine.substr(selectXleft - 1, 2), font, zoomstates[state]), stanga(selLine.substr(selectXleft - 1, 1), font, zoomstates[state]), dreapta(selLine.substr(selectXleft, 1), font, zoomstates[state]);
+            sizetoadd = ambele.getGlobalBounds().width - stanga.getGlobalBounds().width - dreapta.getGlobalBounds().width;
         }
+        sf::RectangleShape blue;
+        blue.setSize(sf::Vector2f(text.getGlobalBounds().width, propsize));
+        int currVisibleLine = 0;
+        if (lines() < propcount) currVisibleLine = selectYleft;
         else {
-            int cnt = 0;
-            selectionBoxes.clear();
-            for (int i = getLowerBoundFrame(); i <= std::min(getUpperBoundFrame(), lines()); ++i) {
-                if (i == selectYleft) {
-                    std::string selLine = getPhrase(i);
-                    sf::Text pretext(selLine.substr(0, selectXleft), font, zoomstates[state]);
-                    sf::Text text(selLine.substr(selectXleft, selLine.size() - selectXleft), font, zoomstates[state]);
-                    int sizetoadd = 0;
-                    if (selectXleft > 0) {
-                        sf::Text ambele(selLine.substr(selectXleft - 1, 2), font, zoomstates[state]), stanga(selLine.substr(selectXleft - 1, 1), font, zoomstates[state]), dreapta(selLine.substr(selectXleft, 1), font, zoomstates[state]);
-                        sizetoadd = ambele.getGlobalBounds().width - stanga.getGlobalBounds().width - dreapta.getGlobalBounds().width;
-                    }
-                    sf::RectangleShape blue;
-                    blue.setSize(sf::Vector2f(text.getGlobalBounds().width, propsize));
-                    blue.setPosition(leftsize + pretext.getLocalBounds().width + sizetoadd/* + (-200.f * offset)*/, BAR::HEIGHT + cnt * propsize);
-                    blue.setFillColor(sf::Color::Blue);
-                    selectionBoxes.push_back(blue);
+            currVisibleLine = selectYleft - getLowerBoundFrame();
+        }
+        blue.setPosition(leftsize + pretext.getLocalBounds().width + sizetoadd + (-200.f * offset), BAR::HEIGHT + propsize * currVisibleLine);
+        blue.setFillColor(sf::Color::Blue);
+        selectionBoxes.clear();
+        selectionBoxes.push_back(blue);
+    }
+    else {
+        int cnt = 0;
+        selectionBoxes.clear();
+        for (int i = getLowerBoundFrame(); i <= std::min(getUpperBoundFrame(), lines()); ++i) {
+            if (i == selectYleft) {
+                std::string selLine = getPhrase(i);
+                sf::Text pretext(selLine.substr(0, selectXleft), font, zoomstates[state]);
+                sf::Text text(selLine.substr(selectXleft, selLine.size() - selectXleft), font, zoomstates[state]);
+                int sizetoadd = 0;
+                if (selectXleft > 0) {
+                    sf::Text ambele(selLine.substr(selectXleft - 1, 2), font, zoomstates[state]), stanga(selLine.substr(selectXleft - 1, 1), font, zoomstates[state]), dreapta(selLine.substr(selectXleft, 1), font, zoomstates[state]);
+                    sizetoadd = ambele.getGlobalBounds().width - stanga.getGlobalBounds().width - dreapta.getGlobalBounds().width;
                 }
-                else if (i == selectYright) {
-                    std::string selLine = getPhrase(i);
-                    sf::Text text(selLine.substr(0, selectXright), font, zoomstates[state]);
-                    sf::RectangleShape blue;
-                    blue.setSize(sf::Vector2f(text.getGlobalBounds().width, propsize));
-                    blue.setPosition(leftsize/* + (-200.f * offset)*/, BAR::HEIGHT + cnt * propsize);
-                    blue.setFillColor(sf::Color::Blue);
-                    selectionBoxes.push_back(blue);
-                }
-                else if (i > selectYleft && i < selectYright) {
-                    std::string selLine = getPhrase(i);
-                    sf::Text text(selLine, font, zoomstates[state]);
-                    sf::RectangleShape blue;
-                    blue.setSize(sf::Vector2f(text.getGlobalBounds().width, propsize));
-                    blue.setPosition(leftsize/* + (-200.f * offset)*/, BAR::HEIGHT + cnt * propsize);
-                    blue.setFillColor(sf::Color::Blue);
-                    selectionBoxes.push_back(blue);
-                }
-                cnt++;
+                sf::RectangleShape blue;
+                blue.setSize(sf::Vector2f(text.getGlobalBounds().width, propsize));
+                blue.setPosition(leftsize + pretext.getLocalBounds().width + sizetoadd + (-200.f * offset), BAR::HEIGHT + cnt * propsize);
+                blue.setFillColor(sf::Color::Blue);
+                selectionBoxes.push_back(blue);
             }
+            else if (i == selectYright) {
+                std::string selLine = getPhrase(i);
+                sf::Text text(selLine.substr(0, selectXright), font, zoomstates[state]);
+                sf::RectangleShape blue;
+                blue.setSize(sf::Vector2f(text.getGlobalBounds().width, propsize));
+                blue.setPosition(leftsize + (-200.f * offset), BAR::HEIGHT + cnt * propsize);
+                blue.setFillColor(sf::Color::Blue);
+                selectionBoxes.push_back(blue);
+            }
+            else if (i > selectYleft && i < selectYright) {
+                std::string selLine = getPhrase(i);
+                sf::Text text(selLine, font, zoomstates[state]);
+                sf::RectangleShape blue;
+                blue.setSize(sf::Vector2f(text.getGlobalBounds().width, propsize));
+                blue.setPosition(leftsize + (-200.f * offset), BAR::HEIGHT + cnt * propsize);
+                blue.setFillColor(sf::Color::Blue);
+                selectionBoxes.push_back(blue);
+            }
+            cnt++;
         }
     }
-
-    
-    
 }
 void Content::updateNumbers() {
     std::string str, tempString;

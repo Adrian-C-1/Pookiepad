@@ -104,6 +104,7 @@ public: // private
     void removeSelection();
 
     void updateCursor();
+    void updateSelections();
     void updateNumbers();
     std::string composeStrings();
     std::string composeSelectedStrings();
