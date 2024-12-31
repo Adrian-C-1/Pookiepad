@@ -84,6 +84,8 @@ public: // private
     bool lastMoved; // 0 = stanga, 1 = dreapta
     int selectXleft, selectYleft;
     int selectXright, selectYright;
+    int startingPosX, startingPosY;
+    
 
     std::vector<int> zoomstates;
     std::vector<int> zoompercentages;

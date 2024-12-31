@@ -65,6 +65,7 @@ void Content::onKeyPress(sf::Uint32 code) {
         std::cout << "Selected: " << selected << '\n';
         std::cout << "Left pos: " << selectXleft << " " << selectYleft << '\n';
         std::cout << "Right pos: " << selectXright<< " " << selectYright<< '\n';
+        std::cout << "Starting pos: " << startingPosX << " " << startingPosY << '\n';
         std::cout << text.getCharacterSize() << " " << propsize << '\n';
         std::cout << "\n\n";
         updateCursor();
@@ -282,8 +283,23 @@ void Content::onSelectText(sf::Vector2f mpos) {
     int oldLine = currLine, oldChar = currChar;
     moveCursor(mpos);
     if (selected) {
-        if (currLine == oldLine && currChar == oldChar) return;
-        if (currLine < selectYleft || currLine == selectYleft && currChar < selectXleft) {
+        if (currLine == startingPosY && currChar == startingPosX) {
+            removeSelection();
+            return;
+        }
+        else {
+            if (currLine < startingPosY || currLine == startingPosY && currChar < startingPosX) {
+                selectXleft = currChar, selectYleft = currLine;
+                selectXright = startingPosX, selectYright = startingPosY;
+                lastMoved = 0;
+            }
+            else {
+                selectXleft = startingPosX, selectYleft = startingPosY;
+                selectXright = currChar, selectYright = currLine;
+                lastMoved = 1;
+            }
+        }
+        /*if (currLine < selectYleft || currLine == selectYleft && currChar < selectXleft) {
             selectXleft = currChar, selectYleft = currLine;
             lastMoved = 0;
         }
@@ -298,24 +314,28 @@ void Content::onSelectText(sf::Vector2f mpos) {
             else {
                 selectXright = currChar, selectYright = currLine;
             }
-        }
+        }*/
     }
     else {
-        if (currLine == oldLine && currChar == oldChar) return;
+        if (currLine == oldLine && currChar == oldChar) {
+            removeSelection();
+            return;
+        }
         if (currLine < oldLine || currLine == oldLine && currChar < oldChar) {
             selected = true;
             selectXleft = currChar, selectYleft = currLine;
             selectXright = oldChar, selectYright = oldLine;
+            startingPosX = selectXright, startingPosY = selectYright;
             lastMoved = 0;
         }
         else {
             selected = true;
             selectXleft = oldChar, selectYleft = oldLine;
             selectXright = currChar, selectYright = currLine;
+            startingPosX = selectXleft, startingPosY = selectYleft;
             lastMoved = 1;
         }
     }
-    //std::cout << selectXleft << " " << selectYleft << '\n' << selectXright << " " << selectYright << '\n';
 }
 bool holding = 0;
 void Content::onMousePress() {
@@ -659,6 +679,7 @@ void Content::select(int control, bool isCtrlShiftPressed) {
     if (control == 0) { // Left
         if (!selected) {
             selectXright = currChar, selectYright = currLine;
+            startingPosX = selectXright, startingPosY = selectYright;
             if (isCtrlShiftPressed) left(true, false);
             else left(false, false);
             selectXleft = currChar, selectYleft = currLine;
@@ -682,6 +703,7 @@ void Content::select(int control, bool isCtrlShiftPressed) {
     else if (control == 1) { // Right
         if (!selected) {
             selectXleft = currChar, selectYleft = currLine;
+            startingPosX = selectXleft, startingPosY = selectYleft;
             if (isCtrlShiftPressed) right(true, false);
             else right(false, false);
             selectXright = currChar, selectYright = currLine;
@@ -705,6 +727,7 @@ void Content::select(int control, bool isCtrlShiftPressed) {
     else if (control == 2) { // Up
         if (!selected) {
             selectXright = currChar, selectYright = currLine;
+            startingPosX = selectXright, startingPosY = selectYright;
             up(false);
             selectXleft = currChar, selectYleft = currLine;
             selected = true;
@@ -726,6 +749,7 @@ void Content::select(int control, bool isCtrlShiftPressed) {
     else if (control == 3) { // Down
         if (!selected) {
             selectXleft = currChar, selectYleft = currLine;
+            startingPosX = selectXleft, startingPosY = selectYleft;
             down(false);
             selectXright = currChar, selectYright = currLine;
             selected = true;
@@ -749,7 +773,7 @@ void Content::select(int control, bool isCtrlShiftPressed) {
         selectAll();
         return;
     }
-    if (selectXleft == selectXright && selectYleft == selectYright) selected = false;
+    if (selectXleft == selectXright && selectYleft == selectYright) removeSelection();
     //std::cout << selectXleft << " " << selectYleft << '\n' << selectXright << " " << selectYright << '\n';
     text.setString(composeStrings());
     updateNumbers();
@@ -760,6 +784,7 @@ void Content::selectAll() {
     selected = true;
     selectXleft = 0, selectXright = 0;
     selectXright = getLineLength(lines()), selectYright = lines();
+    startingPosX = 0, startingPosY = 0;
     currLine = lines();
     if (lines() < propcount) {
         currFrame = 0;
@@ -779,6 +804,7 @@ void Content::removeSelection() {
     selected = false;
     selectXleft = 0, selectXright = 0;
     selectYleft = 0, selectYright = 0;
+    startingPosX = 0, startingPosY = 0;
     lastMoved = 0;
 }
 
