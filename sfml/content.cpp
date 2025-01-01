@@ -359,6 +359,18 @@ void Content::onMouseMove() {
     }
 }
 void Content::onScrollBar(int line) {
+    line = std::max(std::min(line, lines()), 1);
+    if (lines() < propcount) line = 1;
+    diffFrame = line - 1;
+    isFrameMoved = 1;
+    text.setString(composeStrings());
+    updateNumbers();
+    int oldl = currLine;
+    currLine = diffFrame;
+    updateCursor();
+    currLine = oldl;
+    return;
+
     /*
         TODO vezi cum faci aici sa mearga
     */
@@ -1133,7 +1145,8 @@ int Content::findNext(std::string str) {
         minChar = selectXright;
     }
     std::string currPhrase = getPhrase(minLine);
-    currPhrase = currPhrase.substr(minChar + 1, currPhrase.size());
+    if (minChar + 1 > currPhrase.size()) currPhrase = "";
+    else currPhrase = currPhrase.substr(minChar + 1, currPhrase.size());
     int found = currPhrase.find(str);
     if (found != std::string::npos) {
         removeSelection();

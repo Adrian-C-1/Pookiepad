@@ -418,13 +418,19 @@ void Menu::draw() {
 			ordonPages();
 			break;
 		case BAR::FIND_FIND:
-			CONTENT::content->find(reinterpret_cast<FindPopUp*>(currentPopUp)->getText());
+			if (CONTENT::content->find(reinterpret_cast<FindPopUp*>(currentPopUp)->getText()) == 0) {
+				setNotice("Couldn't find text");
+			}
 			break;
 		case BAR::FIND_NEXT:
-			CONTENT::content->findNext(reinterpret_cast<FindPopUp*>(currentPopUp)->getText());
+			if (CONTENT::content->findNext(reinterpret_cast<FindPopUp*>(currentPopUp)->getText()) == 0) {
+				setNotice("Couln't find next text");
+			}
 			break;
 		case BAR::FIND_PREV:
-			CONTENT::content->findPrev(reinterpret_cast<FindPopUp*>(currentPopUp)->getText());
+			if (CONTENT::content->findPrev(reinterpret_cast<FindPopUp*>(currentPopUp)->getText()) == 0) {
+				setNotice("Couldn't find previous text");
+			}
 			break;
 		case BAR::SAVE_FILE:
 		{
