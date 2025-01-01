@@ -54,7 +54,6 @@ void Content::init() {
 
 void Content::onKeyPress(sf::Uint32 code) {
     if (code == 'z') { // debug purposes
-        find("Content::init()");
         std::cout << "\n\n";
         std::cout << "Lines: " << lines() << '\n';
         std::cout << "Current line: " << currLine << '\n';
@@ -1018,6 +1017,7 @@ int Content::find(std::string str) {
             selected = true;
             selectXleft = found, selectXright = found + str.size();
             selectYleft = i, selectYright = i;
+            startingPosX = selectXleft, startingPosY = selectYleft;
             currLine = i;
             currChar = found + str.size();
             if (lines() < propcount) {
@@ -1050,44 +1050,23 @@ int Content::findPrev(std::string str) {
         maxLine = selectYleft;
         maxChar = selectXleft;
     }
-    for (int i = 0; i < maxLine; ++i) {
-        std::string currPhrase = getPhrase(i);
-        int found = currPhrase.find(str);
-        if (found != std::string::npos) {
-            removeSelection();
-            selected = true;
-            selectXleft = found, selectXright = found + str.size();
-            selectYleft = i, selectYright = i;
-            currLine = i;
-            currChar = found + str.size();
-            if (lines() < propcount) {
-                currFrame = 0;
-                diffFrame = currFrame;
-            }
-            else if (currLine > getUpperBoundFrame()) {
-                currFrame = currLine - propcount + 1;
-                diffFrame = currFrame;
-            }
-            else if (currLine < getLowerBoundFrame()) {
-                currFrame = currLine;
-                diffFrame = currFrame;
-            }
-            text.setString(composeStrings());
-            updateNumbers();
-            updateCursor();
-            return 1;
-        }
-    }
     std::string currPhrase = getPhrase(maxLine);
-    currPhrase = currPhrase.substr(0, maxChar - 1);
+    if (maxChar <= 0) currPhrase = "";
+    else currPhrase = currPhrase.substr(0, maxChar - 1);
+    int goodFind = std::string::npos;
     int found = currPhrase.find(str);
-    if (found != std::string::npos) {
+    while (found != std::string::npos) {
+        goodFind = found;
+        found = currPhrase.find(str, found + 1);
+    }
+    if (goodFind != std::string::npos) {
         removeSelection();
         selected = true;
-        selectXleft = found, selectXright = found + str.size();
+        selectXleft = goodFind, selectXright = goodFind + str.size();
         selectYleft = maxLine, selectYright = maxLine;
+        startingPosX = selectXleft, startingPosY = selectYleft;
         currLine = maxLine;
-        currChar = found + str.size();
+        currChar = goodFind + str.size();
         if (lines() < propcount) {
             currFrame = 0;
             diffFrame = currFrame;
@@ -1105,6 +1084,42 @@ int Content::findPrev(std::string str) {
         updateCursor();
         return 1;
     }
+    else {
+        for (int i = maxLine - 1; i >= 0; --i) {
+            std::string currPhrase = getPhrase(i);
+            int goodFind = std::string::npos, found = currPhrase.find(str);
+            while (found != std::string::npos) {
+                goodFind = found;
+                found = currPhrase.find(str, found + 1);
+            }
+            if (goodFind != std::string::npos) {
+                removeSelection();
+                selected = true;
+                selectXleft = goodFind, selectXright = goodFind + str.size();
+                selectYleft = i, selectYright = i;
+                startingPosX = selectXleft, startingPosY = selectYleft;
+                currLine = i;
+                currChar = goodFind + str.size();
+                if (lines() < propcount) {
+                    currFrame = 0;
+                    diffFrame = currFrame;
+                }
+                else if (currLine > getUpperBoundFrame()) {
+                    currFrame = currLine - propcount + 1;
+                    diffFrame = currFrame;
+                }
+                else if (currLine < getLowerBoundFrame()) {
+                    currFrame = currLine;
+                    diffFrame = currFrame;
+                }
+                text.setString(composeStrings());
+                updateNumbers();
+                updateCursor();
+                return 1;
+            }
+        }
+    }
+    
     return 0;
 }
 int Content::findNext(std::string str) {
@@ -1118,15 +1133,16 @@ int Content::findNext(std::string str) {
         minChar = selectXright;
     }
     std::string currPhrase = getPhrase(minLine);
-    currPhrase = currPhrase.substr(0, minChar + 1);
+    currPhrase = currPhrase.substr(minChar + 1, currPhrase.size());
     int found = currPhrase.find(str);
     if (found != std::string::npos) {
         removeSelection();
         selected = true;
-        selectXleft = found, selectXright = found + str.size();
+        selectXleft = minChar + 1 + found, selectXright = minChar + 1 + found + str.size();
         selectYleft = minLine, selectYright = minLine;
+        startingPosX = selectXleft, startingPosY = selectYleft;
         currLine = minLine;
-        currChar = found + str.size();
+        currChar = minChar + 1 + found + str.size();
         if (lines() < propcount) {
             currFrame = 0;
             diffFrame = currFrame;
@@ -1152,6 +1168,7 @@ int Content::findNext(std::string str) {
             selected = true;
             selectXleft = found, selectXright = found + str.size();
             selectYleft = i, selectYright = i;
+            startingPosX = selectXleft, startingPosY = selectYleft;
             currLine = i;
             currChar = found + str.size();
             if (lines() < propcount) {
