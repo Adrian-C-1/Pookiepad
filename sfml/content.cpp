@@ -348,6 +348,11 @@ void Content::onMouseMove() {
         sf::Vector2f mpos = sf::Vector2f(sf::Mouse::getPosition(window));
         onSelectText(mpos);
 
+        if (currLine == getUpperBoundFrame())
+            scroll(false);
+        if (currLine == getLowerBoundFrame())
+            scroll(true);
+
         cursorState = false;
         text.setString(composeStrings());
         updateNumbers();
