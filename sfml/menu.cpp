@@ -417,6 +417,15 @@ void Menu::draw() {
 			pages[current_page].saved = 1;
 			ordonPages();
 			break;
+		case BAR::FIND_FIND:
+			CONTENT::content->find(reinterpret_cast<FindPopUp*>(currentPopUp)->getText());
+			break;
+		case BAR::FIND_NEXT:
+			CONTENT::content->findNext(reinterpret_cast<FindPopUp*>(currentPopUp)->getText());
+			break;
+		case BAR::FIND_PREV:
+			CONTENT::content->findPrev(reinterpret_cast<FindPopUp*>(currentPopUp)->getText());
+			break;
 		case BAR::SAVE_FILE:
 		{
 			saveFile();
@@ -715,12 +724,16 @@ bool Menu::should_draw_scrollbar() {
 
 
 void onFindFind() {
+	BAR::events.push(BAR::FIND_FIND);
 	std::cout << "Finding\n";
+	//CONTENT::content->find();
 }
 void onFindPrev() {
+	BAR::events.push(BAR::FIND_PREV);
 	std::cout << "Finding prev\n";
 }
 void onFindNext() {
+	BAR::events.push(BAR::FIND_NEXT);
 	std::cout << "Finding next\n";
 }
 void onFindCancel() {

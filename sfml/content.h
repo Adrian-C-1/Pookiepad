@@ -40,9 +40,15 @@ public:
     void updateResize();
     void draw_content(); // asta va ramane mereu cu case-ul asta xDDD
 
-    int find(std::string str);
-    int findNext(std::string str);
-    int findPrev(std::string str);
+    void find(std::string str) {
+        
+    }
+    void findNext(std::string str) {
+
+    }
+    void findPrev(std::string str) {
+
+    }
 
     void zoomIn();
     void zoomOut();
