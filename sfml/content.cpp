@@ -1009,7 +1009,7 @@ void Content::draw_content() {
 }
 
 int Content::find(std::string str) {
-    for (int i = 0; i < lines(); ++i) {
+    for (int i = 0; i <= lines(); ++i) {
         std::string currPhrase = getPhrase(i);
         int found = currPhrase.find(str);
         if (found != std::string::npos) {
@@ -1160,7 +1160,7 @@ int Content::findNext(std::string str) {
         updateCursor();
         return 1;
     }
-    for (int i = minLine + 1; i < lines(); ++i) {
+    for (int i = minLine + 1; i <= lines(); ++i) {
         std::string currPhrase = getPhrase(i);
         int found = currPhrase.find(str);
         if (found != std::string::npos) {
