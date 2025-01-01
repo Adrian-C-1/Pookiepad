@@ -350,7 +350,7 @@ void Content::onMouseMove() {
 
         if (currLine == getUpperBoundFrame())
             scroll(false);
-        if (currLine == getLowerBoundFrame())
+        if (currLine <= getLowerBoundFrame())
             scroll(true);
 
         cursorState = false;

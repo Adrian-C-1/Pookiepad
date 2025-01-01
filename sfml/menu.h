@@ -51,6 +51,7 @@ public:
 	void focus();
 	void reset();
 	void onKeyPress(sf::Uint32 code);
+	inline std::string getText() { return text.getString(); }
 private:
 	Button Find, Next, Prev, Cancel;
 

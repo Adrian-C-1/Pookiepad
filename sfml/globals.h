@@ -38,6 +38,9 @@ namespace BAR {
 	CLOSE_FILE,
 	OPEN_FILE,
 	CLOSE_ALL,
+	FIND_FIND,
+	FIND_PREV,
+	FIND_NEXT,
 	};
 	extern std::queue<EVENT> events;
 	
