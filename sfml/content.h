@@ -40,6 +40,10 @@ public:
     void updateResize();
     void draw_content(); // asta va ramane mereu cu case-ul asta xDDD
 
+    int find(std::string str);
+    int findNext(std::string str);
+    int findPrev(std::string str);
+
     void zoomIn();
     void zoomOut();
 
@@ -81,7 +85,6 @@ public: // private
     time_t date;
 
     bool selected;
-    bool lastMoved; // 0 = stanga, 1 = dreapta
     int selectXleft, selectYleft;
     int selectXright, selectYright;
     int startingPosX, startingPosY;

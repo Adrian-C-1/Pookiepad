@@ -269,6 +269,9 @@ void Content::onKeyPress(sf::Keyboard::Key key) {
     else if (key == sf::Keyboard::A && (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl))) { // Ctrl + 'a'
         select(4, false);
     }
+    else if (key == sf::Keyboard::F && (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl))) { // Ctrl + 'f'
+        BAR::events.push(BAR::OPEN_FIND_POPUP);
+    }
     else if (key == sf::Keyboard::Delete) {
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl)) {
             deleteBtn(true);
@@ -291,30 +294,12 @@ void Content::onSelectText(sf::Vector2f mpos) {
             if (currLine < startingPosY || currLine == startingPosY && currChar < startingPosX) {
                 selectXleft = currChar, selectYleft = currLine;
                 selectXright = startingPosX, selectYright = startingPosY;
-                lastMoved = 0;
             }
             else {
                 selectXleft = startingPosX, selectYleft = startingPosY;
                 selectXright = currChar, selectYright = currLine;
-                lastMoved = 1;
             }
         }
-        /*if (currLine < selectYleft || currLine == selectYleft && currChar < selectXleft) {
-            selectXleft = currChar, selectYleft = currLine;
-            lastMoved = 0;
-        }
-        else if (currLine > selectYright || currLine == selectYright && currChar > selectXright) {
-            selectXright = currChar, selectYright = currLine;
-            lastMoved = 1;
-        }
-        else {
-            if (lastMoved == 0) {
-                selectXleft = currChar, selectYleft = currLine;
-            }
-            else {
-                selectXright = currChar, selectYright = currLine;
-            }
-        }*/
     }
     else {
         if (currLine == oldLine && currChar == oldChar) {
@@ -326,14 +311,12 @@ void Content::onSelectText(sf::Vector2f mpos) {
             selectXleft = currChar, selectYleft = currLine;
             selectXright = oldChar, selectYright = oldLine;
             startingPosX = selectXright, startingPosY = selectYright;
-            lastMoved = 0;
         }
         else {
             selected = true;
             selectXleft = oldChar, selectYleft = oldLine;
             selectXright = currChar, selectYright = currLine;
             startingPosX = selectXleft, startingPosY = selectYleft;
-            lastMoved = 1;
         }
     }
 }
@@ -689,18 +672,17 @@ void Content::select(int control, bool isCtrlShiftPressed) {
             else left(false, false);
             selectXleft = currChar, selectYleft = currLine;
             selected = true;
-            lastMoved = 0;
         }
         else {
-            if (lastMoved == 0) {
-                if (isCtrlShiftPressed) left(true, false);
-                else left(false, false);
+            if (isCtrlShiftPressed) left(true, false);
+            else left(false, false);
+            if (currChar == startingPosX && currLine == startingPosY) {
+                removeSelection();
+            }
+            else if (currLine < startingPosY || currLine == startingPosY && currChar < startingPosX) {
                 selectXleft = currChar, selectYleft = currLine;
             }
-            else {
-                currChar = selectXright, currLine = selectYright;
-                if (isCtrlShiftPressed) left(true, false);
-                else left(false, false);
+            else if (currLine > startingPosY || currLine == startingPosY && currChar > startingPosX) {
                 selectXright = currChar, selectYright = currLine;
             }
         }
@@ -713,18 +695,17 @@ void Content::select(int control, bool isCtrlShiftPressed) {
             else right(false, false);
             selectXright = currChar, selectYright = currLine;
             selected = true;
-            lastMoved = 1;
         }
         else {
-            if (lastMoved == 0) {
-                if (isCtrlShiftPressed) right(true, false);
-                else right(false, false);
+            if (isCtrlShiftPressed) right(true, false);
+            else right(false, false);
+            if (currChar == startingPosX && currLine == startingPosY) {
+                removeSelection();
+            }
+            else if (currLine < startingPosY || currLine == startingPosY && currChar < startingPosX) {
                 selectXleft = currChar, selectYleft = currLine;
             }
-            else {
-                currChar = selectXright, currLine = selectYright;
-                if (isCtrlShiftPressed) right(true, false);
-                else right(false, false);
+            else if (currLine > startingPosY || currLine == startingPosY && currChar > startingPosX) {
                 selectXright = currChar, selectYright = currLine;
             }
         }
@@ -736,18 +717,24 @@ void Content::select(int control, bool isCtrlShiftPressed) {
             up(false);
             selectXleft = currChar, selectYleft = currLine;
             selected = true;
-            lastMoved = 0;
         }
         else {
-            if (lastMoved == 0) {
+            if (currLine > startingPosY || currLine == startingPosY && currChar > startingPosX) {
                 up(false);
-                selectXleft = currChar, selectYleft = currLine;
+                if (currLine == startingPosY && currChar == startingPosX) {
+                    removeSelection();
+                }
+                else if (currLine < startingPosY) {
+                    selectXright = selectXleft, selectYright = selectYleft;
+                    selectXleft = currChar, selectYleft = currLine;
+                }
+                else {
+                    selectXright = currChar, selectYright = currLine;
+                }
             }
             else {
                 up(false);
-                selectXright = selectXleft, selectYright = selectYleft;
                 selectXleft = currChar, selectYleft = currLine;
-                lastMoved = 0;
             }
         }
     }
@@ -758,17 +745,22 @@ void Content::select(int control, bool isCtrlShiftPressed) {
             down(false);
             selectXright = currChar, selectYright = currLine;
             selected = true;
-            lastMoved = 1;
         }
         else {
-            if (lastMoved == 0) {
-                selectXleft = selectXright, selectYleft = selectYright;
+            if (currLine < startingPosY || currLine == startingPosY && currChar < startingPosX) {
                 down(false);
-                selectXright = currChar, selectYright = currLine;
-                lastMoved = 1;
+                if (currLine == startingPosY && currChar == startingPosX) {
+                    removeSelection();
+                }
+                else if (currLine > startingPosY) {
+                    selectXleft = selectXright, selectYleft = selectYright;
+                    selectXright = currChar, selectYright = currLine;
+                }
+                else {
+                    selectXleft = currChar, selectYleft = currLine;
+                }
             }
             else {
-                currChar = selectXright, currLine = selectYright;
                 down(false);
                 selectXright = currChar, selectYright = currLine;
             }
@@ -800,7 +792,6 @@ void Content::selectAll() {
         diffFrame = currFrame;
     }
     currChar = getLineLength(lines());
-    lastMoved = 1;
     text.setString(composeStrings());
     updateNumbers();
     updateCursor();
@@ -810,7 +801,6 @@ void Content::removeSelection() {
     selectXleft = 0, selectXright = 0;
     selectYleft = 0, selectYright = 0;
     startingPosX = 0, startingPosY = 0;
-    lastMoved = 0;
 }
 
 
