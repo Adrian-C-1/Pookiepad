@@ -17,6 +17,7 @@ Content::Content(std::string str)
     }
     init();
     text.setString(composeStrings());
+    changeTheme();
 }
 void Content::destroyNode(nod* c) {
 	if (c == nullptr) return;
@@ -35,7 +36,7 @@ void Content::init() {
     numbers.setCharacterSize(zoomstates[state]);
     numbers.setFillColor(CONTENT::LINE_NR_COLOR);
     numberRectangle.setFillColor(CONTENT::BG_COLOR);
-    cursor.setSize(sf::Vector2f(1, (float)zoomstates[state]));
+    cursor.setSize(sf::Vector2f(2, (float)zoomstates[state]));
     cursor.setFillColor(CONTENT::BG_COLOR);
     cursorState = false;
     date = std::time(0);
@@ -53,6 +54,7 @@ void Content::init() {
 
 
 void Content::onKeyPress(sf::Uint32 code) {
+    /*
     if (code == 'z') { // debug purposes
         std::cout << "\n\n";
         std::cout << "Lines: " << lines() << '\n';
@@ -70,6 +72,7 @@ void Content::onKeyPress(sf::Uint32 code) {
         std::cout << "\n\n";
         return;
     }
+    */
     if (code >= ' ' && code <= '~') { // Character
         if (isFrameMoved) {
             diffFrame = currFrame;
@@ -640,14 +643,14 @@ void Content::zoomIn() {
     if (state < 6) state++;
     text.setCharacterSize(zoomstates[state]);
     numbers.setCharacterSize(zoomstates[state]);
-    cursor.setSize(sf::Vector2f(1, (float)zoomstates[state]));
+    cursor.setSize(sf::Vector2f(2, (float)zoomstates[state]));
     updateResize();
 }
 void Content::zoomOut() {
     if (state > 0) state--;
     text.setCharacterSize(zoomstates[state]);
     numbers.setCharacterSize(zoomstates[state]);
-    cursor.setSize(sf::Vector2f(1, (float)zoomstates[state]));
+    cursor.setSize(sf::Vector2f(2, (float)zoomstates[state]));
     updateResize();
 }
 void Content::copy(bool cut) {
@@ -790,7 +793,6 @@ void Content::select(int control, bool isCtrlShiftPressed) {
         return;
     }
     if (selectXleft == selectXright && selectYleft == selectYright) removeSelection();
-    //std::cout << selectXleft << " " << selectYleft << '\n' << selectXright << " " << selectYright << '\n';
     text.setString(composeStrings());
     updateNumbers();
     updateCursor();
@@ -913,7 +915,7 @@ void Content::updateSelections() {
             currVisibleLine = selectYleft - getLowerBoundFrame();
         }
         blue.setPosition(leftsize + pretext.getLocalBounds().width + sizetoadd + (-200.f * offset), BAR::HEIGHT + propsize * currVisibleLine);
-        blue.setFillColor(sf::Color::Blue);
+        blue.setFillColor(CONTENT::SELECT_COLOR);
         selectionBoxes.clear();
         selectionBoxes.push_back(blue);
     }
@@ -933,7 +935,7 @@ void Content::updateSelections() {
                 sf::RectangleShape blue;
                 blue.setSize(sf::Vector2f(text.getGlobalBounds().width, propsize));
                 blue.setPosition(leftsize + pretext.getLocalBounds().width + sizetoadd + (-200.f * offset), BAR::HEIGHT + cnt * propsize);
-                blue.setFillColor(sf::Color::Blue);
+                blue.setFillColor(CONTENT::SELECT_COLOR);
                 selectionBoxes.push_back(blue);
             }
             else if (i == selectYright) {
@@ -942,7 +944,7 @@ void Content::updateSelections() {
                 sf::RectangleShape blue;
                 blue.setSize(sf::Vector2f(text.getGlobalBounds().width, propsize));
                 blue.setPosition(leftsize + (-200.f * offset), BAR::HEIGHT + cnt * propsize);
-                blue.setFillColor(sf::Color::Blue);
+                blue.setFillColor(CONTENT::SELECT_COLOR);
                 selectionBoxes.push_back(blue);
             }
             else if (i > selectYleft && i < selectYright) {
@@ -951,7 +953,7 @@ void Content::updateSelections() {
                 sf::RectangleShape blue;
                 blue.setSize(sf::Vector2f(text.getGlobalBounds().width, propsize));
                 blue.setPosition(leftsize + (-200.f * offset), BAR::HEIGHT + cnt * propsize);
-                blue.setFillColor(sf::Color::Blue);
+                blue.setFillColor(CONTENT::SELECT_COLOR);
                 selectionBoxes.push_back(blue);
             }
             cnt++;
@@ -1268,7 +1270,6 @@ void Content::insert(int pos, char val)
         root->l = nullptr;
         root->r = nullptr;
         recalculate_node_value(root);
-        // cout << "Here 1\n";
         return;
     };
 
@@ -1294,8 +1295,6 @@ void Content::insert(int pos, char val)
             c = c->p;
             if (c == nullptr)
                 break;
-            // cout << "Before rebalancing: \n";
-            // out();
             local_rebalance(c);
         }
     }
@@ -1432,7 +1431,6 @@ void Content::recalculate_node_values_up_from(nod* c)
 {
     while (c != nullptr)
     {
-        // cout << "here " << c << '\n';
         recalculate_node_value(c);
         c = c->p;
     }
@@ -1445,12 +1443,9 @@ void Content::insert_string_pos(nod* c, const std::string& str, int pos)
         else
             c = c->l;
     }
-    // acum sunt in cazul asta indiferent ? cred ?
-    //if (c->l == nullptr && c->r == nullptr) 
+    // acum sunt in cazul asta indiferent 
     {
         // At a leaf
-        // std::cout << "At leaf: " << c->data << '\n';
-        // std::cout << "Pos: " << pos << '\n';
         if (pos == 0)
         {
             // inserez in stanga nodului curent
@@ -1523,8 +1518,6 @@ void Content::insert_string_pos(nod* c, const std::string& str, int pos)
             // trebuie sa dau split la nod si sa pun intre bucati noul text
             std::string left_data = c->data.substr(0, pos);
             std::string right_data = c->data.substr(pos, c->data.size() - pos);
-            // std::cout << "Left data: " << left_data << '\n';
-            // std::cout << "Right data: " << right_data << '\n';
             Content rl(left_data), rd(right_data), rt(str);
             nod* nou_1 = new nod;
             nou_1->p = c->p;
@@ -1626,7 +1619,6 @@ void Content::get_string(nod* c, std::string& str) {
 
 void Content::recalculate_node_value(nod* c)
 {
-    // cout << "Here with " << (c == root ? "root" : "not the root?") << '\n';
     if (c == nullptr)
         return;
     if (c->l == nullptr && c->r == nullptr)
@@ -1751,22 +1743,17 @@ void Content::_erase(nod* c, int pos, int count)
             delete root;
             root = 0;
         }
-        // std::cout << "Tree out after removing whole node:\n";
-        // out(root, 0);
         return;
     }
 
-    // std::cout << c->subtree_size << ' ' << pos << ' ' << count << '\n';
     if (c->l == nullptr && c->r == nullptr)
     {
-        // std::cout << "Leaf\n";
         int fin = std::min(pos + count, int(c->data.size()));
         for (int i = pos; i < fin; i++)
         {
             c->data.erase(c->data.begin() + pos);
         }
         recalculate_node_values_up_from(c);
-        // std::cout << "Here " << c->data << ' ' << pos << ' ' << count << '\n';
     }
     else
     {

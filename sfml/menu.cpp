@@ -8,7 +8,6 @@ Button::Button(std::string name, void (*onPress)())
 	: onPressFunc(onPress) {
 
 	text.setFont(BAR::font);
-	text.setFillColor(BAR::TEXT_COLOR);
 	text.setCharacterSize(BAR::HEIGHT - 4 - BAR::spacing);
 	text.setString(name);
 
@@ -18,6 +17,7 @@ Button::Button(std::string name, void (*onPress)())
 							text.getGlobalBounds().height
 					   ) +  sf::Vector2f(5, 8));
 	background.setFillColor(sf::Color::Transparent);
+	changeTheme();
 }
 void Button::draw() {
 	window.draw(background);
@@ -48,7 +48,7 @@ void Button::onHover() {
 void Button::onUnHover() {
 	background.setFillColor(sf::Color::Transparent);
 }
-void Button::setFillColor(sf::Color col) {
+void Button::setTextFillColor(sf::Color col) {
 	text.setFillColor(col);
 }
 void Button::setText(std::string text) {
@@ -57,17 +57,15 @@ void Button::setText(std::string text) {
 		this->text.getGlobalBounds().width + 2.0 * BAR::spacing,
 		this->text.getGlobalBounds().height
 	) + sf::Vector2f(5, 8));
-	background.setFillColor(sf::Color::Transparent);
 }
 std::string Button::getText() {
 	return text.getString();
 }
 
 PopUp::PopUp(std::vector<Button> buttons) :children(buttons) {
-	;
+	
 }
 PopUp::PopUp() {
-	;
 }
 void PopUp::spaceAround(Button& button) {
 	sf::Vector2f position = {9999, 9999};
@@ -92,9 +90,8 @@ void PopUp::spaceAround(Button& button) {
 
 	background.setPosition(position);
 	background.setSize(size);
-	background.setFillColor(BAR::BG_COLOR);
-	background.setOutlineColor(BAR::OUTLINE_COLOR);
 	background.setOutlineThickness(BAR::OUTLINE_THICKNESS);
+	changeTheme();
 }
 void PopUp::draw(Button* hover) {
 	window.draw(background);
@@ -234,6 +231,29 @@ void onEditCopy() {
 void onEditSelectAll() {
 	CONTENT::content->selectAll();
 }
+void onChangeTheme() {
+	BAR::changeTheme();
+	BAR::events.push(BAR::CHANGED_THEME);
+}
+void Menu::changeTheme() {
+	background_butoane.setFillColor(BAR::BG_COLOR);
+	background.setFillColor(BAR::BG_COLOR);
+	notice.setFillColor(BAR::NOTICE_COLOR);
+	for (auto& i : buttons) {
+		i.changeTheme();
+	}
+	filePopUp.changeTheme();
+	editPopUp.changeTheme();
+	viewPopUp.changeTheme();
+	findPopUp.changeTheme();
+	for (auto& i : pages) {
+		i.button.changeTheme();
+		i.content->changeTheme();
+	}
+	scrollbar_background.setFillColor(BAR::SCROLLBAR_BG_COLOR);
+	scrollbar_active.setFillColor(BAR::SCROLLBAR_ACTIVE_COLOR);
+	ordonPages();
+}
 Menu::Menu() :
 	buttons(std::vector<Button>({ // if modify order see the PopUp spaceAround() functions
 			Button("File", onPressFile),
@@ -256,15 +276,16 @@ Menu::Menu() :
 	viewPopUp({
 		Button("Zoom in", onZoomIn),
 		Button("Zoom out", onZoomOut),
-		Button("Show lines", onShowLines)
+		Button("Show lines", onShowLines),
+		Button("Change theme", onChangeTheme)
 	})
 {
+	onChangeTheme(); // default light theme
 
 	hovering = nullptr;
 
 	background.setPosition({ 0.0f, 0.0f });
 	background.setSize({ float(window.getSize().x), BAR::HEIGHT });
-	background.setFillColor(BAR::BG_COLOR);
 
 	float last_pos = 0; 
 	for (auto &i : buttons) { 
@@ -280,17 +301,17 @@ Menu::Menu() :
 
 	background_butoane.setPosition({ 0, 0 });
 	background_butoane.setSize(sf::Vector2f(buttons[2].getPosition().x + buttons[2].getSize().x, BAR::HEIGHT));
-	background_butoane.setFillColor(BAR::BG_COLOR);
 
 	pages.push_back({ new Content(), Button("Untitled", nullptr) });
-	ordonPages();
 	current_page = 0;
 	CONTENT::content = pages[0].content;
+	ordonPages();
 
 	notice.setFont(font);
 	notice.setCharacterSize(24);
 
 	onResize();
+	changeTheme();
 }
 void Menu::scrollbar_make_good() {
 	float count = CONTENT::content->getLineCount(), line = CONTENT::content->getCurrentLine();
@@ -312,10 +333,10 @@ void Menu::ordonPages() {
 	}
 	for (int i = 0; i < pages.size(); i++) {
 		if (i == current_page) {
-			pages[i].button.setFillColor(sf::Color(255, 255, 255, 255));
+			pages[i].button.setTextFillColor(BAR::CURRENT_PAGE_TEXT_COLOR);
 		}
 		else {
-			pages[i].button.setFillColor(sf::Color(120, 120, 120, 255));
+			pages[i].button.setTextFillColor(BAR::OTHER_PAGE_TEXT_COLOR);
 		}
 	}
 	CONTENT::content = pages[current_page].content;
@@ -326,7 +347,6 @@ void Menu::onResize() {
 
 	scrollbar_background.setSize(sf::Vector2f(BAR::spacing * 2, window.getSize().y - BAR::HEIGHT - 4 * BAR::spacing));
 	scrollbar_background.setPosition(sf::Vector2f(window.getSize().x - BAR::spacing * 5, BAR::HEIGHT + 2 * BAR::spacing));
-	scrollbar_background.setFillColor(BAR::SCROLLBAR_BG_COLOR);
 
 	scrollbar_holding = 0;
 
@@ -334,7 +354,6 @@ void Menu::onResize() {
 	height = std::min(scrollbar_background.getSize().y, height);
 	scrollbar_active.setSize(sf::Vector2f(scrollbar_background.getSize().x, height));
 	scrollbar_active.setPosition(scrollbar_background.getPosition());
-	scrollbar_active.setFillColor(sf::Color::White);
 	scrollbar_make_good();
 }
 void Menu::saveFile() {
@@ -485,6 +504,10 @@ void Menu::draw() {
 			}
 			break;
 		}
+		case BAR::CHANGED_THEME:
+			changeTheme();
+			CONTENT::content->changeTheme();
+			break;
 		default:
 			break;
 		
@@ -586,6 +609,7 @@ bool Menu::onPress() {
 	for (int i = 0; i < pages.size(); i++) {
 		mpos.x -= page_draw_offset;
 		if (pages[i].button.getGlobalRect().contains(mpos)) {
+			if (current_page == i) return 1;
 			current_page = i;
 			ordonPages();
 			CONTENT::content = pages[i].content;
@@ -699,11 +723,9 @@ void Menu::scrollbar_was_moved() {
 	float percentage = 0.0;
 	float real_end = scrollbar_background.getPosition().y + scrollbar_background.getSize().y - scrollbar_active.getSize().y;
 	percentage = (scrollbar_active.getPosition().y - scrollbar_background.getPosition().y) * 100.0 / (real_end - scrollbar_background.getPosition().y);
-	//std::cout << percentage << '\n';
 
 	int c_count = CONTENT::content->getLineCount();
 	int l = int(c_count * percentage / 100) + 1;
-	//l = std::max(c_count, l);
 
 	CONTENT::content->onScrollBar(l);
 }
@@ -731,16 +753,12 @@ bool Menu::should_draw_scrollbar() {
 
 void onFindFind() {
 	BAR::events.push(BAR::FIND_FIND);
-	std::cout << "Finding\n";
-	//CONTENT::content->find();
 }
 void onFindPrev() {
 	BAR::events.push(BAR::FIND_PREV);
-	std::cout << "Finding prev\n";
 }
 void onFindNext() {
 	BAR::events.push(BAR::FIND_NEXT);
-	std::cout << "Finding next\n";
 }
 void onFindCancel() {
 	BAR::events.push(BAR::SHOULD_CLOSE_POPUP);
@@ -755,9 +773,7 @@ FindPopUp::FindPopUp() :
 	float x_total_aprox = Find.getSize().x + Prev.getSize().x + Next.getSize().x + Cancel.getSize().x + 5 * BAR::spacing;
 
 	background.setPosition({ window.getSize().x / 2 - x_total_aprox / 2, BAR::HEIGHT + 4});
-	background.setFillColor(BAR::BG_COLOR);
 	background.setSize({ 100.0, 100.0 });
-	background.setOutlineColor(BAR::OUTLINE_COLOR);
 	background.setOutlineThickness(BAR::OUTLINE_THICKNESS);
 
 	float x_cur = background.getPosition().x;
@@ -785,7 +801,6 @@ FindPopUp::FindPopUp() :
 
 	TextBackground.setPosition(sf::Vector2f(background.getPosition().x + 2 * BAR::spacing, Find.getPosition().y + Find.getSize().y + 2 * BAR::spacing));
 	TextBackground.setSize(sf::Vector2f(x_total_aprox - 4 * BAR::spacing, BAR::HEIGHT - 4 - BAR::spacing));
-	TextBackground.setOutlineColor(BAR::OUTLINE_COLOR);
 	TextBackground.setOutlineThickness(BAR::OUTLINE_THICKNESS);
 	TextBackground.setFillColor(sf::Color::Transparent);
 	background.setSize(sf::Vector2f(background.getSize().x, TextBackground.getPosition().y - background.getPosition().y + TextBackground.getSize().y + BAR::spacing));
@@ -794,7 +809,8 @@ FindPopUp::FindPopUp() :
 	text.setCharacterSize(BAR::HEIGHT - 2 - BAR::spacing - 2);
 	text.setPosition(TextBackground.getPosition() + sf::Vector2f(0.0f, -2.0f));
 	text.setString("NU TRB SA VEZI ASTA");
-	text.setFillColor(sf::Color::White);
+
+	changeTheme();
 }
 void FindPopUp::reset() {
 	line = 0, occurence = 0;
@@ -828,7 +844,7 @@ void FindPopUp::onKeyPress(sf::Uint32 code) {
 
 }
 void FindPopUp::draw(Button* hover) {
-	if (focused == 1) TextBackground.setOutlineColor(sf::Color::White);
+	if (focused == 1) TextBackground.setOutlineColor(BAR::FINDPOPUP_TEXT_OUTLINE_ACTIVE_COLOR);
 	else TextBackground.setOutlineColor(BAR::OUTLINE_COLOR);
 
 	window.draw(background);

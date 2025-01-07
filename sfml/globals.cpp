@@ -8,22 +8,71 @@ sf::WindowHandle handle;
 
 namespace BAR {
 	sf::Font font;
-	const float HEIGHT = 24.0f;
-	const sf::Color BG_COLOR = sf::Color(40, 26, 38, 255);
-	const sf::Color POPUP_COLOR = sf::Color(44, 44, 44, 255); // unused
-	const sf::Color OUTLINE_COLOR = sf::Color(70, 56, 68, 255);
-	const float OUTLINE_THICKNESS = 1.0f;
-	const sf::Color HOVER_COLOR = sf::Color(58, 44, 57, 255);
-	const sf::Color SCROLLBAR_BG_COLOR = sf::Color(0, 0, 0, 44);
-	const sf::Color TEXT_COLOR = sf::Color::White;
-	const int SCROLLBAR_PROXIMITY = 15;
-	const float spacing = 4;
+
+	float spacing = 4;
+	float HEIGHT = 24.0f;
+	float OUTLINE_THICKNESS = 1.0f;
+	
+	sf::Color BG_COLOR = sf::Color(40, 26, 38, 255);
+	sf::Color TEXT_COLOR = sf::Color::White;
+	sf::Color HOVER_COLOR = sf::Color(58, 44, 57, 255);
+	sf::Color POPUP_COLOR = sf::Color(44, 44, 44, 255); // unused
+	sf::Color OUTLINE_COLOR = sf::Color(70, 56, 68, 255);
+	sf::Color NOTICE_COLOR = sf::Color::White;
+	sf::Color SCROLLBAR_ACTIVE_COLOR = sf::Color::Black;
+	sf::Color FINDPOPUP_TEXT_OUTLINE_ACTIVE_COLOR = sf::Color::White;
+	sf::Color CURRENT_PAGE_TEXT_COLOR = sf::Color(255, 255, 255, 255);
+	sf::Color OTHER_PAGE_TEXT_COLOR = sf::Color(120, 120, 120, 255);
+
+	sf::Color SCROLLBAR_BG_COLOR = sf::Color(0, 0, 0, 44);
+	int SCROLLBAR_PROXIMITY = 15;
 
 	std::queue<EVENT> events;
 	Menu *menu = nullptr;
 
 	bool SHOW_HITBOX = 1;
 	
+	void changeTheme() {
+		static bool black_theme = 0;
+		black_theme = 1 - black_theme;
+
+		if (black_theme) {
+			BG_COLOR = sf::Color(40, 26, 38, 255);
+			TEXT_COLOR = sf::Color::White;
+			HOVER_COLOR = sf::Color(58, 44, 57, 255);
+			OUTLINE_COLOR = sf::Color(70, 56, 68, 255);
+			NOTICE_COLOR = sf::Color::White;
+			SCROLLBAR_ACTIVE_COLOR = sf::Color::Black;
+			FINDPOPUP_TEXT_OUTLINE_ACTIVE_COLOR = sf::Color::White;
+			SCROLLBAR_BG_COLOR = sf::Color(0, 0, 0, 44);
+			OTHER_PAGE_TEXT_COLOR = sf::Color::White;
+			CURRENT_PAGE_TEXT_COLOR = sf::Color(120, 120, 120, 255);
+
+			CONTENT::BG_COLOR = sf::Color(39, 39, 39, 255);
+			CONTENT::TEXT_COLOR = sf::Color(255, 255, 255, 255);
+			CONTENT::LINE_NR_COLOR = sf::Color(110, 110, 110, 255);
+			CONTENT::SELECT_COLOR = sf::Color(100, 100, 100, 255);
+		}
+		else { // WHITE THEME
+			BG_COLOR = sf::Color::White;
+			TEXT_COLOR = sf::Color::Black;
+			HOVER_COLOR = sf::Color(200, 200, 200, 255);
+			OUTLINE_COLOR = sf::Color(70, 56, 68, 255);
+			NOTICE_COLOR = sf::Color::Black;
+			SCROLLBAR_BG_COLOR = sf::Color(200, 200, 200, 255);
+			SCROLLBAR_ACTIVE_COLOR = sf::Color(0, 0, 0);
+			FINDPOPUP_TEXT_OUTLINE_ACTIVE_COLOR = sf::Color::Black;
+			CURRENT_PAGE_TEXT_COLOR = sf::Color(100, 150, 150, 255);
+			OTHER_PAGE_TEXT_COLOR = sf::Color::Black;
+
+			CONTENT::BG_COLOR = sf::Color::White;
+			CONTENT::TEXT_COLOR = sf::Color::Black;
+			CONTENT::LINE_NR_COLOR = sf::Color(110, 110, 110, 255);
+			CONTENT::SELECT_COLOR = sf::Color(200, 240, 240, 255);
+		}
+
+	}
+
 	std::string getClipboardText() {
 		OpenClipboard(nullptr);
 		HANDLE handle = GetClipboardData(CF_TEXT);
@@ -78,7 +127,8 @@ namespace BAR {
 namespace CONTENT {
 	Content* content = nullptr;
 
-	const sf::Color BG_COLOR = sf::Color(39, 39, 39, 255);
-	const sf::Color TEXT_COLOR = sf::Color(255, 255, 255, 255);
-	const sf::Color LINE_NR_COLOR = sf::Color(110, 110, 110, 255);
+	sf::Color BG_COLOR = sf::Color(39, 39, 39, 255);
+	sf::Color TEXT_COLOR = sf::Color(255, 255, 255, 255);
+	sf::Color LINE_NR_COLOR = sf::Color(110, 110, 110, 255);
+	sf::Color SELECT_COLOR = sf::Color::Blue;
 }

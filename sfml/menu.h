@@ -9,6 +9,10 @@ public:
 	void draw();
 	void onPress();
 
+	inline void changeTheme() {
+		text.setFillColor(BAR::TEXT_COLOR);
+	}
+
 	sf::FloatRect getGlobalRect();
 	sf::Vector2f getPosition();
 	sf::Vector2f getSize();
@@ -16,7 +20,7 @@ public:
 
 	void onHover();
 	void onUnHover();
-	void setFillColor(sf::Color col);
+	void setTextFillColor(sf::Color col);
 	void setText(std::string text);
 	std::string getText();
 private:
@@ -30,6 +34,14 @@ public:
 	PopUp(std::vector<Button> buttons);
 	PopUp();
 	virtual void spaceAround(Button& button);
+
+	inline void changeTheme() {
+		for (auto& i : children) {
+			i.changeTheme();
+		}
+		background.setFillColor(BAR::BG_COLOR);
+		background.setOutlineColor(BAR::OUTLINE_COLOR);
+	}
 
 	virtual void draw(Button* hover);
 	/// <summary>
@@ -52,6 +64,16 @@ public:
 	void reset();
 	void onKeyPress(sf::Uint32 code);
 	inline std::string getText() { return text.getString(); }
+	inline void changeTheme() {
+		background.setFillColor(BAR::BG_COLOR);
+		background.setOutlineColor(BAR::OUTLINE_COLOR);
+		TextBackground.setOutlineColor(BAR::OUTLINE_COLOR);
+		text.setFillColor(BAR::TEXT_COLOR);
+		Find.changeTheme();
+		Next.changeTheme();
+		Prev.changeTheme();
+		Cancel.changeTheme();
+	}
 private:
 	Button Find, Next, Prev, Cancel;
 
@@ -80,6 +102,7 @@ public:
 	void scrollbar_make_good();
 	
 	void setNotice(std::string text);
+	void changeTheme();
 private:
 	void ordonPages();
 	float getPage0x();

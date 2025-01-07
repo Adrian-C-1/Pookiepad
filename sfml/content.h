@@ -40,6 +40,14 @@ public:
     void updateResize();
     void draw_content(); // asta va ramane mereu cu case-ul asta xDDD
 
+    inline void changeTheme() {
+        numberRectangle.setFillColor(CONTENT::BG_COLOR);
+        for (auto& i : selectionBoxes) {
+            i.setFillColor(CONTENT::SELECT_COLOR);
+        }
+        text.setFillColor(CONTENT::TEXT_COLOR);
+    }
+
     int find(std::string str);
     int findPrev(std::string str);
     int findNext(std::string str);

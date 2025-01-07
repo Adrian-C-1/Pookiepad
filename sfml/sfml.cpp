@@ -27,13 +27,13 @@ int main()
     bool debug = true;
     initiate();
 
-    //CONTENT::content = new Content();
+    BAR::changeTheme(); // light theme ON
     BAR::menu = new Menu(); // initialize it here not there
-
     if (CONTENT::content == nullptr) {
-        std::cout << "Zii lui Adrian ca e prost daca ajungi aici\n";
+        std::cout << "Menu nu merge? \n";
         return 0;
     }
+
 
     window.setFramerateLimit(100);
     while (window.isOpen()) {
@@ -83,20 +83,16 @@ int main()
                 CONTENT::content->onMouseMove();
                 break;
             case sf::Event::TextEntered:
-                //std::cout << "Text entered before\n";
                 BAR::menu->markChanged();
                 if (!BAR::menu->onTextEntered(event.text.unicode))
                     CONTENT::content->onKeyPress(event.text.unicode);
-                //std::cout << "Text entered after\n";
                 BAR::menu->scrollbar_make_good();
 
                 break;
             case sf::Event::KeyPressed:
-                //std::cout << "Key pressed before\n";
                 BAR::menu->markChanged();
                 if (!BAR::menu->onKeyPress())
                     CONTENT::content->onKeyPress(event.key.code);
-                //std::cout << "Key pressed after\n";
                 BAR::menu->scrollbar_make_good();
                 break;
             case sf::Event::MouseWheelScrolled:
