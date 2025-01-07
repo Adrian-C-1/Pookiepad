@@ -277,6 +277,15 @@ void Content::onKeyPress(sf::Keyboard::Key key) {
     else if (key == sf::Keyboard::S && (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl))) {
         BAR::events.push(BAR::SAVE_FILE);
     }
+    else if (key == sf::Keyboard::N && (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl))) {
+        BAR::events.push(BAR::NEW_FILE);
+    }
+    else if (key == sf::Keyboard::O && (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl))) {
+        BAR::events.push(BAR::OPEN_FILE);
+    }
+    else if (key == sf::Keyboard::W && (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl))) {
+        BAR::events.push(BAR::CLOSE_FILE);
+    }
     else if (key == sf::Keyboard::Delete) {
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl)) {
             deleteBtn(true);
