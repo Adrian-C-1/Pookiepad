@@ -1026,6 +1026,8 @@ void Content::draw_content() {
 }
 
 int Content::find(std::string str) {
+    if (str.size() == 0) return 0;
+    if (root == nullptr) return 0;
     for (int i = 0; i <= lines(); ++i) {
         std::string currPhrase = getPhrase(i);
         int found = currPhrase.find(str);
@@ -1058,6 +1060,8 @@ int Content::find(std::string str) {
     return 0;
 }
 int Content::findPrev(std::string str) {
+    if (str.size() == 0) return 0;
+    if (root == nullptr) return 0;
     int maxLine, maxChar;
     if (!selected) {
         maxLine = currLine;
@@ -1140,6 +1144,7 @@ int Content::findPrev(std::string str) {
     return 0;
 }
 int Content::findNext(std::string str) {
+    if (str.size() == 0) return 0;
     if (root == nullptr) return 0;
     int minLine, minChar;
     if (!selected) {
