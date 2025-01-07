@@ -355,6 +355,8 @@ void Menu::onResize() {
 	scrollbar_active.setSize(sf::Vector2f(scrollbar_background.getSize().x, height));
 	scrollbar_active.setPosition(scrollbar_background.getPosition());
 	scrollbar_make_good();
+
+	findPopUp.onResize();
 }
 void Menu::saveFile() {
 	if (pages[current_page].path.size() == 0) { // no path selected
@@ -770,45 +772,9 @@ FindPopUp::FindPopUp() :
 	Next("Next", onFindNext),
 	Cancel("Cancel", onFindCancel)
 {
-	float x_total_aprox = Find.getSize().x + Prev.getSize().x + Next.getSize().x + Cancel.getSize().x + 5 * BAR::spacing;
-
-	background.setPosition({ window.getSize().x / 2 - x_total_aprox / 2, BAR::HEIGHT + 4});
-	background.setSize({ 100.0, 100.0 });
-	background.setOutlineThickness(BAR::OUTLINE_THICKNESS);
-
-	float x_cur = background.getPosition().x;
-	float y_cur = background.getPosition().y;
-
-	x_cur += BAR::spacing;
-
-	Find.setPosition({ x_cur, y_cur });
-	x_cur += Find.getSize().x;
-	x_cur += BAR::spacing;
-
-	Prev.setPosition({ x_cur, y_cur });
-	x_cur += Prev.getSize().x;
-	x_cur += BAR::spacing;
-
-	Next.setPosition({ x_cur, y_cur });
-	x_cur += Next.getSize().x;
-	x_cur += BAR::spacing;
-
-	Cancel.setPosition({ x_cur, y_cur });
-	x_cur += Cancel.getSize().x;
-	x_cur += BAR::spacing;
-
-	background.setSize(sf::Vector2f(x_total_aprox, background.getSize().y));
-
-	TextBackground.setPosition(sf::Vector2f(background.getPosition().x + 2 * BAR::spacing, Find.getPosition().y + Find.getSize().y + 2 * BAR::spacing));
-	TextBackground.setSize(sf::Vector2f(x_total_aprox - 4 * BAR::spacing, BAR::HEIGHT - 4 - BAR::spacing));
-	TextBackground.setOutlineThickness(BAR::OUTLINE_THICKNESS);
-	TextBackground.setFillColor(sf::Color::Transparent);
-	background.setSize(sf::Vector2f(background.getSize().x, TextBackground.getPosition().y - background.getPosition().y + TextBackground.getSize().y + BAR::spacing));
-
 	text.setFont(BAR::font);
-	text.setCharacterSize(BAR::HEIGHT - 2 - BAR::spacing - 2);
-	text.setPosition(TextBackground.getPosition() + sf::Vector2f(0.0f, -2.0f));
-	text.setString("NU TRB SA VEZI ASTA");
+	text.setString("");
+	onResize();
 
 	changeTheme();
 }
