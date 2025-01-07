@@ -217,7 +217,7 @@ void onZoomOut() {
 	CONTENT::content->zoomOut();
 }
 void onEditpaste() {
-	//CONTENT::content->insert(BAR::getClipboardText());
+	CONTENT::content->paste();
 }
 void onShowLines() {
 	CONTENT::content->showlines();

@@ -24,7 +24,7 @@ void initiate() {
 
 int WINAPI WinMain(HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPSTR lpszArgument, int nCmdShow)
 {
-    bool debug = true;
+    bool debug = false;
     initiate();
 
     BAR::changeTheme(); // light theme ON
