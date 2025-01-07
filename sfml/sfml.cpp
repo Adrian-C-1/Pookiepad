@@ -27,7 +27,7 @@ int WINAPI WinMain(HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPSTR lpszA
     bool debug = false;
     initiate();
 
-    BAR::changeTheme(); // light theme ON
+    //BAR::changeTheme(); // light theme ON
     BAR::menu = new Menu(); // initialize it here not there
     if (CONTENT::content == nullptr) {
         std::cout << "Menu nu merge? \n";
