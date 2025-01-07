@@ -1138,6 +1138,7 @@ int Content::findPrev(std::string str) {
     return 0;
 }
 int Content::findNext(std::string str) {
+    if (root == nullptr) return 0;
     int minLine, minChar;
     if (!selected) {
         minLine = currLine;
