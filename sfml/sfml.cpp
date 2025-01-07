@@ -22,7 +22,7 @@ void initiate() {
 
 
 
-int main()
+int WINAPI WinMain(HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPSTR lpszArgument, int nCmdShow)
 {
     bool debug = true;
     initiate();
