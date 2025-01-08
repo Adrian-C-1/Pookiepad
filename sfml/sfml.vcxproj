@@ -113,7 +113,7 @@
       <AdditionalIncludeDirectories>$(ProjectDir)\extern\SFML\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(ProjectDir)\extern\SFML\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>sfml-window-d.lib;sfml-system-d.lib;opengl32.lib;sfml-graphics-d.lib;%(AdditionalDependencies);Dwmapi.lib</AdditionalDependencies>
