@@ -1082,7 +1082,7 @@ int Content::findPrev(std::string str) {
     }
     std::string currPhrase = getPhrase(maxLine);
     if (maxChar <= 0) currPhrase = "";
-    else currPhrase = currPhrase.substr(0, maxChar - 1);
+    else currPhrase = currPhrase.substr(0, maxChar);
     int goodFind = std::string::npos;
     int found = currPhrase.find(str);
     while (found != std::string::npos) {
@@ -1165,17 +1165,17 @@ int Content::findNext(std::string str) {
         minChar = selectXright;
     }
     std::string currPhrase = getPhrase(minLine);
-    if (minChar + 1 > currPhrase.size()) currPhrase = "";
-    else currPhrase = currPhrase.substr(minChar + 1, currPhrase.size());
+    if (minChar > currPhrase.size()) currPhrase = "";
+    else currPhrase = currPhrase.substr(minChar, currPhrase.size());
     int found = currPhrase.find(str);
     if (found != std::string::npos) {
         removeSelection();
         selected = true;
-        selectXleft = minChar + 1 + found, selectXright = minChar + 1 + found + str.size();
+        selectXleft = minChar + found, selectXright = minChar + found + str.size();
         selectYleft = minLine, selectYright = minLine;
         startingPosX = selectXleft, startingPosY = selectYleft;
         currLine = minLine;
-        currChar = minChar + 1 + found + str.size();
+        currChar = minChar + found + str.size();
         if (lines() < propcount) {
             currFrame = 0;
             diffFrame = currFrame;
