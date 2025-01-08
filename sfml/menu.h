@@ -5,7 +5,7 @@
 
 class Button {
 public:
-	Button(std::string name, void (*onPress)());
+	Button(std::string name, void (*onPress)() );
 	void draw();
 	void onPress();
 
@@ -28,11 +28,13 @@ private:
 
 	sf::Text text;
 	sf::RectangleShape background;
-};
+}; 
 class PopUp {
 public:
 	PopUp(std::vector<Button> buttons);
 	PopUp();
+
+	// pune pop-up-ul sub button
 	virtual void spaceAround(Button& button);
 
 	inline void changeTheme() {
@@ -60,60 +62,19 @@ public:
 	void draw(Button* hover) override;
 	bool onPress() override;
 	Button* onHover(sf::Vector2f mpos) override;
+
+	// face sa poti scrie
 	void focus();
+
+	// reseteaza textul
 	void reset();
+
 	void onKeyPress(sf::Uint32 code);
 	inline std::string getText() { return text.getString(); }
-	inline void changeTheme() {
-		background.setFillColor(BAR::BG_COLOR);
-		background.setOutlineColor(BAR::OUTLINE_COLOR);
-		TextBackground.setOutlineColor(BAR::OUTLINE_COLOR);
-		text.setFillColor(BAR::TEXT_COLOR);
-		Find.changeTheme();
-		Next.changeTheme();
-		Prev.changeTheme();
-		Cancel.changeTheme();
-	}
-	inline void onResize() {
-		float x_total_aprox = Find.getSize().x + Prev.getSize().x + Next.getSize().x + Cancel.getSize().x + 5 * BAR::spacing;
+	void changeTheme();
 
-		background.setPosition({ window.getSize().x / 2 - x_total_aprox / 2, BAR::HEIGHT + 4 });
-		background.setSize({ 100.0, 100.0 });
-		background.setOutlineThickness(BAR::OUTLINE_THICKNESS);
-
-		float x_cur = background.getPosition().x;
-		float y_cur = background.getPosition().y;
-
-		x_cur += BAR::spacing;
-
-		Find.setPosition({ x_cur, y_cur });
-		x_cur += Find.getSize().x;
-		x_cur += BAR::spacing;
-
-		Prev.setPosition({ x_cur, y_cur });
-		x_cur += Prev.getSize().x;
-		x_cur += BAR::spacing;
-
-		Next.setPosition({ x_cur, y_cur });
-		x_cur += Next.getSize().x;
-		x_cur += BAR::spacing;
-
-		Cancel.setPosition({ x_cur, y_cur });
-		x_cur += Cancel.getSize().x;
-		x_cur += BAR::spacing;
-
-		background.setSize(sf::Vector2f(x_total_aprox, background.getSize().y));
-
-		TextBackground.setPosition(sf::Vector2f(background.getPosition().x + 2 * BAR::spacing, Find.getPosition().y + Find.getSize().y + 2 * BAR::spacing));
-		TextBackground.setSize(sf::Vector2f(x_total_aprox - 4 * BAR::spacing, BAR::HEIGHT - 4 - BAR::spacing));
-		TextBackground.setOutlineThickness(BAR::OUTLINE_THICKNESS);
-		TextBackground.setFillColor(sf::Color::Transparent);
-		background.setSize(sf::Vector2f(background.getSize().x, TextBackground.getPosition().y - background.getPosition().y + TextBackground.getSize().y + BAR::spacing));
-
-		text.setCharacterSize(BAR::HEIGHT - 2 - BAR::spacing - 2);
-		text.setPosition(TextBackground.getPosition() + sf::Vector2f(0.0f, -2.0f));
-		//text.setString("");
-	}
+	// centreaza
+	void onResize();
 private:
 	Button Find, Next, Prev, Cancel;
 
@@ -131,14 +92,16 @@ public:
 	bool onPress();
 	void onMouseMove();
 	void onResize();
-	void markChanged();
-	void markUnchanged();
+
+	void markChanged(); // cand scrii intr-un fisier
+	void markUnchanged(); // cand salvezi
 
 	/// returneaza 1 daca am facut ceva cu cheia (am deschid find)
 	bool onKeyPress();
 	/// returneaza 1 daca am facut ceva cu cheia (am deschid find)
 	bool onTextEntered(sf::Uint32 code);
 	
+	// pune chestiaa din scrollbar la pozitia buna in functie de content
 	void scrollbar_make_good();
 	
 	void setNotice(std::string text);
@@ -149,7 +112,7 @@ private:
 	void saveFile();
 	void closeFile();
 	sf::RectangleShape background;
-	sf::RectangleShape background_butoane;
+	sf::RectangleShape background_butoane; // backgroundul pt edit view find
 	std::vector<Button> buttons;
 
 	PopUp filePopUp, editPopUp, viewPopUp;

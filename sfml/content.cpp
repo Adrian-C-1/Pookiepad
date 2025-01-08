@@ -19,6 +19,10 @@ Content::Content(std::string str)
     text.setString(composeStrings());
     changeTheme();
 }
+/// <summary>
+/// deletes c
+/// </summary>
+/// <param name="c"></param>
 void Content::destroyNode(nod* c) {
 	if (c == nullptr) return;
 	destroyNode(c->l);
@@ -654,6 +658,7 @@ void Content::zoomIn() {
     numbers.setCharacterSize(zoomstates[state]);
     cursor.setSize(sf::Vector2f(2, (float)zoomstates[state]));
     updateResize();
+    BAR::menu->setNotice(std::string("Changed zoom to ") + std::to_string(getPercentage()) + "%");
 }
 void Content::zoomOut() {
     if (state > 0) state--;
@@ -661,6 +666,7 @@ void Content::zoomOut() {
     numbers.setCharacterSize(zoomstates[state]);
     cursor.setSize(sf::Vector2f(2, (float)zoomstates[state]));
     updateResize();
+    BAR::menu->setNotice(std::string("Changed zoom to ") + std::to_string(getPercentage()) + "%");
 }
 void Content::copy(bool cut) {
     if (!selected) BAR::menu->setNotice("No text selected");
@@ -980,7 +986,7 @@ void Content::updateNumbers() {
             str += std::to_string(i + 1) + '\n';
         }
         for (int i = 0; i < digitsCount(std::min(getUpperBoundFrame(), lines()) + 1); ++i) {
-            tempString += '4';
+            tempString += '4'; // pt distanta din stanga
         }
     }
     numbers.setString(str);
@@ -1243,6 +1249,75 @@ void Content::loadText(std::string str) {
     updateNumbers();
     updateCursor();
 }
+
+
+
+
+
+
+
+
+
+
+
+
+// DE AICI CHESTII PT ROPE 
+// DE AICI CHESTII PT ROPE 
+// DE AICI CHESTII PT ROPE 
+// DE AICI CHESTII PT ROPE 
+// DE AICI CHESTII PT ROPE 
+// DE AICI CHESTII PT ROPE 
+// DE AICI CHESTII PT ROPE 
+// DE AICI CHESTII PT ROPE 
+// DE AICI CHESTII PT ROPE 
+// DE AICI CHESTII PT ROPE 
+// DE AICI CHESTII PT ROPE 
+// DE AICI CHESTII PT ROPE 
+// DE AICI CHESTII PT ROPE 
+// DE AICI CHESTII PT ROPE 
+// DE AICI CHESTII PT ROPE 
+// DE AICI CHESTII PT ROPE 
+// DE AICI CHESTII PT ROPE 
+// DE AICI CHESTII PT ROPE 
+// DE AICI CHESTII PT ROPE 
+// DE AICI CHESTII PT ROPE 
+// DE AICI CHESTII PT ROPE 
+// DE AICI CHESTII PT ROPE 
+// DE AICI CHESTII PT ROPE 
+// DE AICI CHESTII PT ROPE 
+// DE AICI CHESTII PT ROPE 
+// DE AICI CHESTII PT ROPE 
+// DE AICI CHESTII PT ROPE 
+// DE AICI CHESTII PT ROPE 
+// DE AICI CHESTII PT ROPE 
+// DE AICI CHESTII PT ROPE 
+// DE AICI CHESTII PT ROPE 
+// DE AICI CHESTII PT ROPE 
+// DE AICI CHESTII PT ROPE 
+// DE AICI CHESTII PT ROPE 
+// DE AICI CHESTII PT ROPE 
+// DE AICI CHESTII PT ROPE 
+// DE AICI CHESTII PT ROPE 
+// DE AICI CHESTII PT ROPE 
+// DE AICI CHESTII PT ROPE 
+// DE AICI CHESTII PT ROPE 
+// DE AICI CHESTII PT ROPE 
+// DE AICI CHESTII PT ROPE 
+// DE AICI CHESTII PT ROPE 
+// DE AICI CHESTII PT ROPE 
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 int Content::lines() { // indexare de la 0, daca nu exista text se va afisa -1
@@ -1608,11 +1683,6 @@ nod* Content::getLastNode(nod* c = nullptr)
     return c;
 }
 
-int Content::getLength(nod* c) {
-    if (c == nullptr) return 0;
-    return c->subtree_size;
-}
-
 std::string Content::getString() {
     if (root == nullptr) return "";
     std::string ret = "";
@@ -1722,6 +1792,10 @@ void Content::split_node(nod* c)
     recalculate_node_values_up_from(newc);
     delete c;
 }
+/// <summary>
+/// does not delete c
+/// </summary>
+/// <param name="c"></param>
 void Content::deleteSubtree(nod* c)
 {
     if (c->l != nullptr)
@@ -1738,6 +1812,7 @@ void Content::deleteSubtree(nod* c)
     }
 }
 
+;
 void Content::_erase(nod* c, int pos, int count)
 {
     nod* p = c->p;
@@ -1827,12 +1902,6 @@ nod* Content::get_leftmost_leaf_of_subtree(nod* r)
         else if (r->r != nullptr)
             r = r->r;
     }
-    /*
-    if (r->l != nullptr)
-        return get_leftmost_leaf_of_subtree(r->l);
-    if (r->r != nullptr)
-        return get_leftmost_leaf_of_subtree(r->r);
-        */
     return r;
 }
 nod* Content::get_rightmost_leaf_of_subtree(nod* r)
@@ -1843,13 +1912,6 @@ nod* Content::get_rightmost_leaf_of_subtree(nod* r)
         else if (r->l != nullptr)
             r = r->l;
     }
-    /*
-    
-    if (r->r != nullptr)
-        return get_rightmost_leaf_of_subtree(r->r);
-    if (r->l != nullptr)
-        return get_rightmost_leaf_of_subtree(r->l);
-    */
     return r;
 }
 
@@ -1930,7 +1992,6 @@ void Content::out(nod* c, int h)
 /// (Removes the node in the left of G and puts it in the actual left of G)
 /// - ! Works for small sub-trees
 ///    (abs(node->left->leaf_nodes - node->right->leaf_nodes) <= 6)
-/// todo When is it faster to just rebalance a subtree ?
 /// @param c
 void Content::local_rebalance(nod* c)
 {
@@ -1951,9 +2012,6 @@ void Content::local_rebalance(nod* c)
 
         nod* put_it_left_of = get_leftmost_leaf_of_subtree(c->r);
         nod* put_this = get_rightmost_leaf_of_subtree(c->l);
-
-        // cout << "Modifying " << put_this->data << ' ' << put_it_left_of->data << '\n';
-        // cout << "Parent sizes: " << put_this->p->subtree_size << ' ' << put_it_left_of->p->subtree_size << '\n';
 
         if (put_this->p->r == put_this)
             put_this->p->r = nullptr;
@@ -2032,12 +2090,11 @@ void Content::rebalance_nodes_up_from(nod* c)
     local_rebalance(c);
     rebalance_nodes_up_from(c->p);
 }
-// todo cred ca nu trb sa balancez mai sus decat daca acum chiar s-a intamplat balansarea, altfel nare rost ? poate
+
 void Content::get_phrase(nod* c, int index, std::string& str)
 {
-    //std::cout << "New function\n";
+    // eficient asa // recursiv inanite
     while (c->l != nullptr && c->r != nullptr) {
-        //std::cout << "Here " << c->subtree_size << '\n';
         int l = c->l->newline_characters;
         int r = c->r->newline_characters;
         if (l > index)
