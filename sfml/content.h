@@ -24,11 +24,16 @@ public:
     Content(std::string str);
     inline void destroyTree() { destroyNode(root); }
     
+    // chestii
     void scroll(bool direction);
+    // pe taste
     void onKeyPress(sf::Uint32 code);
+    // chestii speciale
     void onKeyPress(sf::Keyboard::Key key);
 
+    // selecteaza textul cand apesi cu mausu
     void onSelectText(sf::Vector2f mpos);
+
     void onMousePress();
     void onMouseMove();
 
@@ -36,9 +41,13 @@ public:
     void copy(bool cut);
     void paste();
     void selectAll();
+    
+    // updateaza cursorul on-off
     void updateBlinker();
+    // resile la window
     void updateResize();
-    void draw_content(); // asta va ramane mereu cu case-ul asta xDDD
+    // asta va ramane mereu cu case-ul asta 
+    void draw_content(); 
 
     inline void changeTheme() {
         numberRectangle.setFillColor(CONTENT::BG_COLOR);
@@ -48,79 +57,113 @@ public:
         text.setFillColor(CONTENT::TEXT_COLOR);
     }
 
+    // din butoanele din bar
     int find(std::string str);
     int findPrev(std::string str);
     int findNext(std::string str);
-
     void zoomIn();
     void zoomOut();
 
+    // returneaza zoom percentageul
     int getPercentage();
     
+    // ia tot textul
     std::string getString();
 
     inline nod* getRoot() { return root; }
     inline int getCurrentLine() { return diffFrame; }
     inline int getLineCount() { return std::max(lines() - propcount + 1, 1); }
+    
     // line e cea mai de sus linie care trb sa apara (indexare de la 0 !)
     void onScrollBar(int line);
 
-
     // cu l mic ca deja se numeste showLines si nu ma pot gandi la nume originale
     inline void showlines() { showLines = 1 - showLines; updateResize(); } // AM MURIT =)))))
-public: // private
+private: // private
 
     nod* root;
     const int leaf_size = 6;
 
-    sf::Text text;
-    sf::Text numbers;
+    sf::Text text; // textul vizibil
+    sf::Text numbers; // numerele vizibile
 
-    sf::RectangleShape cursor;
-    sf::RectangleShape numberRectangle;
-    std::vector<sf::RectangleShape> selectionBoxes;
+    sf::RectangleShape cursor; 
+
+    float leftsize; // x pt numberRectangle 
+    sf::RectangleShape numberRectangle; // overlay pt 'numbers'
+
+    std::vector<sf::RectangleShape> selectionBoxes; 
     bool cursorState;
 
     int currChar; // distanta de la inceputul liniei si pana la cursor | [0, m] (m = numarul de caractere din propzitia curenta, incluzand ultimul \n, daca exista)
     int currLine; // linia curenta la care ne aflam | [0, n] (n = numarul de linii din fisier)
-    int currFrame; // frame-ul curent vizibil, fiecare frame avand propcount propozitii pe el | [0, n - propcount] cred (propcount = numarul de propozitii care pot incapea in frame)
+    int currFrame; // frame-ul curent internal, fiecare frame avand propcount propozitii pe el | [0, n - propcount] cred (propcount = numarul de propozitii care pot incapea in frame)
     int propcount; // numarul de propozitii care se pot afla pe ecran in orice moment in functie de marimea ferestrei
     int propsize; // cat de mare poate fi o propozitie in functie de marimea ferestrei
 
     bool isFrameMoved;
-    int diffFrame;
+    int diffFrame; // frameul vizibil (ca sa se miste inapoi la currFrame la type cand te uiti la altceva)
     
-    time_t date;
+    time_t date; // pt cursor
 
     bool selected;
-    int selectXleft, selectYleft;
-    int selectXright, selectYright;
-    int startingPosX, startingPosY;
+    // y - linia, x - caracter
+    int selectXleft, selectYleft;  // caracterul din stanga selectiei
+    int selectXright, selectYright; // caracterul din dreapta selectiei
+    int startingPosX, startingPosY; // de unde ai inceput sa selctezi
     
-
-    std::vector<int> zoomstates;
-    std::vector<int> zoompercentages;
-    int offset;
-    float leftsize;
-    int state;
-    bool showLines;
+    // folosit la size-ul cursorului si characterSize
+    std::vector<int> zoomstates; // cate zoomuri sunt disponibile (50% - 200%)
+    std::vector<int> zoompercentages; // procentaju pt om
+    int state; // zoom-ul
+    
+    int offset; // pt cand ma duc prea in dreapta | off-ul textului
+    
+    bool showLines; 
 
     void init();
 
-    void moveCursor(sf::Vector2f mpos);
-    void left(bool isCtrlPressed, bool selectionDeletion);
+    void moveCursor(sf::Vector2f mpos); // pt click
+    
+    /// selectionDeletion nu mai selecteaza ce era selectat inainte</param>
+    void left(bool isCtrlPressed, bool selectionDeletion); 
     void right(bool isCtrlPressed, bool selectionDeletion);
     void up(bool selectionDeletion);
     void down(bool selectionDeletion);
-    void deleteBtn(bool isCtrlPressed);
-    void select(int control, bool isCtrlShiftPressed);
+    void deleteBtn(bool isCtrlPressed); 
+
+    // functie generala pt selct left/right/up/down
+    // control - selecteaza up/down/l/r
+    void select(int control, bool isCtrlShiftPressed); 
+
+    // nu mai selecteaza ce era selectat inainte
     void removeSelection();
 
+    // updateaza unde se afla cursoul
     void updateCursor();
+    // updateaza pozitia selectiei
     void updateSelections();
+    // numerele din stanga
     void updateNumbers();
+
+    // ia ce e vizibil si pune in 'text'
     std::string composeStrings();
+    // ia textul selectat
     std::string composeSelectedStrings();
+
+    // sterge ceea ce e celectat
+    void BIGERASE();
+
+    // cel mai mic nr vizibil pe ecran
+    int getLowerBoundFrame();
+    // cel mai mare nr vizibil pe ecran
+    int getUpperBoundFrame();
+
+
+
+
+
+    // vvv chestii pt Rope
 
     void out();
     char at(int pos);
@@ -128,19 +171,34 @@ public: // private
     void insert(int pos, std::string& str);
     void erase(int pos);
     void erase(int start_pos, int count) { _erase(root, start_pos, count); }
-    void BIGERASE();
-    int lines();
+    int lines(); // indexare de la 0, daca nu exista text se va afisa -1
     int getPhrasePosition(int phrase_index);
-    int getLowerBoundFrame();
-    int getUpperBoundFrame();
+    // short definitions
 
-    void destroyNode(nod* c);
 
+
+    // deletes c
+    void destroyNode(nod* c); 
+
+    // recalculated any node values 
+    // call this after a change
     void recalculate_node_value(nod* c);
+
+    // recalculates up from (including) c
     void recalculate_node_values_up_from(nod* c);
+
+    // indexing from 0
     nod* get_node_at_pos(int pos, nod* c, int& pos_in_string);
+
+    // splits it in half
+    // c is deleted
+    // use only when inserting characters 
     void split_node(nod* c);
-    void deleteSubtree(nod* c);
+
+    // does not delete c
+    void deleteSubtree(nod* c); 
+
+    // erases 'count' characters
     void _erase(nod* c, int pos, int count);
 
     /// @brief
@@ -155,20 +213,28 @@ public: // private
     /// (Removes the node in the left of G and puts it in the actual left of G)
     /// - ! Works for small sub-trees
     ///    (abs(node->left->leaf_nodes - node->right->leaf_nodes) <= 6)
-    /// todo When is it faster to just rebalance a subtree ?
     /// @param c
     void local_rebalance(nod* c);
-    void rebalance_nodes_up_from(nod* c);
-    // todo cred ca nu trb sa balancez mai sus decat daca acum chiar s-a intamplat balansarea, altfel nare rost ? poate
 
+    // c included
+    void rebalance_nodes_up_from(nod* c);
+
+    // returneaza indexul propozitiei care contine caracterul index
     void get_phrase(nod* c, int index, std::string& str);
 
+    // returneaza frunza din dreapta la fiu
     nod* get_next_node(nod* c, nod* fiu);
+    // returneaza frunza din stanga la fiu
     nod* get_prev_node(nod* c, nod* fiu);
 
-    int getLength(nod* c);
+    // returneaza lungimea unei functii
     int getLineLength(int line);
+
+    // returneaza TOT textul
+    // apeleaza doar cand e 100% necesar
     void get_string(nod* c, std::string& str);
+
+    ;
     int get_phrase_position(nod* c, int phrase_index, int left_positions);
     void insert_string_pos(nod* c, const std::string& str, int pos);
     void out(nod* c, int h);

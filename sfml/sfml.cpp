@@ -34,7 +34,6 @@ int WINAPI WinMain(HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPSTR lpszA
         return 0;
     }
 
-
     window.setFramerateLimit(100);
     while (window.isOpen()) {
 

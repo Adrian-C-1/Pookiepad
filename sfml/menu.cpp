@@ -254,6 +254,11 @@ void Menu::changeTheme() {
 	scrollbar_active.setFillColor(BAR::SCROLLBAR_ACTIVE_COLOR);
 	ordonPages();
 }
+
+void f() {
+	std::cout << "mami sunt bun!\n";
+}
+
 Menu::Menu() :
 	buttons(std::vector<Button>({ // if modify order see the PopUp spaceAround() functions
 			Button("File", onPressFile),
@@ -300,7 +305,7 @@ Menu::Menu() :
 	currentPopUp = nullptr;
 
 	background_butoane.setPosition({ 0, 0 });
-	background_butoane.setSize(sf::Vector2f(buttons[2].getPosition().x + buttons[2].getSize().x, BAR::HEIGHT));
+	background_butoane.setSize(sf::Vector2f(buttons[buttons.size() - 1].getPosition().x + buttons[buttons.size() -1 ].getSize().x, BAR::HEIGHT));
 
 	pages.push_back({ new Content(), Button("Untitled", nullptr) });
 	current_page = 0;
@@ -313,7 +318,7 @@ Menu::Menu() :
 	onResize();
 	changeTheme();
 }
-void Menu::scrollbar_make_good() {
+void Menu::scrollbar_make_good() { 
 	float count = CONTENT::content->getLineCount(), line = CONTENT::content->getCurrentLine();
 	float percentage = line / count;
 	float possible = scrollbar_background.getSize().y - scrollbar_active.getSize().y;
@@ -322,7 +327,7 @@ void Menu::scrollbar_make_good() {
 	scrollbar_active.move(sf::Vector2f(0, off_y));
 }
 float Menu::getPage0x() {
-	return buttons[2].getPosition().x + buttons[2].getSize().x + BAR::spacing * 3;
+	return buttons[buttons.size() - 1].getPosition().x + buttons[buttons.size() - 1].getSize().x + BAR::spacing * 3;
 }
 void Menu::ordonPages() {
 	pages[0].button.setPosition(sf::Vector2f(getPage0x(), buttons[2].getPosition().y));
@@ -752,7 +757,6 @@ bool Menu::should_draw_scrollbar() {
 	return 0;
 }
 
-
 void onFindFind() {
 	BAR::events.push(BAR::FIND_FIND);
 }
@@ -869,6 +873,56 @@ bool FindPopUp::onPress() {
 	}
 
 	return 0;
+}
+void FindPopUp::onResize() {
+	float x_total_aprox = Find.getSize().x + Prev.getSize().x + Next.getSize().x + Cancel.getSize().x + 5 * BAR::spacing;
+
+	background.setPosition({ window.getSize().x / 2 - x_total_aprox / 2, BAR::HEIGHT + 4 });
+	background.setSize({ 100.0, 100.0 });
+	background.setOutlineThickness(BAR::OUTLINE_THICKNESS);
+
+	float x_cur = background.getPosition().x;
+	float y_cur = background.getPosition().y;
+
+	x_cur += BAR::spacing;
+
+	Find.setPosition({ x_cur, y_cur });
+	x_cur += Find.getSize().x;
+	x_cur += BAR::spacing;
+
+	Prev.setPosition({ x_cur, y_cur });
+	x_cur += Prev.getSize().x;
+	x_cur += BAR::spacing;
+
+	Next.setPosition({ x_cur, y_cur });
+	x_cur += Next.getSize().x;
+	x_cur += BAR::spacing;
+
+	Cancel.setPosition({ x_cur, y_cur });
+	x_cur += Cancel.getSize().x;
+	x_cur += BAR::spacing;
+
+	background.setSize(sf::Vector2f(x_total_aprox, background.getSize().y));
+
+	TextBackground.setPosition(sf::Vector2f(background.getPosition().x + 2 * BAR::spacing, Find.getPosition().y + Find.getSize().y + 2 * BAR::spacing));
+	TextBackground.setSize(sf::Vector2f(x_total_aprox - 4 * BAR::spacing, BAR::HEIGHT - 4 - BAR::spacing));
+	TextBackground.setOutlineThickness(BAR::OUTLINE_THICKNESS);
+	TextBackground.setFillColor(sf::Color::Transparent);
+	background.setSize(sf::Vector2f(background.getSize().x, TextBackground.getPosition().y - background.getPosition().y + TextBackground.getSize().y + BAR::spacing));
+
+	text.setCharacterSize(BAR::HEIGHT - 2 - BAR::spacing - 2);
+	text.setPosition(TextBackground.getPosition() + sf::Vector2f(0.0f, -2.0f));
+	//text.setString("");
+}
+void FindPopUp::changeTheme() {
+	background.setFillColor(BAR::BG_COLOR);
+	background.setOutlineColor(BAR::OUTLINE_COLOR);
+	TextBackground.setOutlineColor(BAR::OUTLINE_COLOR);
+	text.setFillColor(BAR::TEXT_COLOR);
+	Find.changeTheme();
+	Next.changeTheme();
+	Prev.changeTheme();
+	Cancel.changeTheme();
 }
 Button* FindPopUp::onHover(sf::Vector2f mpos) {
 	if (Find.getGlobalRect().contains(mpos)) {
