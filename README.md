@@ -1,6 +1,6 @@
 # Pookiepad 🎀
 
-Lightweight notepad-like text editor made in SFML by [Adrian-C-1](https://github.com/Adrian-C-1) and [imNaphy](https://github.com/imNaphy) for an uni assignment.
+Lightweight notepad-like text editor made in SFML by [Adrian-C-1](https://github.com/Adrian-C-1) and [imNaphy](https://github.com/imNaphy).
 
 ### Features
 
